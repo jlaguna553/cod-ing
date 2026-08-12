@@ -78,12 +78,23 @@ La base existe pero está vacía. Desde tu máquina, una sola vez:
 cd /home/jlaguna/projects/cod-ing
 
 npx vercel link          # elige tu cuenta y el proyecto cod-ing
-npx vercel env pull .env.local
+npx vercel env pull .env.local --environment=production
 npm run db:migrate
 ```
 
-`vercel env pull` descarga las credenciales a `.env.local`, y el migrador lo lee
-solo. Debe terminar así:
+⚠️ **`--environment=production` es obligatorio.** Sin esa bandera, `vercel env
+pull` descarga las variables de *development*, donde `DATABASE_URL` no existe:
+las integraciones del Marketplace solo la inyectan en Production y Preview. El
+síntoma es que el archivo se actualiza pero el migrador sigue sin encontrar la
+cadena.
+
+Para ver qué variables hay y en qué entorno:
+
+```bash
+npx vercel env ls
+```
+
+El migrador lee `.env.local` solo. Debe terminar así:
 
 ```
 Conectando a ep-algo-123.us-east-2.aws.neon.tech…

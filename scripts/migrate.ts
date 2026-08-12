@@ -39,12 +39,30 @@ async function main() {
   if (!url) {
     console.error('✖ No encuentro la cadena de conexión.');
     console.error('');
-    console.error('  Si la base está en Vercel:');
-    console.error('    vercel link && vercel env pull .env.local');
+    console.error('  Si la base está en Vercel, descarga las variables de');
+    console.error('  PRODUCCIÓN — `vercel env pull` sin más baja las de');
+    console.error('  desarrollo, donde DATABASE_URL no existe:');
+    console.error('');
+    console.error('    vercel env pull .env.local --environment=production');
     console.error('    npm run db:migrate');
     console.error('');
-    console.error('  O pásala directamente:');
+    console.error('  Para ver qué variables hay y en qué entorno:');
+    console.error('    vercel env ls');
+    console.error('');
+    console.error('  O pasa la cadena directamente:');
     console.error('    DATABASE_URL=postgres://… npm run db:migrate');
+
+    // Pista concreta: si el archivo existe pero no trae la variable, el
+    // problema es el entorno equivocado, no que falte el `pull`.
+    if (existsSync('.env.local')) {
+      const keys = readFileSync('.env.local', 'utf8')
+        .split('\n')
+        .map((line) => line.split('=')[0].trim())
+        .filter((key) => /^[A-Z_][A-Z0-9_]*$/i.test(key));
+      console.error('');
+      console.error(`  (.env.local existe y contiene: ${keys.join(', ') || 'nada'})`);
+    }
+
     process.exit(1);
   }
 
