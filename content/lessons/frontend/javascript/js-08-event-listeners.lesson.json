@@ -1,0 +1,201 @@
+{
+  "$schema": "../../../schema/lesson.schema.json",
+  "schemaVersion": 1,
+
+  "id": "js-08-event-listeners",
+  "track": "frontend",
+  "module": "javascript",
+  "order": 8,
+
+  "kind": "challenge",
+  "difficulty": "apprentice",
+  "estimatedMinutes": 22,
+
+  "title": {
+    "es": "Responder al usuario: eventos y el objeto `event`",
+    "en": "Responding to the user: events and the `event` object"
+  },
+  "summary": {
+    "es": "Registra manejadores, entiende qué trae el objeto `event`, y aprende a distinguir «pasar la función» de «llamarla» — el error que rompe más formularios de principiante.",
+    "en": "Register handlers, learn what the `event` object carries, and tell \"passing the function\" apart from \"calling it\" — the mistake that breaks the most beginner forms."
+  },
+  "concepts": ["dom", "events", "addeventlistener", "preventdefault", "forms"],
+  "prerequisites": ["js-06-dom-manipulation"],
+
+  "runtime": {
+    "kind": "dom",
+    "dependencies": {},
+    "timeoutMs": 6000
+  },
+
+  "workspace": {
+    "entry": "app.js",
+    "allowCreate": false,
+    "allowDelete": false,
+    "protectedPaths": [],
+    "files": [
+      {
+        "path": "app.js",
+        "content": "const form = document.querySelector('#add-task');\nconst input = document.querySelector('#task-name');\nconst list = document.querySelector('#tasks');\n\nfunction addTask() {\n  const name = input.value.trim();\n  if (!name) return;\n\n  const item = document.createElement('li');\n  item.textContent = name;\n  list.appendChild(item);\n\n  input.value = '';\n}\n\n// TODO: al enviar el formulario, añade la tarea SIN recargar la página\nform.addEventListener('submit', addTask());\n",
+        "active": true
+      },
+      {
+        "path": "index.html",
+        "content": "<!doctype html>\n<html>\n  <body>\n    <form id=\"add-task\">\n      <input id=\"task-name\" placeholder=\"Nueva tarea\" />\n      <button type=\"submit\">Añadir</button>\n    </form>\n    <ul id=\"tasks\"></ul>\n    <script type=\"module\" src=\"./app.js\"></script>\n  </body>\n</html>\n",
+        "readOnly": true
+      }
+    ]
+  },
+
+  "rules": [
+    {
+      "id": "passes-reference",
+      "kind": "regex-forbid",
+      "file": "app.js",
+      "pattern": "addEventListener\\s*\\(\\s*['\"]\\w+['\"]\\s*,\\s*\\w+\\s*\\(\\s*\\)",
+      "phase": "type",
+      "severity": "damage",
+      "message": {
+        "es": "¡Daño! `addTask()` con paréntesis **ejecuta** la función ahora mismo y registra su resultado (`undefined`) como manejador. Pasa la función sin llamarla.",
+        "en": "Damage! `addTask()` with parentheses **runs** the function right now and registers its result (`undefined`) as the handler. Pass the function without calling it."
+      },
+      "points": 0
+    },
+    {
+      "id": "has-listener",
+      "kind": "regex-must",
+      "file": "app.js",
+      "pattern": "addEventListener\\s*\\(\\s*['\"]submit['\"]",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Registra un manejador para el evento `submit` del formulario.",
+        "en": "Register a handler for the form's `submit` event."
+      },
+      "points": 20
+    },
+    {
+      "id": "prevents-default",
+      "kind": "regex-must",
+      "file": "app.js",
+      "pattern": "preventDefault\\s*\\(\\s*\\)",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "El comportamiento por defecto de un formulario es recargar la página. Hay que impedirlo desde el objeto del evento.",
+        "en": "A form's default behaviour is to reload the page. That has to be stopped from the event object."
+      },
+      "successMessage": {
+        "es": "Ahora el formulario no recarga y la lista sobrevive.",
+        "en": "The form no longer reloads and the list survives."
+      },
+      "points": 30
+    },
+    {
+      "id": "receives-event",
+      "kind": "regex-must",
+      "file": "app.js",
+      "pattern": "function\\s+addTask\\s*\\(\\s*\\w+\\s*\\)|addTask\\s*=\\s*\\(\\s*\\w+\\s*\\)\\s*=>",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "El manejador tiene que recibir el objeto del evento como parámetro: el navegador se lo pasa siempre.",
+        "en": "The handler has to take the event object as a parameter: the browser always passes it in."
+      },
+      "points": 20
+    },
+    {
+      "id": "task-added",
+      "kind": "dom-assert",
+      "selector": "#tasks",
+      "assert": "exists",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "La lista de tareas debe seguir en la página.",
+        "en": "The task list should still be on the page."
+      },
+      "points": 15
+    }
+  ],
+
+  "steps": [
+    {
+      "id": "step-1-reference",
+      "title": {
+        "es": "Pasar la función, no su resultado",
+        "en": "Pass the function, not its result"
+      },
+      "body": {
+        "es": "Mira la última línea del archivo. Tiene un bug que parece un detalle tipográfico y cambia el significado por completo:\n\n```js\nform.addEventListener('submit', addTask());   // ❌\nform.addEventListener('submit', addTask);     // ✅\n```\n\nCon paréntesis, JavaScript **ejecuta `addTask` inmediatamente**, al cargar la página, y registra como manejador lo que esa llamada devuelve — que es `undefined`. Resultado: la función corre una vez cuando no debía, y no vuelve a correr nunca cuando debería.\n\nSin paréntesis estás pasando la función **misma**, para que el navegador la guarde y la llame cuando ocurra el evento. Es la diferencia entre darle a alguien una receta y darle el plato ya cocinado.\n\nCuando necesites pasar argumentos, envuélvelo en otra función:\n\n```js\nboton.addEventListener('click', () => borrar(id));\n```",
+        "en": "Look at the last line of the file. It has a bug that reads like a typo and changes the meaning entirely:\n\n```js\nform.addEventListener('submit', addTask());   // ❌\nform.addEventListener('submit', addTask);     // ✅\n```\n\nWith parentheses, JavaScript **runs `addTask` immediately**, at page load, and registers whatever that call returns — which is `undefined`. Result: the function runs once when it shouldn't, and never runs when it should.\n\nWithout parentheses you're passing the function **itself**, so the browser can store it and call it when the event happens. It's the difference between handing someone a recipe and handing them the cooked dish.\n\nWhen you need to pass arguments, wrap it in another function:\n\n```js\nbutton.addEventListener('click', () => remove(id));\n```"
+      },
+      "task": {
+        "es": "Corrige el registro del manejador para que se pase la función sin ejecutarla.",
+        "en": "Fix the handler registration so the function is passed without being called."
+      },
+      "focusFile": "app.js",
+      "focusLines": [16, 17],
+      "ruleIds": ["has-listener", "passes-reference"],
+      "xp": 30
+    },
+    {
+      "id": "step-2-event-object",
+      "title": {
+        "es": "El objeto que el navegador te regala",
+        "en": "The object the browser hands you"
+      },
+      "body": {
+        "es": "Cuando ocurre un evento, el navegador llama a tu función pasándole un objeto con todo el contexto. No hay que pedirlo: llega siempre como primer parámetro, y si no lo declaras simplemente lo estás ignorando.\n\nLo que más vas a usar de él:\n\n- `event.target` → el elemento donde ocurrió el evento.\n- `event.preventDefault()` → cancela lo que el navegador haría por su cuenta.\n- `event.key` → en eventos de teclado, qué tecla fue.\n\nAquí importa `preventDefault`. Un `<form>` tiene un comportamiento nativo: al enviarlo, **recarga la página**. Es de los años noventa, cuando los formularios se procesaban en el servidor, y sigue activo por compatibilidad.\n\nPor eso tu tarea aparece un instante y desaparece: la página se está recargando entera. No es que tu código falle — es que funciona y acto seguido se borra todo.\n\nHay otros comportamientos por defecto que querrás cancelar: un `<a>` que navega, la tecla espacio que hace scroll, el menú contextual del clic derecho.",
+        "en": "When an event fires, the browser calls your function with an object carrying the whole context. You don't ask for it: it always arrives as the first parameter, and not declaring it just means ignoring it.\n\nWhat you'll use most from it:\n\n- `event.target` → the element the event happened on.\n- `event.preventDefault()` → cancels what the browser would do on its own.\n- `event.key` → on keyboard events, which key it was.\n\n`preventDefault` is the one that matters here. A `<form>` has native behaviour: submitting it **reloads the page**. That's from the nineties, when forms were processed on the server, and it's still active for compatibility.\n\nThat's why your task flashes and vanishes: the whole page is reloading. Your code isn't failing — it works, and then everything gets wiped.\n\nThere are other default behaviours you'll want to cancel: an `<a>` navigating away, the space bar scrolling, the right-click context menu."
+      },
+      "task": {
+        "es": "Haz que `addTask` reciba el evento e impida la recarga de la página.",
+        "en": "Make `addTask` receive the event and stop the page from reloading."
+      },
+      "focusFile": "app.js",
+      "focusLines": [5, 7],
+      "ruleIds": ["receives-event", "prevents-default", "task-added"],
+      "xp": 50,
+      "hints": [
+        {
+          "id": "h-param",
+          "tier": 1,
+          "text": {
+            "es": "Declara el parámetro en la firma de `addTask` y llama al método que cancela el comportamiento nativo **al principio** de la función.",
+            "en": "Declare the parameter in `addTask`'s signature and call the method that cancels native behaviour **at the top** of the function."
+          },
+          "xpPenalty": 5,
+          "autoOfferAfterSeconds": 75
+        }
+      ],
+      "bestPractice": {
+        "es": "**Mejora progresiva:** escucha `submit` del formulario, no `click` del botón. Así funciona también al pulsar Enter en el campo de texto, que es como mucha gente envía formularios — y como lo hacen los lectores de pantalla. Escuchar el `click` del botón deja fuera a esos usuarios sin que te enteres.",
+        "en": "**Progressive enhancement:** listen for the form's `submit`, not the button's `click`. That way it also works when someone presses Enter in the text field, which is how many people submit forms — and how screen readers do it. Listening to the button's `click` silently locks those users out."
+      }
+    }
+  ],
+
+  "drills": [],
+
+  "reward": {
+    "baseXp": 160,
+    "flawlessBonus": 60,
+    "noHintBonus": 35,
+    "comboMultiplierCap": 3,
+    "achievements": ["event-listener"]
+  },
+
+  "solution": {
+    "files": [
+      {
+        "path": "app.js",
+        "content": "const form = document.querySelector('#add-task');\nconst input = document.querySelector('#task-name');\nconst list = document.querySelector('#tasks');\n\nfunction addTask(event) {\n  event.preventDefault();\n\n  const name = input.value.trim();\n  if (!name) return;\n\n  const item = document.createElement('li');\n  item.textContent = name;\n  list.appendChild(item);\n\n  input.value = '';\n}\n\nform.addEventListener('submit', addTask);\n"
+      }
+    ],
+    "explanation": {
+      "es": "Dos cambios: el parámetro del evento en la firma con la llamada que cancela la recarga como primera línea, y el manejador registrado sin paréntesis. El `trim()` y el `return` temprano evitan añadir tareas vacías, que es la validación mínima de cualquier formulario.",
+      "en": "Two changes: the event parameter in the signature with the call that cancels the reload as the first line, and the handler registered without parentheses. The `trim()` and early `return` stop empty tasks getting added, which is the minimum validation any form needs."
+    }
+  }
+}

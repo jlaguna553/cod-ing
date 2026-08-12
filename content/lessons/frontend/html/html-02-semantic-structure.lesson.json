@@ -1,0 +1,243 @@
+{
+  "$schema": "../../../schema/lesson.schema.json",
+  "schemaVersion": 1,
+
+  "id": "html-02-semantic-structure",
+  "track": "frontend",
+  "module": "html",
+  "order": 2,
+
+  "kind": "concept",
+  "difficulty": "novice",
+  "estimatedMinutes": 15,
+
+  "title": {
+    "es": "HTML semántico: etiquetas que significan algo",
+    "en": "Semantic HTML: tags that actually mean something"
+  },
+  "summary": {
+    "es": "Deja de construir con `div` y aprende a usar las etiquetas que describen el contenido. Es la diferencia entre una página que un lector de pantalla puede navegar y una que no.",
+    "en": "Stop building everything out of `div` and learn the tags that describe your content. It's the difference between a page a screen reader can navigate and one it can't."
+  },
+  "concepts": ["html", "semantics", "accessibility", "seo"],
+  "prerequisites": ["html-01-first-page"],
+
+  "runtime": {
+    "kind": "dom",
+    "dependencies": {},
+    "timeoutMs": 5000
+  },
+
+  "workspace": {
+    "entry": "index.html",
+    "allowCreate": false,
+    "allowDelete": false,
+    "protectedPaths": [],
+    "files": [
+      {
+        "path": "index.html",
+        "content": "<!doctype html>\n<html lang=\"es\">\n  <head>\n    <meta charset=\"utf-8\" />\n    <title>Mi blog</title>\n    <link rel=\"stylesheet\" href=\"./styles.css\" />\n  </head>\n  <body>\n    <div class=\"top\">\n      <div class=\"logo\">Mi blog</div>\n      <div class=\"links\">\n        <a href=\"#inicio\">Inicio</a>\n        <a href=\"#sobre\">Sobre mí</a>\n      </div>\n    </div>\n\n    <div class=\"content\">\n      <div class=\"post\">\n        <div class=\"post-title\">Cómo aprendí a programar</div>\n        <p>Empecé copiando código que no entendía. Funcionaba.</p>\n      </div>\n    </div>\n\n    <div class=\"bottom\">© 2026</div>\n  </body>\n</html>\n",
+        "active": true
+      },
+      {
+        "path": "styles.css",
+        "content": "body { font-family: system-ui; max-width: 42rem; margin: 2rem auto; }\n.top, header { display: flex; gap: 1rem; align-items: baseline; }\n",
+        "readOnly": true
+      }
+    ]
+  },
+
+  "rules": [
+    {
+      "id": "has-header",
+      "kind": "regex-must",
+      "file": "index.html",
+      "pattern": "<header[\\s>]",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Falta un `<header>` para la cabecera de la página.",
+        "en": "The page header still needs a `<header>`."
+      },
+      "points": 15
+    },
+    {
+      "id": "has-nav",
+      "kind": "regex-must",
+      "file": "index.html",
+      "pattern": "<nav[\\s>]",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Los enlaces de navegación deben ir dentro de `<nav>`. Es lo que permite a un lector de pantalla ofrecer «saltar al menú».",
+        "en": "Navigation links belong inside `<nav>`. That's what lets a screen reader offer \"skip to menu\"."
+      },
+      "points": 15
+    },
+    {
+      "id": "has-main",
+      "kind": "regex-must",
+      "file": "index.html",
+      "pattern": "<main[\\s>]",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Falta `<main>`: marca el contenido principal, y solo puede haber uno por página.",
+        "en": "`<main>` is missing: it marks the primary content, and there can only be one per page."
+      },
+      "points": 15
+    },
+    {
+      "id": "has-article",
+      "kind": "regex-must",
+      "file": "index.html",
+      "pattern": "<article[\\s>]",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Una entrada de blog es contenido que se sostiene solo: eso es un `<article>`.",
+        "en": "A blog post is content that stands on its own: that's an `<article>`."
+      },
+      "points": 15
+    },
+    {
+      "id": "has-footer",
+      "kind": "regex-must",
+      "file": "index.html",
+      "pattern": "<footer[\\s>]",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "El pie de página va en `<footer>`.",
+        "en": "The page footer goes in `<footer>`."
+      },
+      "points": 10
+    },
+    {
+      "id": "real-heading",
+      "kind": "dom-assert",
+      "selector": "h1",
+      "assert": "exists",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "El título de la entrada es un `div` con clase, no un encabezado. Usa `<h1>`: es lo que construye el índice por el que navega un lector de pantalla.",
+        "en": "The post title is a styled `div`, not a heading. Use `<h1>`: it's what builds the outline a screen reader navigates by."
+      },
+      "successMessage": {
+        "es": "Ahora la página tiene un encabezado real.",
+        "en": "The page has a real heading now."
+      },
+      "points": 20
+    },
+    {
+      "id": "no-div-soup",
+      "kind": "regex-forbid",
+      "file": "index.html",
+      "pattern": "class=\"(top|bottom|post-title|links)\"",
+      "phase": "type",
+      "severity": "damage",
+      "message": {
+        "es": "Ese `div` con clase describe su aspecto, no lo que es. Hay una etiqueta HTML que ya significa eso.",
+        "en": "That classed `div` describes how it looks, not what it is. There's an HTML tag that already means it."
+      },
+      "points": 0
+    }
+  ],
+
+  "steps": [
+    {
+      "id": "step-1-why",
+      "title": {
+        "es": "Por qué `div` no basta",
+        "en": "Why `div` isn't enough"
+      },
+      "body": {
+        "es": "Un `<div>` no significa nada. Es una caja. Sirve para agrupar cosas cuando ninguna otra etiqueta encaja.\n\nEl problema aparece cuando **todo** es un `div`. La página se ve bien y funciona con ratón, pero:\n\n- Un lector de pantalla no puede ofrecer «ir al contenido principal» porque no sabe cuál es.\n- El navegador no puede activar el modo lectura.\n- Google ve un muro de cajas sin jerarquía.\n\nHTML ya trae etiquetas que **describen el papel** de cada zona: `header`, `nav`, `main`, `article`, `aside`, `footer`. Se comportan igual que un `div` visualmente, pero además dicen qué son.",
+        "en": "A `<div>` means nothing. It's a box. It exists to group things when no other tag fits.\n\nThe problem shows up when **everything** is a `div`. The page looks fine and works with a mouse, but:\n\n- A screen reader can't offer \"skip to main content\" because it doesn't know which one that is.\n- The browser can't turn on reader mode.\n- Google sees a wall of boxes with no hierarchy.\n\nHTML already ships tags that **describe the role** of each region: `header`, `nav`, `main`, `article`, `aside`, `footer`. They look exactly like a `div`, but they also say what they are."
+      },
+      "task": {
+        "es": "Lee `index.html` y localiza las cinco zonas: cabecera, navegación, contenido principal, la entrada del blog y el pie.",
+        "en": "Read `index.html` and spot the five regions: header, navigation, main content, the blog post, and the footer."
+      },
+      "focusFile": "index.html",
+      "focusLines": [9, 25],
+      "ruleIds": [],
+      "xp": 20
+    },
+    {
+      "id": "step-2-replace",
+      "title": {
+        "es": "Cambia las cajas por significado",
+        "en": "Swap boxes for meaning"
+      },
+      "body": {
+        "es": "Ahora sustituye cada `div` por la etiqueta que describe su papel. La regla para elegir: **pregúntate qué es ese bloque, no cómo se ve.**\n\n- ¿Es la franja superior con logo y menú? → cabecera.\n- ¿Es un grupo de enlaces de navegación? → hay una etiqueta con ese nombre exacto.\n- ¿Es el contenido central de la página, el que no se repite entre páginas? → principal.\n- ¿Es una pieza que tendría sentido por sí sola en un lector de feeds? → artículo.\n- ¿Es la franja inferior con el copyright? → pie.\n\nOjo con `.post-title`: no es una zona, es un **encabezado**. Y para encabezados existen `h1`–`h6`.",
+        "en": "Now replace each `div` with the tag that describes its role. The rule for choosing: **ask what the block is, not what it looks like.**\n\n- The top strip with logo and menu? → header.\n- A group of navigation links? → there's a tag named exactly that.\n- The central content, the part that doesn't repeat across pages? → main.\n- A piece that would make sense on its own in a feed reader? → article.\n- The bottom strip with the copyright? → footer.\n\nWatch out for `.post-title`: it isn't a region, it's a **heading**. And headings have their own tags, `h1`–`h6`."
+      },
+      "task": {
+        "es": "Sustituye los `div` por `header`, `nav`, `main`, `article` y `footer`, y convierte el título de la entrada en un encabezado real.",
+        "en": "Replace the `div`s with `header`, `nav`, `main`, `article` and `footer`, and turn the post title into a real heading."
+      },
+      "focusFile": "index.html",
+      "ruleIds": [
+        "has-header",
+        "has-nav",
+        "has-main",
+        "has-article",
+        "has-footer",
+        "real-heading",
+        "no-div-soup"
+      ],
+      "xp": 50,
+      "hints": [
+        {
+          "id": "h-nav",
+          "tier": 1,
+          "text": {
+            "es": "`<nav>` va **dentro** de `<header>`, no al lado: el menú forma parte de la cabecera.",
+            "en": "`<nav>` goes **inside** `<header>`, not next to it: the menu is part of the header."
+          },
+          "xpPenalty": 5,
+          "autoOfferAfterSeconds": 90
+        },
+        {
+          "id": "h-main",
+          "tier": 2,
+          "text": {
+            "es": "`<main>` envuelve el contenido; el `<article>` va dentro de él. Y el título de la entrada, dentro del artículo, como `<h1>`.",
+            "en": "`<main>` wraps the content; the `<article>` sits inside it. And the post title lives inside the article as an `<h1>`."
+          },
+          "xpPenalty": 10
+        }
+      ],
+      "bestPractice": {
+        "es": "**Accesibilidad como estándar, no como extra:** estas etiquetas crean *landmarks*, los puntos por los que un usuario de lector de pantalla salta por la página con una tecla. Cuestan lo mismo que un `div` y son la base de las WCAG. Escribirlas bien desde el principio sale gratis; añadirlas después es un refactor.",
+        "en": "**Accessibility as the default, not an extra:** these tags create *landmarks* — the points a screen reader user jumps between with a single key. They cost exactly what a `div` costs and they're the foundation of WCAG. Getting them right up front is free; retrofitting them is a refactor."
+      }
+    }
+  ],
+
+  "drills": [],
+
+  "reward": {
+    "baseXp": 100,
+    "flawlessBonus": 40,
+    "noHintBonus": 25,
+    "comboMultiplierCap": 3,
+    "achievements": ["semantic-scribe"]
+  },
+
+  "solution": {
+    "files": [
+      {
+        "path": "index.html",
+        "content": "<!doctype html>\n<html lang=\"es\">\n  <head>\n    <meta charset=\"utf-8\" />\n    <title>Mi blog</title>\n    <link rel=\"stylesheet\" href=\"./styles.css\" />\n  </head>\n  <body>\n    <header>\n      <div class=\"logo\">Mi blog</div>\n      <nav>\n        <a href=\"#inicio\">Inicio</a>\n        <a href=\"#sobre\">Sobre mí</a>\n      </nav>\n    </header>\n\n    <main>\n      <article>\n        <h1>Cómo aprendí a programar</h1>\n        <p>Empecé copiando código que no entendía. Funcionaba.</p>\n      </article>\n    </main>\n\n    <footer>© 2026</footer>\n  </body>\n</html>\n"
+      }
+    ],
+    "explanation": {
+      "es": "El `div.logo` se queda como `div` a propósito: no hay etiqueta semántica para «logo», y forzar una peor sería peor que un `div` honesto. Esa es la regla real — semántica donde existe, `div` donde no.",
+      "en": "The `div.logo` stays a `div` on purpose: there's no semantic tag for \"logo\", and forcing a worse-fitting one is worse than an honest `div`. That's the actual rule — semantics where they exist, `div` where they don't."
+    }
+  }
+}

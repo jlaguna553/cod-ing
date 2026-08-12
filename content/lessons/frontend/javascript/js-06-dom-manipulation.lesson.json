@@ -1,0 +1,207 @@
+{
+  "$schema": "../../../schema/lesson.schema.json",
+  "schemaVersion": 1,
+
+  "id": "js-06-dom-manipulation",
+  "track": "frontend",
+  "module": "javascript",
+  "order": 6,
+
+  "kind": "concept",
+  "difficulty": "apprentice",
+  "estimatedMinutes": 20,
+
+  "title": {
+    "es": "Tocar la página: seleccionar, leer y crear",
+    "en": "Touching the page: select, read, create"
+  },
+  "summary": {
+    "es": "Aprende a encontrar elementos, cambiar su contenido y construir nodos nuevos — y por qué `textContent` no es intercambiable con `innerHTML`.",
+    "en": "Learn to find elements, change their content and build new nodes — and why `textContent` isn't interchangeable with `innerHTML`."
+  },
+  "concepts": ["dom", "queryselector", "textcontent", "createelement", "xss"],
+  "prerequisites": ["js-03-array-map"],
+
+  "runtime": {
+    "kind": "dom",
+    "dependencies": {},
+    "timeoutMs": 6000
+  },
+
+  "workspace": {
+    "entry": "app.js",
+    "allowCreate": false,
+    "allowDelete": false,
+    "protectedPaths": [],
+    "files": [
+      {
+        "path": "app.js",
+        "content": "const players = [\n  { name: 'Ada', score: 120 },\n  { name: 'Linus', score: 95 },\n  { name: 'Grace', score: 210 },\n];\n\n// TODO 1: selecciona el <ul id=\"leaderboard\">\nconst list = null;\n\n// TODO 2: pinta un <li> por jugador con \"Nombre — puntos\"\n\n\n// TODO 3: escribe el total en el <span id=\"total\">\n",
+        "active": true
+      },
+      {
+        "path": "index.html",
+        "content": "<!doctype html>\n<html>\n  <body>\n    <h1>Clasificación</h1>\n    <ul id=\"leaderboard\"></ul>\n    <p>Total: <span id=\"total\">0</span></p>\n    <script type=\"module\" src=\"./app.js\"></script>\n  </body>\n</html>\n",
+        "readOnly": true
+      }
+    ]
+  },
+
+  "rules": [
+    {
+      "id": "selects-list",
+      "kind": "regex-must",
+      "file": "app.js",
+      "pattern": "querySelector\\s*\\(\\s*['\"]#leaderboard",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Selecciona la lista con `document.querySelector('#leaderboard')`.",
+        "en": "Select the list with `document.querySelector('#leaderboard')`."
+      },
+      "points": 20
+    },
+    {
+      "id": "creates-items",
+      "kind": "dom-assert",
+      "selector": "#leaderboard li",
+      "assert": "countEquals",
+      "count": 3,
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Deben aparecer tres `<li>`, uno por jugador.",
+        "en": "Three `<li>` elements should appear, one per player."
+      },
+      "points": 30
+    },
+    {
+      "id": "total-rendered",
+      "kind": "dom-assert",
+      "selector": "#total",
+      "assert": "textEquals",
+      "expected": "425",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "El total debe ser 425 (120 + 95 + 210).",
+        "en": "The total should be 425 (120 + 95 + 210)."
+      },
+      "points": 25
+    },
+    {
+      "id": "no-innerhtml-with-data",
+      "kind": "regex-forbid",
+      "file": "app.js",
+      "pattern": "innerHTML\\s*=\\s*[`'\"][^`'\"]*\\$\\{",
+      "phase": "type",
+      "severity": "damage",
+      "message": {
+        "es": "¡Daño! Interpolar datos dentro de `innerHTML` es la puerta de entrada de XSS. Si esos nombres vinieran de un formulario, acabarías ejecutando el HTML de otro.",
+        "en": "Damage! Interpolating data into `innerHTML` is the front door for XSS. If those names came from a form, you'd end up running someone else's HTML."
+      },
+      "points": 0
+    },
+    {
+      "id": "uses-textcontent",
+      "kind": "regex-must",
+      "file": "app.js",
+      "pattern": "textContent",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Usa `textContent` para meter texto: trata el contenido como texto plano, nunca como HTML.",
+        "en": "Use `textContent` to insert text: it treats the content as plain text, never as HTML."
+      },
+      "points": 25
+    }
+  ],
+
+  "steps": [
+    {
+      "id": "step-1-select",
+      "title": {
+        "es": "Encontrar antes de tocar",
+        "en": "Find before you touch"
+      },
+      "body": {
+        "es": "El DOM es el árbol de objetos que el navegador construye a partir de tu HTML. Para modificar algo, primero hay que localizarlo.\n\nHay una sola pareja de métodos que necesitas conocer, y aceptan **cualquier selector CSS** — el mismo que ya sabes escribir en la hoja de estilos:\n\n```js\ndocument.querySelector('#total')       // el PRIMERO que coincida, o null\ndocument.querySelectorAll('.card')     // TODOS los que coincidan\n```\n\nDos detalles que ahorran tiempo:\n\n- `querySelector` devuelve `null` si no encuentra nada. Ese `null` es la causa del error «Cannot read properties of null» que verás mil veces: casi siempre significa que el script se ejecutó antes de que el elemento existiera, o que el selector está mal escrito.\n- `querySelectorAll` **no** devuelve un array, sino una `NodeList`. Tiene `forEach`, pero no `map` ni `filter`. Si los necesitas: `[...document.querySelectorAll('.card')]`.",
+        "en": "The DOM is the tree of objects the browser builds from your HTML. To change something, you first have to find it.\n\nThere's a single pair of methods you need, and they take **any CSS selector** — the same ones you already write in your stylesheet:\n\n```js\ndocument.querySelector('#total')       // the FIRST match, or null\ndocument.querySelectorAll('.card')     // ALL matches\n```\n\nTwo details that save time:\n\n- `querySelector` returns `null` when it finds nothing. That `null` is the cause of the \"Cannot read properties of null\" error you'll meet a thousand times: it almost always means the script ran before the element existed, or the selector is misspelled.\n- `querySelectorAll` does **not** return an array, it returns a `NodeList`. It has `forEach`, but no `map` or `filter`. If you need those: `[...document.querySelectorAll('.card')]`."
+      },
+      "task": {
+        "es": "Selecciona la lista `#leaderboard` y guárdala en `list`.",
+        "en": "Select the `#leaderboard` list and store it in `list`."
+      },
+      "focusFile": "app.js",
+      "focusLines": [7, 8],
+      "ruleIds": ["selects-list"],
+      "xp": 25
+    },
+    {
+      "id": "step-2-create",
+      "title": {
+        "es": "Construir nodos, no pegar cadenas",
+        "en": "Build nodes, don't glue strings"
+      },
+      "body": {
+        "es": "Para añadir un elemento hay dos caminos, y la diferencia importa más de lo que parece.\n\n**Camino 1 — construir el nodo:**\n\n```js\nconst li = document.createElement('li');\nli.textContent = 'Ada — 120';\nlist.appendChild(li);\n```\n\n**Camino 2 — pegar HTML como texto:** `list.innerHTML += '<li>Ada — 120</li>'`.\n\nEl segundo parece más corto y tiene tres problemas:\n\n1. **Seguridad.** `innerHTML` **interpreta** lo que le das como HTML. Si el nombre viniera de un usuario y fuera `<img src=x onerror=alert(1)>`, se ejecutaría. Eso es XSS, y es la vulnerabilidad más común del frontend.\n2. **Rendimiento.** `innerHTML +=` reconstruye todo el contenido del elemento cada vez.\n3. **Estado perdido.** Reconstruir el HTML destruye los nodos anteriores, y con ellos sus listeners y el foco del teclado.\n\nLa regla práctica: **`textContent` para texto, `createElement` para estructura.** `innerHTML` solo con HTML que hayas escrito tú literalmente, sin interpolar datos.",
+        "en": "There are two ways to add an element, and the difference matters more than it looks.\n\n**Path 1 — build the node:**\n\n```js\nconst li = document.createElement('li');\nli.textContent = 'Ada — 120';\nlist.appendChild(li);\n```\n\n**Path 2 — glue HTML as a string:** `list.innerHTML += '<li>Ada — 120</li>'`.\n\nThe second looks shorter and has three problems:\n\n1. **Security.** `innerHTML` **parses** what you hand it as HTML. If the name came from a user and read `<img src=x onerror=alert(1)>`, it would run. That's XSS, the most common frontend vulnerability.\n2. **Performance.** `innerHTML +=` rebuilds the element's entire contents every time.\n3. **Lost state.** Rebuilding the HTML destroys the previous nodes, and with them their listeners and keyboard focus.\n\nThe practical rule: **`textContent` for text, `createElement` for structure.** Use `innerHTML` only with HTML you wrote literally yourself, never interpolating data."
+      },
+      "task": {
+        "es": "Pinta un `<li>` por jugador con «Nombre — puntos» y escribe la suma en `#total`.",
+        "en": "Render one `<li>` per player reading \"Name — points\" and write the sum into `#total`."
+      },
+      "focusFile": "app.js",
+      "ruleIds": ["creates-items", "total-rendered", "uses-textcontent", "no-innerhtml-with-data"],
+      "xp": 55,
+      "hints": [
+        {
+          "id": "h-loop",
+          "tier": 1,
+          "text": {
+            "es": "`for (const player of players)` te da cada jugador. Dentro, crea el `li`, ponle el texto y añádelo a la lista.",
+            "en": "`for (const player of players)` hands you each player. Inside, create the `li`, set its text and append it to the list."
+          },
+          "xpPenalty": 5,
+          "autoOfferAfterSeconds": 90
+        },
+        {
+          "id": "h-total",
+          "tier": 2,
+          "text": {
+            "es": "Para el total, `reduce` sobre `players` sumando `score`. Y recuerda que `textContent` espera texto.",
+            "en": "For the total, `reduce` over `players` summing `score`. And remember `textContent` expects text."
+          },
+          "xpPenalty": 10
+        }
+      ],
+      "bestPractice": {
+        "es": "**OWASP — XSS:** la regla que se sigue en cualquier equipo con revisión de seguridad es que los datos nunca se concatenan dentro de HTML. Frameworks como React y Vue escapan el texto por defecto justamente por esto; en JavaScript sin framework, esa responsabilidad es tuya y `textContent` es la herramienta.",
+        "en": "**OWASP — XSS:** the rule any team with security review follows is that data never gets concatenated into HTML. Frameworks like React and Vue escape text by default precisely because of this; in plain JavaScript that responsibility is yours, and `textContent` is the tool."
+      }
+    }
+  ],
+
+  "drills": [],
+
+  "reward": {
+    "baseXp": 150,
+    "flawlessBonus": 60,
+    "noHintBonus": 35,
+    "comboMultiplierCap": 3,
+    "achievements": ["dom-apprentice"]
+  },
+
+  "solution": {
+    "files": [
+      {
+        "path": "app.js",
+        "content": "const players = [\n  { name: 'Ada', score: 120 },\n  { name: 'Linus', score: 95 },\n  { name: 'Grace', score: 210 },\n];\n\nconst list = document.querySelector('#leaderboard');\n\nfor (const player of players) {\n  const item = document.createElement('li');\n  item.textContent = `${player.name} — ${player.score}`;\n  list.appendChild(item);\n}\n\nconst total = players.reduce((sum, player) => sum + player.score, 0);\ndocument.querySelector('#total').textContent = String(total);\n"
+      }
+    ],
+    "explanation": {
+      "es": "Cada `<li>` se construye como nodo y su texto entra por `textContent`, así que un nombre con `<script>` dentro se vería como texto y no se ejecutaría. El total sale de `reduce`, sin variable acumuladora suelta.",
+      "en": "Each `<li>` is built as a node and its text goes in through `textContent`, so a name containing `<script>` would show up as text instead of running. The total comes from `reduce`, with no loose accumulator variable."
+    }
+  }
+}

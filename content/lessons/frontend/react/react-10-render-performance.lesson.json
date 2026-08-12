@@ -1,0 +1,318 @@
+{
+  "$schema": "../../../schema/lesson.schema.json",
+  "schemaVersion": 1,
+
+  "id": "react-10-render-performance",
+  "track": "frontend",
+  "module": "react",
+  "order": 10,
+
+  "kind": "interview",
+  "difficulty": "interview",
+  "estimatedMinutes": 35,
+
+  "title": {
+    "es": "Boss: la tabla que se traba al escribir",
+    "en": "Boss fight: the table that stutters as you type"
+  },
+  "summary": {
+    "es": "Un buscador sobre 2.000 filas tarda 400ms por pulsación. Diagnostica por qué se re-renderiza todo, arréglalo, y sabe defender cuándo NO hay que memoizar. Pregunta habitual de entrevista de React senior.",
+    "en": "A search box over 2,000 rows takes 400ms per keystroke. Diagnose why everything re-renders, fix it, and be ready to argue when NOT to memoize. A staple of senior React interviews."
+  },
+  "concepts": ["react", "performance", "memo", "usememo", "usecallback", "referential-equality"],
+  "prerequisites": ["react-04-state-and-events"],
+
+  "runtime": {
+    "kind": "sandpack",
+    "dependencies": { "react": "^19.0.0", "react-dom": "^19.0.0" },
+    "timeoutMs": 20000
+  },
+
+  "workspace": {
+    "entry": "src/Dashboard.jsx",
+    "allowCreate": true,
+    "allowDelete": false,
+    "protectedPaths": ["src/main.jsx", "src/renderCounter.js"],
+    "files": [
+      {
+        "path": "src/Dashboard.jsx",
+        "content": "import { useState } from 'react';\nimport { countRender } from './renderCounter';\n\nconst ROWS = Array.from({ length: 2000 }, (_, i) => ({\n  id: i,\n  name: `Jugador ${i}`,\n  score: (i * 37) % 500,\n}));\n\nfunction Row({ player, onSelect }) {\n  countRender('Row');\n  return (\n    <tr onClick={() => onSelect(player.id)}>\n      <td>{player.name}</td>\n      <td>{player.score}</td>\n    </tr>\n  );\n}\n\nfunction Toolbar({ onReset }) {\n  countRender('Toolbar');\n  return <button onClick={onReset}>Reiniciar</button>;\n}\n\nexport default function Dashboard() {\n  countRender('Dashboard');\n  const [query, setQuery] = useState('');\n  const [selected, setSelected] = useState(null);\n\n  // Se recalcula en CADA render, incluso al cambiar `selected`.\n  const visible = ROWS.filter((row) =>\n    row.name.toLowerCase().includes(query.toLowerCase()),\n  );\n\n  return (\n    <div>\n      <input value={query} onChange={(e) => setQuery(e.target.value)} />\n      <Toolbar onReset={() => setQuery('')} />\n      <p>Seleccionado: {selected ?? '—'}</p>\n      <table>\n        <tbody>\n          {visible.slice(0, 50).map((player) => (\n            <Row key={player.id} player={player} onSelect={(id) => setSelected(id)} />\n          ))}\n        </tbody>\n      </table>\n    </div>\n  );\n}\n",
+        "active": true
+      },
+      {
+        "path": "src/renderCounter.js",
+        "content": "const counts = new Map();\n\nexport function countRender(label) {\n  counts.set(label, (counts.get(label) ?? 0) + 1);\n  window.__renderCounts__ = Object.fromEntries(counts);\n}\n\nexport function resetCounts() {\n  counts.clear();\n}\n",
+        "readOnly": true
+      },
+      {
+        "path": "src/main.jsx",
+        "content": "import { createRoot } from 'react-dom/client';\nimport Dashboard from './Dashboard';\n\ncreateRoot(document.getElementById('root')).render(<Dashboard />);\n",
+        "readOnly": true
+      }
+    ]
+  },
+
+  "rules": [
+    {
+      "id": "memoizes-filter",
+      "kind": "regex-must",
+      "file": "src/Dashboard.jsx",
+      "pattern": "useMemo\\s*\\(",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "El filtrado de 2.000 filas se repite en cada render, también cuando solo cambia la selección. Cachéalo contra sus dependencias reales.",
+        "en": "Filtering 2,000 rows repeats on every render, including when only the selection changes. Cache it against its real dependencies."
+      },
+      "points": 30
+    },
+    {
+      "id": "stable-callback",
+      "kind": "regex-must",
+      "file": "src/Dashboard.jsx",
+      "pattern": "useCallback\\s*\\(",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Las funciones que pasas como prop se crean nuevas en cada render, así que cualquier memoización de los hijos queda anulada.",
+        "en": "The functions you pass as props are created fresh on every render, so any memoization on the children is defeated."
+      },
+      "points": 30
+    },
+    {
+      "id": "memoized-row",
+      "kind": "regex-must",
+      "file": "src/Dashboard.jsx",
+      "pattern": "memo\\s*\\(",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "`Row` se repinta aunque sus props no hayan cambiado. Envuélvelo para que compare sus props antes de re-renderizar.",
+        "en": "`Row` repaints even when its props haven't changed. Wrap it so it compares props before re-rendering."
+      },
+      "points": 30
+    },
+    {
+      "id": "no-inline-handler-in-list",
+      "kind": "regex-forbid",
+      "file": "src/Dashboard.jsx",
+      "pattern": "onSelect=\\{\\s*\\([^)]*\\)\\s*=>",
+      "phase": "type",
+      "severity": "damage",
+      "message": {
+        "es": "¡Daño! Una arrow function escrita en línea dentro del `.map()` crea una prop distinta en cada render para cada fila. Es lo que hace inútil memoizar `Row`.",
+        "en": "Damage! An inline arrow inside the `.map()` creates a different prop on every render for every row. That's what makes memoizing `Row` useless."
+      },
+      "points": 0
+    },
+    {
+      "id": "imports-hooks",
+      "kind": "regex-must",
+      "file": "src/Dashboard.jsx",
+      "pattern": "import\\s*\\{[^}]*(useMemo|useCallback|memo)[^}]*\\}\\s*from\\s*['\"]react['\"]",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Importa desde `react` lo que vayas usando.",
+        "en": "Import what you use from `react`."
+      },
+      "points": 10
+    },
+    {
+      "id": "still-filters",
+      "kind": "dom-assert",
+      "selector": "tbody tr",
+      "assert": "countEquals",
+      "count": 50,
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "La tabla debe seguir mostrando 50 filas: optimizar no puede cambiar el comportamiento.",
+        "en": "The table must still show 50 rows: optimizing can't change behaviour."
+      },
+      "points": 20
+    }
+  ],
+
+  "steps": [
+    {
+      "id": "step-1-diagnose",
+      "title": {
+        "es": "Cuenta renders antes de tocar nada",
+        "en": "Count renders before touching anything"
+      },
+      "body": {
+        "es": "En una entrevista, empezar a repartir `memo` por el archivo es la respuesta que suspende. La buena empieza midiendo: **qué se está re-renderizando y por qué.**\n\nEl proyecto trae un contador (`window.__renderCounts__`). Escribe una letra en el buscador y míralo. Después pulsa una fila —que solo cambia `selected`— y vuelve a mirarlo.\n\nLo que vas a encontrar, y conviene que sepas explicarlo con estas palabras:\n\n1. **React re-renderiza un componente cuando cambia su estado, y con él todo su subárbol.** No es un bug: es el modelo. Cambiar `selected` repinta `Dashboard` entero, incluidas las 50 filas que no tienen nada que ver.\n2. **El filtrado de 2.000 elementos se rehace en cada render**, aunque `query` no haya cambiado, porque es código suelto en el cuerpo del componente.\n3. **Cada render crea funciones nuevas.** `() => setSelected(id)` es una función distinta cada vez, aunque el código sea idéntico. Y como React compara las props por **identidad**, no por contenido, esa prop «cambia» siempre.\n\nEse tercer punto es el que suele decidir la entrevista, porque explica por qué mucha gente añade `memo` y no mejora nada.",
+        "en": "In an interview, sprinkling `memo` across the file is the answer that fails. The good one starts by measuring: **what is re-rendering, and why.**\n\nThe project ships a counter (`window.__renderCounts__`). Type a letter in the search box and look at it. Then click a row — which only changes `selected` — and look again.\n\nWhat you'll find, and it's worth being able to say it in these words:\n\n1. **React re-renders a component when its state changes, and its whole subtree with it.** That's not a bug: it's the model. Changing `selected` repaints all of `Dashboard`, including the 50 rows that have nothing to do with it.\n2. **The 2,000-item filter is redone on every render**, even when `query` hasn't changed, because it's loose code in the component body.\n3. **Every render creates new functions.** `() => setSelected(id)` is a different function each time, even though the code is identical. And since React compares props by **identity**, not by content, that prop \"changes\" every time.\n\nThat third point usually decides the interview, because it explains why so many people add `memo` and see no improvement."
+      },
+      "task": {
+        "es": "Ejecuta, escribe en el buscador y pulsa una fila. Anota cuántas veces se renderiza `Row` en cada caso.",
+        "en": "Run it, type in the search box and click a row. Note how many times `Row` renders in each case."
+      },
+      "focusFile": "src/Dashboard.jsx",
+      "focusLines": [25, 33],
+      "ruleIds": [],
+      "xp": 45
+    },
+    {
+      "id": "step-2-fix",
+      "title": {
+        "es": "Las tres piezas, y en este orden",
+        "en": "The three pieces, in this order"
+      },
+      "body": {
+        "es": "Hay tres herramientas y cada una resuelve **un** problema distinto de los que acabas de medir. Aplicarlas sin entender cuál ataca qué es lo que produce código lleno de memoización que no acelera nada.\n\n- **Cachear un cálculo caro** entre renders, para que solo se rehaga cuando cambien sus entradas.\n- **Mantener estable la identidad de una función** entre renders, para que pasarla como prop no cuente como cambio.\n- **Evitar que un componente se repinte** cuando sus props son las mismas: una comparación superficial antes de renderizar.\n\nEl orden importa. Envolver el componente hijo **sin** estabilizar antes las funciones que recibe no sirve de nada: la comparación de props verá una función nueva cada vez y repintará igual. Ese es exactamente el error que hace que la gente concluya que «memo no funciona».\n\nY presta atención a los arrays de dependencias: son la parte que de verdad hay que pensar. Una dependencia de más anula la caché; una de menos deja el valor congelado y produce un bug de datos obsoletos, que es mucho peor que la lentitud original.",
+        "en": "There are three tools and each solves **one** of the problems you just measured. Applying them without knowing which attacks what is how you end up with code full of memoization that speeds up nothing.\n\n- **Cache an expensive computation** across renders, so it only redoes when its inputs change.\n- **Keep a function's identity stable** across renders, so passing it as a prop doesn't count as a change.\n- **Stop a component from repainting** when its props are the same: a shallow comparison before rendering.\n\nOrder matters. Wrapping the child component **without** first stabilizing the functions it receives achieves nothing: the props comparison will see a new function every time and repaint anyway. That's precisely the mistake that leads people to conclude \"memo doesn't work\".\n\nAnd pay attention to the dependency arrays: that's the part that actually requires thought. One dependency too many voids the cache; one too few freezes the value and produces a stale-data bug, which is far worse than the original slowness."
+      },
+      "task": {
+        "es": "Arregla los tres problemas y comprueba en el contador que al pulsar una fila ya no se repintan las 50.",
+        "en": "Fix the three problems and confirm in the counter that clicking a row no longer repaints all 50."
+      },
+      "focusFile": "src/Dashboard.jsx",
+      "ruleIds": [
+        "memoizes-filter",
+        "stable-callback",
+        "memoized-row",
+        "imports-hooks",
+        "no-inline-handler-in-list",
+        "still-filters"
+      ],
+      "xp": 90,
+      "hints": [
+        {
+          "id": "h-deps",
+          "tier": 1,
+          "text": {
+            "es": "Pregúntate por cada valor cacheado: ¿de qué depende **de verdad**? El filtrado depende de la consulta, no de la selección.",
+            "en": "Ask of each cached value: what does it **actually** depend on? The filtering depends on the query, not on the selection."
+          },
+          "xpPenalty": 8,
+          "autoOfferAfterSeconds": 120
+        },
+        {
+          "id": "h-id",
+          "tier": 2,
+          "text": {
+            "es": "Para que el manejador sea estable no puede cerrar sobre el `id` de cada fila. Que reciba el `id` como argumento y sea la fila quien se lo pase al invocarlo.",
+            "en": "For the handler to be stable it can't close over each row's `id`. Have it take the `id` as an argument and let the row pass it when calling."
+          },
+          "xpPenalty": 15
+        }
+      ],
+      "bestPractice": {
+        "es": "**Actualizaciones funcionales y dependencias:** si dentro de un manejador estabilizado necesitas el estado anterior, usa la forma funcional del actualizador. Así el manejador no depende del estado y su array de dependencias puede quedar vacío — sigue siendo estable de verdad.",
+        "en": "**Functional updates and dependencies:** if a stabilized handler needs the previous state, use the functional form of the setter. That way the handler doesn't depend on the state and its dependency array can stay empty — genuinely stable."
+      }
+    },
+    {
+      "id": "step-3-when-not",
+      "title": {
+        "es": "Cuándo NO memoizar",
+        "en": "When NOT to memoize"
+      },
+      "body": {
+        "es": "Aquí es donde se separa a quien ha leído un tutorial de quien ha mantenido una aplicación.\n\n**La memoización no es gratis.** Cada `useMemo` guarda un valor y compara dependencias en cada render; cada `memo` hace una comparación superficial de todas las props. En un componente que renderiza rápido, esa comparación puede costar más que el propio render.\n\nCuándo **no** aplicarla:\n\n- Componentes pequeños que pintan poco. Comparar props cuesta más que repintar tres nodos.\n- Props que cambian casi siempre. La caché nunca acierta y solo pagas el coste.\n- Antes de medir. Memoizar por si acaso es la forma más común de complicar un archivo sin ganar nada.\n\nY el argumento de cierre, el que demuestra criterio: **muchas veces la mejor optimización no es memoizar, sino mover el estado.** Si el `query` viviera en un componente pequeño junto al `input`, en lugar de en `Dashboard`, escribir no repintaría la tabla en absoluto — sin un solo hook de memoización. Colocar bien el estado elimina el problema; memoizar solo lo mitiga.\n\nConviene además saber que el compilador de React apunta a automatizar buena parte de esto, lo que refuerza la conclusión: la memoización manual es un parche sobre una estructura mejorable, no una virtud.",
+        "en": "This is where someone who read a tutorial parts ways with someone who has maintained an app.\n\n**Memoization isn't free.** Every `useMemo` stores a value and compares dependencies on each render; every `memo` shallow-compares all props. In a component that renders fast, that comparison can cost more than the render itself.\n\nWhen **not** to use it:\n\n- Small components that paint little. Comparing props costs more than repainting three nodes.\n- Props that change almost every time. The cache never hits and you only pay the cost.\n- Before measuring. Memoizing just in case is the most common way to complicate a file for nothing.\n\nAnd the closing argument, the one that shows judgement: **often the best optimization isn't memoizing, it's moving the state.** If `query` lived in a small component next to the `input` instead of in `Dashboard`, typing wouldn't repaint the table at all — without a single memoization hook. Placing state well removes the problem; memoizing only softens it.\n\nIt's also worth knowing that the React compiler aims to automate much of this, which reinforces the conclusion: manual memoization is a patch over an improvable structure, not a virtue."
+      },
+      "task": {
+        "es": "Sin cambiar código: describe cómo reestructurarías el componente para que escribir en el buscador no tocara la tabla, sin usar memoización.",
+        "en": "No code change: describe how you'd restructure the component so typing in the search box never touches the table, without memoization."
+      },
+      "focusFile": "src/Dashboard.jsx",
+      "ruleIds": [],
+      "xp": 55
+    }
+  ],
+
+  "drills": [],
+
+  "interview": {
+    "prompt": {
+      "es": "Un compañero te pasa este dashboard: escribir en el buscador va a tirones y el equipo lo achaca a «que React es lento». Tienes 25 minutos. Diagnostica en voz alta qué se re-renderiza y por qué, aplica los arreglos por orden de impacto, y termina explicando qué NO memoizarías y por qué.",
+      "en": "A colleague hands you this dashboard: typing in the search box stutters and the team blames it on \"React being slow\". You have 25 minutes. Diagnose out loud what re-renders and why, apply the fixes in order of impact, and finish by explaining what you would NOT memoize, and why."
+    },
+    "company_style": "faang",
+    "category": "optimization",
+    "constraints": [
+      {
+        "es": "El comportamiento visible no puede cambiar: mismas filas, mismo filtrado, misma selección.",
+        "en": "Visible behaviour can't change: same rows, same filtering, same selection."
+      },
+      {
+        "es": "Pulsar una fila no debe re-renderizar las demás.",
+        "en": "Clicking one row must not re-render the others."
+      },
+      {
+        "es": "Sin librerías externas de virtualización ni de estado.",
+        "en": "No external virtualization or state libraries."
+      }
+    ],
+    "complexity": {
+      "time": "O(n) por pulsación → O(1) renders de fila por selección"
+    },
+    "followUps": [
+      {
+        "question": {
+          "es": "Has memoizado el componente hijo y no ha mejorado nada. ¿Qué compruebas primero?",
+          "en": "You memoized the child component and nothing improved. What do you check first?"
+        },
+        "answer": {
+          "es": "Las props que recibe. La comparación de `memo` es superficial y por identidad: si le llega una función creada en línea, un objeto literal o un array construido en el render del padre, la prop es distinta cada vez y la comparación siempre falla. Antes de memoizar el hijo hay que estabilizar lo que se le pasa; si no, solo se ha añadido el coste de comparar.",
+          "en": "The props it receives. `memo`'s comparison is shallow and identity-based: if an inline function, an object literal or an array built during the parent's render reaches it, the prop differs every time and the comparison always fails. You stabilize what you pass before memoizing the child; otherwise you've only added the cost of comparing."
+        }
+      },
+      {
+        "question": {
+          "es": "¿Qué pasa si dejas fuera una dependencia del array para «optimizar más»?",
+          "en": "What happens if you leave a dependency out of the array to \"optimize harder\"?"
+        },
+        "answer": {
+          "es": "Cambias un problema de rendimiento por uno de corrección, que es peor. El valor cacheado se queda con datos viejos y la interfaz muestra algo que ya no es cierto — un bug intermitente, difícil de reproducir y que no aparece en desarrollo con pocos datos. La regla del linter de hooks existe por esto y no conviene silenciarla sin un motivo escrito.",
+          "en": "You trade a performance problem for a correctness one, which is worse. The cached value keeps stale data and the UI shows something that's no longer true — an intermittent bug, hard to reproduce, invisible in development with little data. The hooks lint rule exists for this and shouldn't be silenced without a written reason."
+        }
+      },
+      {
+        "question": {
+          "es": "Con 2.000 filas visibles a la vez en lugar de 50, ¿bastaría con esto?",
+          "en": "With 2,000 rows visible at once instead of 50, would this be enough?"
+        },
+        "answer": {
+          "es": "No. Memoizar evita renders innecesarios, pero 2.000 nodos en el DOM son caros aunque solo se pinten una vez: el navegador tiene que calcular estilos y layout para todos. Ahí la solución es la virtualización — renderizar solo las filas visibles en la ventana más un pequeño margen. Es un problema distinto: uno es coste de React, el otro es coste del DOM.",
+          "en": "No. Memoizing avoids unnecessary renders, but 2,000 DOM nodes are expensive even painted once: the browser has to compute styles and layout for all of them. There the answer is virtualization — rendering only the rows in the viewport plus a small buffer. It's a different problem: one is React's cost, the other is the DOM's."
+        }
+      },
+      {
+        "question": {
+          "es": "¿Cómo lo medirías para demostrar que tu arreglo funcionó?",
+          "en": "How would you measure it to prove your fix worked?"
+        },
+        "answer": {
+          "es": "El Profiler de React DevTools, grabando la misma interacción antes y después: da el número de renders por componente y el tiempo de cada commit. Como número de cara al equipo, el INP (Interaction to Next Paint) de Core Web Vitals, que es lo que percibe el usuario al escribir. Un contador de renders sirve para diagnosticar, pero no es la prueba que se lleva a una revisión.",
+          "en": "React DevTools' Profiler, recording the same interaction before and after: it gives render counts per component and the time of each commit. As a number to show the team, Core Web Vitals' INP (Interaction to Next Paint), which is what the user actually feels while typing. A render counter is fine for diagnosis, but it isn't the evidence you take to a review."
+        }
+      }
+    ],
+    "rubric": []
+  },
+
+  "reward": {
+    "baseXp": 420,
+    "flawlessBonus": 160,
+    "noHintBonus": 100,
+    "comboMultiplierCap": 2,
+    "achievements": ["render-surgeon", "algorithm-slayer"]
+  },
+
+  "solution": {
+    "files": [
+      {
+        "path": "src/Dashboard.jsx",
+        "content": "import { useState, useMemo, useCallback, memo } from 'react';\nimport { countRender } from './renderCounter';\n\nconst ROWS = Array.from({ length: 2000 }, (_, i) => ({\n  id: i,\n  name: `Jugador ${i}`,\n  score: (i * 37) % 500,\n}));\n\nconst Row = memo(function Row({ player, onSelect }) {\n  countRender('Row');\n  return (\n    <tr onClick={() => onSelect(player.id)}>\n      <td>{player.name}</td>\n      <td>{player.score}</td>\n    </tr>\n  );\n});\n\nconst Toolbar = memo(function Toolbar({ onReset }) {\n  countRender('Toolbar');\n  return <button onClick={onReset}>Reiniciar</button>;\n});\n\nexport default function Dashboard() {\n  countRender('Dashboard');\n  const [query, setQuery] = useState('');\n  const [selected, setSelected] = useState(null);\n\n  const visible = useMemo(\n    () => ROWS.filter((row) => row.name.toLowerCase().includes(query.toLowerCase())),\n    [query],\n  );\n\n  const handleSelect = useCallback((id) => setSelected(id), []);\n  const handleReset = useCallback(() => setQuery(''), []);\n\n  return (\n    <div>\n      <input value={query} onChange={(e) => setQuery(e.target.value)} />\n      <Toolbar onReset={handleReset} />\n      <p>Seleccionado: {selected ?? '—'}</p>\n      <table>\n        <tbody>\n          {visible.slice(0, 50).map((player) => (\n            <Row key={player.id} player={player} onSelect={handleSelect} />\n          ))}\n        </tbody>\n      </table>\n    </div>\n  );\n}\n"
+      }
+    ],
+    "explanation": {
+      "es": "Las tres piezas encajadas en el orden correcto. `useMemo` ata el filtrado a `query`, así que cambiar la selección ya no recorre 2.000 elementos. `useCallback` con dependencias vacías da manejadores estables — posible porque `handleSelect` recibe el `id` como argumento en lugar de capturarlo. Y solo entonces `memo` sirve de algo: al pulsar una fila, las otras 49 ven props idénticas y no se repintan. Nota que el `onClick` interno de `Row` sigue siendo una arrow en línea, y está bien: es un manejador del DOM, no una prop que alguien compare.",
+      "en": "The three pieces slotted together in the right order. `useMemo` ties the filtering to `query`, so changing the selection no longer walks 2,000 items. `useCallback` with empty dependencies gives stable handlers — possible because `handleSelect` takes the `id` as an argument instead of capturing it. And only then does `memo` buy anything: clicking one row leaves the other 49 seeing identical props, so they don't repaint. Note that `Row`'s internal `onClick` is still an inline arrow, and that's fine: it's a DOM handler, not a prop anyone compares."
+    }
+  }
+}

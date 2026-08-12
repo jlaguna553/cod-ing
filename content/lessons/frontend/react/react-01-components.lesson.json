@@ -1,0 +1,202 @@
+{
+  "$schema": "../../../schema/lesson.schema.json",
+  "schemaVersion": 1,
+
+  "id": "react-01-components",
+  "track": "frontend",
+  "module": "react",
+  "order": 1,
+
+  "kind": "concept",
+  "difficulty": "novice",
+  "estimatedMinutes": 16,
+
+  "title": {
+    "es": "Un componente es una función que devuelve interfaz",
+    "en": "A component is a function that returns UI"
+  },
+  "summary": {
+    "es": "Descubre que React no inventa nada raro: un componente es una función de JavaScript normal. Aprende las tres reglas que el compilador te va a exigir desde el primer día.",
+    "en": "Discover that React invents nothing exotic: a component is an ordinary JavaScript function. Learn the three rules the compiler will hold you to from day one."
+  },
+  "concepts": ["react", "components", "jsx", "composition"],
+  "prerequisites": ["js-02-functions"],
+
+  "runtime": {
+    "kind": "sandpack",
+    "dependencies": { "react": "^19.0.0", "react-dom": "^19.0.0" },
+    "timeoutMs": 15000
+  },
+
+  "workspace": {
+    "entry": "src/App.jsx",
+    "allowCreate": true,
+    "allowDelete": false,
+    "protectedPaths": ["src/main.jsx"],
+    "files": [
+      {
+        "path": "src/App.jsx",
+        "content": "// TODO 1: este componente no cumple una de las tres reglas\nfunction welcomeCard() {\n  return <p>Bienvenida a la partida</p>;\n}\n\n// TODO 2: falta que devuelva algo\nfunction ScoreBadge() {\n  <span>0 puntos</span>;\n}\n\nexport default function App() {\n  return (\n    <div>\n      {/* TODO 3: usa aquí los dos componentes de arriba */}\n    </div>\n  );\n}\n",
+        "active": true
+      },
+      {
+        "path": "src/main.jsx",
+        "content": "import { createRoot } from 'react-dom/client';\nimport App from './App';\n\ncreateRoot(document.getElementById('root')).render(<App />);\n",
+        "readOnly": true
+      }
+    ]
+  },
+
+  "rules": [
+    {
+      "id": "capitalized-component",
+      "kind": "regex-must",
+      "file": "src/App.jsx",
+      "pattern": "function\\s+WelcomeCard\\s*\\(",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Un componente debe empezar por mayúscula. En minúscula, React lo trata como una etiqueta HTML y busca un elemento `<welcomecard>` que no existe.",
+        "en": "A component must start with a capital letter. In lowercase, React treats it as an HTML tag and looks for a `<welcomecard>` element that doesn't exist."
+      },
+      "successMessage": {
+        "es": "Mayúscula inicial: React ya sabe que es un componente tuyo.",
+        "en": "Capitalized: React now knows it's your component."
+      },
+      "points": 25
+    },
+    {
+      "id": "score-returns",
+      "kind": "regex-must",
+      "file": "src/App.jsx",
+      "pattern": "function\\s+ScoreBadge\\s*\\(\\s*\\)\\s*\\{[\\s\\S]{0,80}return",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "`ScoreBadge` no devuelve nada. Un componente que no devuelve pinta exactamente eso: nada.",
+        "en": "`ScoreBadge` returns nothing. A component that returns nothing renders exactly that: nothing."
+      },
+      "points": 25
+    },
+    {
+      "id": "both-used",
+      "kind": "regex-must",
+      "file": "src/App.jsx",
+      "pattern": "<WelcomeCard\\s*/?>[\\s\\S]*<ScoreBadge\\s*/?>",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Usa los dos componentes dentro de `App`, como si fueran etiquetas.",
+        "en": "Use both components inside `App`, as if they were tags."
+      },
+      "points": 25
+    },
+    {
+      "id": "no-lowercase-usage",
+      "kind": "regex-forbid",
+      "file": "src/App.jsx",
+      "pattern": "<welcomeCard|<welcomecard",
+      "phase": "type",
+      "severity": "damage",
+      "message": {
+        "es": "¡Daño! En minúscula React lo interpreta como etiqueta HTML nativa, no como tu componente.",
+        "en": "Damage! In lowercase React reads it as a native HTML tag, not as your component."
+      },
+      "points": 0
+    },
+    {
+      "id": "renders-text",
+      "kind": "dom-assert",
+      "selector": "p",
+      "assert": "textContains",
+      "expected": "Bienvenida",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "El texto de bienvenida debe verse en la página.",
+        "en": "The welcome text should appear on the page."
+      },
+      "points": 20
+    }
+  ],
+
+  "steps": [
+    {
+      "id": "step-1-just-functions",
+      "title": {
+        "es": "No hay magia: son funciones",
+        "en": "There's no magic: they're functions"
+      },
+      "body": {
+        "es": "Un componente de React es una **función de JavaScript que devuelve la interfaz**. Nada más. Si ya sabes escribir funciones, ya sabes la mitad de React.\n\n```jsx\nfunction Saludo() {\n  return <h1>Hola</h1>;\n}\n```\n\nEso que parece HTML dentro del JavaScript es **JSX**, y lo verás en detalle en la siguiente lección. Por ahora basta con saber que describe lo que se va a pintar.\n\nUsar el componente se parece a escribir una etiqueta:\n\n```jsx\n<Saludo />\n```\n\nY aquí están las **tres reglas** que React te va a exigir siempre:\n\n1. **El nombre empieza por mayúscula.** Es cómo React distingue tus componentes (`<Saludo />`) de las etiquetas nativas (`<div />`). En minúscula buscará un elemento HTML llamado así y no encontrará nada.\n2. **Tiene que devolver algo.** Una función sin `return` devuelve `undefined`, y un componente que devuelve `undefined` no pinta nada. Es el bug silencioso número uno de quien empieza: sin error en consola, sin nada en pantalla.\n3. **Devuelve un único elemento raíz.** Dos elementos hermanos sueltos no valen; hay que envolverlos.",
+        "en": "A React component is **a JavaScript function that returns UI**. That's it. If you can write functions, you already know half of React.\n\n```jsx\nfunction Greeting() {\n  return <h1>Hello</h1>;\n}\n```\n\nThat HTML-looking thing inside JavaScript is **JSX**, and you'll see it in detail next lesson. For now it's enough to know it describes what gets painted.\n\nUsing the component looks like writing a tag:\n\n```jsx\n<Greeting />\n```\n\nAnd here are the **three rules** React will always hold you to:\n\n1. **The name starts with a capital letter.** It's how React tells your components (`<Greeting />`) apart from native tags (`<div />`). In lowercase it will look for an HTML element by that name and find nothing.\n2. **It has to return something.** A function with no `return` returns `undefined`, and a component returning `undefined` paints nothing. It's the number one silent beginner bug: no console error, nothing on screen.\n3. **It returns a single root element.** Two loose sibling elements won't do; they have to be wrapped."
+      },
+      "task": {
+        "es": "Arregla los dos componentes rotos: uno incumple la regla del nombre, el otro la del `return`.",
+        "en": "Fix the two broken components: one breaks the naming rule, the other the `return` rule."
+      },
+      "focusFile": "src/App.jsx",
+      "focusLines": [1, 9],
+      "ruleIds": ["capitalized-component", "score-returns", "no-lowercase-usage"],
+      "xp": 40,
+      "hints": [
+        {
+          "id": "h-rename",
+          "tier": 1,
+          "text": {
+            "es": "Si renombras la función, acuérdate de renombrarla también donde la uses.",
+            "en": "If you rename the function, remember to rename it where you use it too."
+          },
+          "xpPenalty": 5,
+          "autoOfferAfterSeconds": 60
+        }
+      ]
+    },
+    {
+      "id": "step-2-compose",
+      "title": {
+        "es": "Componer es meter unos dentro de otros",
+        "en": "Composing is nesting them"
+      },
+      "body": {
+        "es": "La razón de partir la interfaz en componentes no es estética: es que cada uno se puede leer, probar y reutilizar por separado.\n\nUn componente puede usar otros dentro de su `return`, y así se construye la aplicación entera — un árbol de funciones que se llaman entre sí.\n\n```jsx\nfunction Panel() {\n  return (\n    <div>\n      <Saludo />\n      <Marcador />\n    </div>\n  );\n}\n```\n\nFíjate en los **paréntesis** después de `return`. Cuando el JSX ocupa varias líneas hacen falta: sin ellos, JavaScript inserta un punto y coma automático justo después del `return` y la función acaba devolviendo `undefined`. Es el mismo bug de antes, disfrazado de problema de formato.\n\nY recuerda la tercera regla: `Panel` devuelve **un** `<div>` que contiene a los dos, no dos elementos sueltos. Cuando no quieras añadir un `<div>` extra al HTML final, existe el fragmento: `<>...</>`.",
+        "en": "The reason to split the UI into components isn't aesthetic: it's that each one can be read, tested and reused on its own.\n\nA component can use others inside its `return`, and that's how the whole app gets built — a tree of functions calling each other.\n\n```jsx\nfunction Panel() {\n  return (\n    <div>\n      <Greeting />\n      <Scoreboard />\n    </div>\n  );\n}\n```\n\nNotice the **parentheses** after `return`. They're required once the JSX spans several lines: without them, JavaScript inserts an automatic semicolon right after `return` and the function ends up returning `undefined`. Same bug as before, disguised as a formatting issue.\n\nAnd remember rule three: `Panel` returns **one** `<div>` containing both, not two loose elements. When you don't want an extra `<div>` in the final HTML, there's the fragment: `<>...</>`."
+      },
+      "task": {
+        "es": "Usa `WelcomeCard` y `ScoreBadge` dentro de `App`.",
+        "en": "Use `WelcomeCard` and `ScoreBadge` inside `App`."
+      },
+      "focusFile": "src/App.jsx",
+      "focusLines": [11, 17],
+      "ruleIds": ["both-used", "renders-text"],
+      "xp": 40,
+      "bestPractice": {
+        "es": "**Un componente, una responsabilidad:** si una función de componente pasa de unas 60 líneas o mezcla varias ideas distintas, casi siempre esconde dos componentes dentro. Partirlo no es purismo: es lo que permite que el siguiente cambio toque un solo archivo.",
+        "en": "**One component, one job:** once a component function passes about 60 lines or mixes several distinct ideas, it's almost always hiding two components inside. Splitting it isn't purism: it's what lets the next change touch a single file."
+      }
+    }
+  ],
+
+  "drills": [],
+
+  "reward": {
+    "baseXp": 110,
+    "flawlessBonus": 45,
+    "noHintBonus": 25,
+    "comboMultiplierCap": 3,
+    "achievements": ["component-crafter"]
+  },
+
+  "solution": {
+    "files": [
+      {
+        "path": "src/App.jsx",
+        "content": "function WelcomeCard() {\n  return <p>Bienvenida a la partida</p>;\n}\n\nfunction ScoreBadge() {\n  return <span>0 puntos</span>;\n}\n\nexport default function App() {\n  return (\n    <div>\n      <WelcomeCard />\n      <ScoreBadge />\n    </div>\n  );\n}\n"
+      }
+    ],
+    "explanation": {
+      "es": "Tres arreglos que corresponden a las tres reglas: mayúscula inicial, `return` explícito, y un único elemento raíz que contiene a los dos hijos.",
+      "en": "Three fixes matching the three rules: initial capital, explicit `return`, and a single root element wrapping both children."
+    }
+  }
+}

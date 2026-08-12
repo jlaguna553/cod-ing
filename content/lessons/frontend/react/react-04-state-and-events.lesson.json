@@ -1,0 +1,303 @@
+{
+  "$schema": "../../../schema/lesson.schema.json",
+  "schemaVersion": 1,
+  "id": "react-04-state-and-events",
+  "track": "frontend",
+  "module": "react",
+  "order": 4,
+  "kind": "challenge",
+  "difficulty": "apprentice",
+  "estimatedMinutes": 30,
+  "title": {
+    "es": "Monta el proyecto y dale estado a un componente",
+    "en": "Scaffold the project and give a component state"
+  },
+  "summary": {
+    "es": "Crea el proyecto tú mismo desde la terminal con Vite, instala las dependencias y construye un contador con `useState`. Un proyecto de verdad, no un hueco que rellenar.",
+    "en": "Create the project yourself from the terminal with Vite, install the dependencies and build a counter with `useState`. A real project, not a blank to fill in."
+  },
+  "concepts": [
+    "react",
+    "usestate",
+    "events",
+    "npm",
+    "vite",
+    "immutability"
+  ],
+  "prerequisites": [
+    "react-02-jsx",
+    "react-03-props"
+  ],
+  "runtime": {
+    "kind": "sandpack",
+    "command": "npm run dev",
+    "previewPort": 5173,
+    "terminal": {
+      "enabled": true,
+      "allowedCommands": [
+        "npm",
+        "npx",
+        "ls",
+        "cat",
+        "cd",
+        "pwd",
+        "mkdir",
+        "clear",
+        "node"
+      ],
+      "greeting": {
+        "es": "Terminal lista. Monta el proyecto tú mismo: los archivos que generes aparecerán en el árbol de la izquierda.",
+        "en": "Terminal ready. Scaffold the project yourself: the files you generate will show up in the tree on the left."
+      }
+    },
+    "dependencies": {
+      "react": "^19.0.0",
+      "react-dom": "^19.0.0"
+    },
+    "timeoutMs": 30000
+  },
+  "workspace": {
+    "entry": "package.json",
+    "allowCreate": true,
+    "allowDelete": true,
+    "protectedPaths": [
+      "package.json"
+    ],
+    "files": [
+      {
+        "path": "README.md",
+        "content": "# Reto: contador\n\nEl proyecto todavía no existe. Lo vas a crear tú desde la terminal.\n\n1. `npm create vite@latest app -- --template react`\n2. `cd app && npm install`\n3. `npm run dev`\n",
+        "active": true
+      },
+      {
+        "path": "package.json",
+        "content": "{\n  \"name\": \"reto-contador\",\n  \"private\": true\n}\n",
+        "readOnly": true
+      }
+    ]
+  },
+  "rules": [
+    {
+      "id": "project-created",
+      "kind": "file-exists",
+      "file": "app/package.json",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Todavía no existe `app/package.json`. Crea el proyecto desde la terminal antes de seguir.",
+        "en": "There's no `app/package.json` yet. Create the project from the terminal before moving on."
+      },
+      "points": 25
+    },
+    {
+      "id": "deps-installed",
+      "kind": "file-exists",
+      "file": "app/node_modules/react/package.json",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "React no está instalado. Ejecuta la instalación de dependencias dentro de `app/`.",
+        "en": "React isn't installed. Run the dependency install inside `app/`."
+      },
+      "points": 20
+    },
+    {
+      "id": "ran-install",
+      "kind": "cli-transcript",
+      "expectedCommands": [
+        "npm create vite@latest",
+        "npm install"
+      ],
+      "allowExtra": true,
+      "phase": "run",
+      "severity": "warn",
+      "message": {
+        "es": "El objetivo es que teclees los comandos tú: crear el proyecto e instalar dependencias forma parte del oficio.",
+        "en": "The point is that you type the commands: scaffolding and installing is part of the craft."
+      },
+      "points": 10
+    },
+    {
+      "id": "uses-usestate",
+      "kind": "ast-query",
+      "file": "app/src/Counter.jsx",
+      "query": "CallExpression[callee.name=\"useState\"]",
+      "minMatches": 1,
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "El contador necesita estado: usa `useState`.",
+        "en": "The counter needs state: use `useState`."
+      },
+      "points": 25
+    },
+    {
+      "id": "no-direct-mutation",
+      "kind": "regex-forbid",
+      "file": "app/src/Counter.jsx",
+      "pattern": "\\bcount\\s*(\\+\\+|--|\\+=|=\\s*count\\s*\\+)",
+      "phase": "type",
+      "severity": "damage",
+      "message": {
+        "es": "¡Daño! Modificar la variable de estado directamente no repinta nada. React solo se entera si llamas a la función actualizadora.",
+        "en": "Damage! Mutating the state variable directly repaints nothing. React only finds out if you call the setter."
+      },
+      "points": 0
+    },
+    {
+      "id": "functional-update",
+      "kind": "regex-must",
+      "file": "app/src/Counter.jsx",
+      "pattern": "set[A-Z]\\w*\\(\\s*\\(?\\s*\\w+\\s*\\)?\\s*=>",
+      "phase": "submit",
+      "severity": "warn",
+      "message": {
+        "es": "Cuando el valor nuevo depende del anterior, pasa una función al actualizador en lugar del valor. Evita quedarte con un valor obsoleto si se agrupan varias actualizaciones.",
+        "en": "When the new value depends on the previous one, pass a function to the setter instead of the value. It avoids reading a stale value when updates get batched."
+      },
+      "points": 20
+    },
+    {
+      "id": "button-works",
+      "kind": "dom-assert",
+      "selector": "button",
+      "assert": "exists",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Falta el botón que incrementa el contador.",
+        "en": "The button that increments the counter is missing."
+      },
+      "points": 15
+    }
+  ],
+  "steps": [
+    {
+      "id": "step-1-scaffold",
+      "title": {
+        "es": "Crea el proyecto tú, desde la terminal",
+        "en": "Create the project yourself, from the terminal"
+      },
+      "body": {
+        "es": "En la pestaña **Terminal** tienes una consola. Empieza por generar el andamiaje del proyecto: la herramienta estándar hoy es **Vite**, y se invoca con `npm create`:\n\n```bash\nnpm create vite@latest app -- --template react\n```\n\nLuego entra en la carpeta, instala las dependencias y arranca el servidor de desarrollo. Verás el árbol de la izquierda llenarse con los archivos que el comando genera.\n\nHacerlo tú es a propósito: **saber montar un proyecto es parte de saber React.** Quien solo ha rellenado huecos en un editor online se queda atascado el primer día que le dan un repositorio vacío.\n\n> Nota honesta sobre esta terminal: es una simulación determinista, no un Node real. Los comandos, la estructura que genera y los errores son fieles, pero no puedes instalar un paquete cualquiera de npm — solo las plantillas de la lección.",
+        "en": "The **Terminal** tab gives you a console. Start by scaffolding the project: today's standard tool is **Vite**, invoked through `npm create`:\n\n```bash\nnpm create vite@latest app -- --template react\n```\n\nThen step into the folder, install the dependencies and start the dev server. You'll watch the tree on the left fill up with the files the command generates.\n\nDoing it yourself is deliberate: **knowing how to stand a project up is part of knowing React.** Someone who has only filled blanks in an online editor freezes on their first day with an empty repository.\n\n> An honest note about this terminal: it's a deterministic simulation, not a real Node. The commands, the structure it generates and the errors are faithful, but you can't install an arbitrary npm package — only the lesson's templates."
+      },
+      "task": {
+        "es": "Crea el proyecto con Vite, instala las dependencias y arranca el servidor de desarrollo.",
+        "en": "Scaffold the project with Vite, install the dependencies and start the dev server."
+      },
+      "ruleIds": [
+        "project-created",
+        "deps-installed",
+        "ran-install"
+      ],
+      "xp": 50,
+      "hints": [
+        {
+          "id": "h-cd",
+          "tier": 1,
+          "text": {
+            "es": "Tras crear el proyecto tienes que **entrar en la carpeta** antes de instalar: npm instala en el directorio donde estás.",
+            "en": "After scaffolding you have to **step into the folder** before installing: npm installs into whatever directory you're in."
+          },
+          "xpPenalty": 5,
+          "autoOfferAfterSeconds": 120
+        }
+      ],
+      "bestPractice": {
+        "es": "**Por qué `npm create vite` y no clonar una plantilla de internet:** el generador oficial trae la configuración mínima y actual. Las plantillas de terceros arrastran dependencias que nadie audita y quedan desfasadas en meses.",
+        "en": "**Why `npm create vite` instead of cloning a template off the internet:** the official generator ships the minimal, current configuration. Third-party templates drag in dependencies nobody audits and go stale within months."
+      }
+    },
+    {
+      "id": "step-2-state",
+      "title": {
+        "es": "Un componente que recuerda",
+        "en": "A component that remembers"
+      },
+      "body": {
+        "es": "Una variable normal dentro de un componente no sirve para guardar algo que cambia: cada vez que React repinta, la función se ejecuta entera otra vez y la variable vuelve a su valor inicial.\n\n`useState` resuelve exactamente eso. Devuelve dos cosas: el valor actual y una función para cambiarlo.\n\n```jsx\nconst [nombre, setNombre] = useState('invitado');\n```\n\nLa clave está en la segunda: **llamar al actualizador es lo que le dice a React que tiene que repintar.** Modificar la variable directamente no repinta nada — el valor cambia en memoria y la pantalla se queda igual, que es el bug más común de quien empieza.\n\nCrea `app/src/Counter.jsx` con un componente que muestre un número y un botón que lo suba.",
+        "en": "A plain variable inside a component can't hold something that changes: every time React repaints, the function runs again from the top and the variable resets.\n\n`useState` exists for exactly that. It returns two things: the current value and a function to change it.\n\n```jsx\nconst [name, setName] = useState('guest');\n```\n\nThe second one is the point: **calling the setter is what tells React to repaint.** Mutating the variable directly repaints nothing — the value changes in memory and the screen stays put, which is the single most common beginner bug.\n\nCreate `app/src/Counter.jsx` with a component that shows a number and a button that raises it."
+      },
+      "task": {
+        "es": "Crea `app/src/Counter.jsx` con un contador y un botón que lo incremente, y móntalo en `App.jsx`.",
+        "en": "Create `app/src/Counter.jsx` with a counter and a button that increments it, then mount it in `App.jsx`."
+      },
+      "focusFile": "app/src/Counter.jsx",
+      "ruleIds": [
+        "uses-usestate",
+        "button-works",
+        "no-direct-mutation"
+      ],
+      "xp": 60,
+      "hints": [
+        {
+          "id": "h-import",
+          "tier": 1,
+          "text": {
+            "es": "`useState` hay que importarlo: viene de `react`.",
+            "en": "`useState` has to be imported: it comes from `react`."
+          },
+          "xpPenalty": 5,
+          "autoOfferAfterSeconds": 90
+        },
+        {
+          "id": "h-handler",
+          "tier": 2,
+          "text": {
+            "es": "En `onClick` pasa la **función**, no su resultado. `onClick={sumar}` la ejecuta al pulsar; `onClick={sumar()}` la ejecuta al renderizar.",
+            "en": "Pass the **function** to `onClick`, not its result. `onClick={add}` runs it on click; `onClick={add()}` runs it on render."
+          },
+          "xpPenalty": 10
+        }
+      ]
+    },
+    {
+      "id": "step-3-functional",
+      "title": {
+        "es": "El bug que aparece al pulsar dos veces seguidas",
+        "en": "The bug that shows up when you click twice fast"
+      },
+      "body": {
+        "es": "Prueba una cosa: haz que el botón incremente **dos veces** llamando al actualizador dos veces seguidas con el valor nuevo. Sube de uno en uno, no de dos en dos.\n\nNo es un fallo de React. Durante un mismo evento, el valor que leíste al principio no cambia: las dos llamadas calculan lo mismo a partir del mismo número, y la segunda pisa a la primera.\n\nLa solución es pasar una **función** al actualizador en lugar de un valor. Así React te entrega el valor más reciente en el momento de aplicar el cambio, en vez de usar el que capturaste al renderizar.\n\nEsta distinción parece un detalle y es la respuesta a una pregunta clásica de entrevista de React.",
+        "en": "Try something: make the button increment **twice** by calling the setter twice in a row with the new value. It goes up by one, not by two.\n\nThat's not a React bug. Within a single event, the value you read at the top doesn't change: both calls compute from the same number, and the second overwrites the first.\n\nThe fix is to pass a **function** to the setter instead of a value. React then hands you the most recent value at the moment it applies the change, rather than the one you captured at render time.\n\nThis distinction looks like a detail and it's the answer to a classic React interview question."
+      },
+      "task": {
+        "es": "Reescribe el incremento para que use la forma funcional del actualizador.",
+        "en": "Rewrite the increment so it uses the functional form of the setter."
+      },
+      "focusFile": "app/src/Counter.jsx",
+      "ruleIds": [
+        "functional-update"
+      ],
+      "xp": 55,
+      "bestPractice": {
+        "es": "**Regla práctica:** si el valor nuevo depende del anterior, forma funcional siempre. Si no depende (poner un valor fijo, reiniciar a cero), pasar el valor directo está bien. Aplicar la forma funcional por defecto no cuesta nada y elimina una familia entera de bugs difíciles de reproducir.",
+        "en": "**Rule of thumb:** if the new value depends on the previous one, always use the functional form. If it doesn't (setting a fixed value, resetting to zero), passing the value directly is fine. Defaulting to the functional form costs nothing and removes a whole family of hard-to-reproduce bugs."
+      }
+    }
+  ],
+  "drills": [],
+  "reward": {
+    "baseXp": 220,
+    "flawlessBonus": 80,
+    "noHintBonus": 50,
+    "comboMultiplierCap": 3,
+    "achievements": [
+      "project-founder",
+      "state-handler"
+    ]
+  },
+  "solution": {
+    "files": [
+      {
+        "path": "app/src/Counter.jsx",
+        "content": "import { useState } from 'react';\n\nexport function Counter() {\n  const [count, setCount] = useState(0);\n\n  const increment = () => setCount((previous) => previous + 1);\n\n  return (\n    <div>\n      <p>{count}</p>\n      <button onClick={increment}>+1</button>\n    </div>\n  );\n}\n"
+      }
+    ],
+    "explanation": {
+      "es": "`useState(0)` fija el valor inicial. `setCount((previous) => previous + 1)` calcula a partir del valor más reciente, así que dos llamadas seguidas suman dos. Y `onClick={increment}` pasa la función sin ejecutarla.",
+      "en": "`useState(0)` sets the initial value. `setCount((previous) => previous + 1)` computes from the freshest value, so two calls in a row add two. And `onClick={increment}` passes the function without calling it."
+    }
+  }
+}

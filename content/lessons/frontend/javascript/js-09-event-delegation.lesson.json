@@ -1,0 +1,266 @@
+{
+  "$schema": "../../../schema/lesson.schema.json",
+  "schemaVersion": 1,
+  "id": "js-09-event-delegation",
+  "track": "frontend",
+  "module": "javascript",
+  "order": 9,
+  "kind": "challenge",
+  "difficulty": "adept",
+  "estimatedMinutes": 28,
+  "title": {
+    "es": "5.000 filas, un solo listener",
+    "en": "5,000 rows, one listener"
+  },
+  "summary": {
+    "es": "Una tabla con miles de filas y un listener por fila congela la pestaña. Aprende delegación de eventos y arréglalo con un único listener, entendiendo por qué funciona.",
+    "en": "A table with thousands of rows and one listener per row freezes the tab. Learn event delegation and fix it with a single listener, understanding why it works."
+  },
+  "concepts": [
+    "dom",
+    "events",
+    "event-bubbling",
+    "performance",
+    "memory-leaks"
+  ],
+  "prerequisites": [
+    "js-06-dom-manipulation",
+    "js-08-event-listeners"
+  ],
+  "runtime": {
+    "kind": "dom",
+    "dependencies": {},
+    "timeoutMs": 8000
+  },
+  "workspace": {
+    "entry": "app.js",
+    "allowCreate": false,
+    "allowDelete": false,
+    "protectedPaths": [
+      "bench.js"
+    ],
+    "files": [
+      {
+        "path": "app.js",
+        "content": "const table = document.querySelector('#grid tbody');\n\nexport function renderRows(rows) {\n  table.innerHTML = '';\n\n  for (const row of rows) {\n    const tr = document.createElement('tr');\n    tr.innerHTML = `\n      <td>${row.id}</td>\n      <td>${row.name}</td>\n      <td><button class=\"select\">Seleccionar</button></td>\n    `;\n\n    // Un listener por fila: con 5.000 filas son 5.000 listeners.\n    tr.querySelector('.select').addEventListener('click', () => {\n      document.querySelector('#selected').textContent = row.name;\n    });\n\n    table.appendChild(tr);\n  }\n}\n\nrenderRows(window.__ROWS__);\n",
+        "active": true
+      },
+      {
+        "path": "index.html",
+        "content": "<!doctype html>\n<html>\n  <body>\n    <p>Seleccionado: <span id=\"selected\">—</span></p>\n    <table id=\"grid\"><tbody></tbody></table>\n    <script src=\"./bench.js\"></script>\n    <script type=\"module\" src=\"./app.js\"></script>\n  </body>\n</html>\n",
+        "readOnly": true
+      },
+      {
+        "path": "bench.js",
+        "content": "// Genera 5.000 filas y mide el tiempo de renderizado.\nwindow.__ROWS__ = Array.from({ length: 5000 }, (_, i) => ({\n  id: i + 1,\n  name: `Fila ${i + 1}`,\n}));\n\nwindow.__measure__ = (label, fn) => {\n  const start = performance.now();\n  fn();\n  console.log(`${label}: ${(performance.now() - start).toFixed(1)}ms`);\n};\n",
+        "readOnly": true,
+        "hidden": false
+      }
+    ]
+  },
+  "rules": [
+    {
+      "id": "single-listener",
+      "kind": "ast-query",
+      "file": "app.js",
+      "query": "CallExpression[callee.property.name=\"addEventListener\"]",
+      "minMatches": 1,
+      "maxMatches": 1,
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Debe quedar exactamente UN `addEventListener` en todo el archivo.",
+        "en": "Exactly ONE `addEventListener` should remain in the whole file."
+      },
+      "successMessage": {
+        "es": "Un solo listener para 5.000 filas.",
+        "en": "One listener for 5,000 rows."
+      },
+      "points": 35
+    },
+    {
+      "id": "listener-outside-loop",
+      "kind": "ast-query",
+      "file": "app.js",
+      "query": "ForOfStatement CallExpression[callee.property.name=\"addEventListener\"], ForStatement CallExpression[callee.property.name=\"addEventListener\"], ForInStatement CallExpression[callee.property.name=\"addEventListener\"]",
+      "minMatches": 0,
+      "maxMatches": 0,
+      "phase": "submit",
+      "severity": "damage",
+      "message": {
+        "es": "¡Daño! Sigue habiendo un `addEventListener` dentro del bucle. Ese es justo el problema que hay que eliminar.",
+        "en": "Damage! There's still an `addEventListener` inside the loop. That's exactly the problem you're removing."
+      },
+      "points": 0
+    },
+    {
+      "id": "identifies-target",
+      "kind": "regex-must",
+      "file": "app.js",
+      "pattern": "event\\.target|e\\.target",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Con un solo listener necesitas averiguar qué elemento se pulsó realmente. Esa información viene en el objeto del evento.",
+        "en": "With a single listener you need to work out which element was actually clicked. That information lives on the event object."
+      },
+      "points": 25
+    },
+    {
+      "id": "filters-clicks",
+      "kind": "regex-must",
+      "file": "app.js",
+      "pattern": "\\.closest\\(|\\.matches\\(",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Un clic en cualquier parte de la tabla llega a tu listener, también en una celda vacía. Filtra para actuar solo cuando el clic venga de un botón de selección.",
+        "en": "A click anywhere in the table reaches your listener, empty cells included. Filter so you only act when the click came from a select button."
+      },
+      "points": 25
+    },
+    {
+      "id": "no-inline-handlers",
+      "kind": "regex-forbid",
+      "file": "app.js",
+      "pattern": "onclick\\s*=",
+      "phase": "submit",
+      "severity": "warn",
+      "message": {
+        "es": "`onclick` en el HTML mezcla estructura y comportamiento, y solo admite un manejador por elemento.",
+        "en": "`onclick` in the HTML mixes structure with behaviour, and only allows one handler per element."
+      },
+      "points": 10
+    },
+    {
+      "id": "still-works",
+      "kind": "dom-assert",
+      "selector": "#selected",
+      "assert": "exists",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "La selección debe seguir funcionando después del refactor.",
+        "en": "Selection must still work after the refactor."
+      },
+      "points": 20
+    }
+  ],
+  "steps": [
+    {
+      "id": "step-1-measure",
+      "title": {
+        "es": "Mide antes de optimizar",
+        "en": "Measure before optimizing"
+      },
+      "body": {
+        "es": "Ejecuta el código tal cual está y mira la consola. Cinco mil filas, cinco mil closures, cinco mil listeners registrados en el navegador.\n\nEl coste no es solo el tiempo de arranque. Cada listener mantiene viva una referencia al objeto `row` de su fila, así que la memoria no se libera aunque quites la fila del DOM sin más — es una fuga de memoria clásica en tablas que se repintan a menudo.\n\nY hay un tercer problema, el más molesto en la práctica: si mañana añades filas nuevas por AJAX, **no tendrán listener**. Habrá que acordarse de registrarlo también ahí. Ese \"acordarse\" es exactamente lo que falla en producción.",
+        "en": "Run the code as it stands and watch the console. Five thousand rows, five thousand closures, five thousand listeners registered with the browser.\n\nThe cost isn't just startup time. Each listener holds a live reference to its row's `row` object, so memory isn't reclaimed even when you drop the row from the DOM — a classic leak in tables that repaint often.\n\nAnd there's a third problem, the most annoying one in practice: if tomorrow you append new rows over AJAX, **they'll have no listener**. Someone will have to remember to wire those up too. That \"remember to\" is precisely what fails in production."
+      },
+      "task": {
+        "es": "Ejecuta el código y anota el tiempo de renderizado que aparece en consola.",
+        "en": "Run the code and note the render time printed in the console."
+      },
+      "focusFile": "app.js",
+      "focusLines": [
+        13,
+        17
+      ],
+      "ruleIds": [],
+      "xp": 25
+    },
+    {
+      "id": "step-2-bubbling",
+      "title": {
+        "es": "Los eventos suben",
+        "en": "Events travel upward"
+      },
+      "body": {
+        "es": "Cuando pulsas un botón dentro de una celda, el navegador no lanza el evento solo en ese botón. Lo propaga hacia arriba por todos sus ancestros: botón → celda → fila → cuerpo de tabla → tabla → `body` → `document`. Eso es el **burbujeo**.\n\nLa consecuencia práctica es enorme: **un listener en la tabla recibe los clics de todas sus filas**, incluidas las que todavía no existen.\n\nEl objeto del evento trae dos propiedades que suelen confundirse, y la diferencia es justo lo que hace posible esta técnica:\n\n- `currentTarget` → el elemento donde **registraste** el listener. Siempre la tabla.\n- `target` → el elemento donde **ocurrió** el clic de verdad. El botón concreto.\n\nCon `target` sabes qué fila pulsó el usuario aunque el listener viva en el ancestro. Falta un detalle: si el usuario pincha en un hueco de la tabla, `target` será otra cosa. Necesitas comprobar que el clic viene realmente de un botón de selección antes de actuar — el DOM tiene métodos para preguntar «¿este elemento encaja con este selector?» y «¿tengo algún ancestro que encaje?».",
+        "en": "When you click a button inside a cell, the browser doesn't fire the event only on that button. It propagates upward through every ancestor: button → cell → row → table body → table → `body` → `document`. That's **bubbling**.\n\nThe practical consequence is huge: **one listener on the table receives clicks from all its rows**, including rows that don't exist yet.\n\nThe event object carries two properties people routinely mix up, and the difference is exactly what makes this technique possible:\n\n- `currentTarget` → the element where you **registered** the listener. Always the table.\n- `target` → the element where the click **actually happened**. The specific button.\n\nWith `target` you know which row the user hit even though the listener lives on the ancestor. One detail is missing: if the user clicks an empty patch of table, `target` will be something else. You need to check the click really came from a select button before acting — the DOM has methods for asking \"does this element match this selector?\" and \"do I have an ancestor that matches?\"."
+      },
+      "task": {
+        "es": "Refactoriza `renderRows` para que use un único listener registrado fuera del bucle.",
+        "en": "Refactor `renderRows` to use a single listener registered outside the loop."
+      },
+      "focusFile": "app.js",
+      "ruleIds": [
+        "single-listener",
+        "listener-outside-loop",
+        "identifies-target",
+        "filters-clicks",
+        "still-works",
+        "no-inline-handlers"
+      ],
+      "xp": 80,
+      "hints": [
+        {
+          "id": "h-where",
+          "tier": 1,
+          "text": {
+            "es": "El listener no debe registrarse dentro de `renderRows`: si esa función se llama dos veces, tendrías dos listeners. Regístralo una sola vez, sobre el contenedor.",
+            "en": "The listener shouldn't be registered inside `renderRows`: if that function runs twice you'd have two listeners. Register it once, on the container."
+          },
+          "xpPenalty": 8,
+          "autoOfferAfterSeconds": 120
+        },
+        {
+          "id": "h-row-data",
+          "tier": 2,
+          "text": {
+            "es": "Ya no tienes la variable `row` en el manejador. Guarda el dato que necesites en un atributo `data-` de la fila y léelo desde el elemento pulsado subiendo hasta el `<tr>`.",
+            "en": "You no longer have the `row` variable inside the handler. Stash whatever you need in a `data-` attribute on the row and read it from the clicked element by walking up to the `<tr>`."
+          },
+          "xpPenalty": 15
+        }
+      ],
+      "bestPractice": {
+        "es": "**Estándar de la industria:** la delegación de eventos es la base de cómo React monta su sistema de eventos sintéticos — un puñado de listeners en la raíz en lugar de uno por componente. Entenderla aquí explica por qué en React no hay que preocuparse de quitar manejadores al desmontar.",
+        "en": "**Industry standard:** event delegation is the foundation of how React wires its synthetic event system — a handful of listeners at the root instead of one per component. Understanding it here explains why you never have to detach handlers on unmount in React."
+      }
+    },
+    {
+      "id": "step-3-limits",
+      "title": {
+        "es": "Cuándo NO delegar",
+        "en": "When NOT to delegate"
+      },
+      "body": {
+        "es": "Ninguna técnica es gratis, y en una entrevista la respuesta completa incluye sus límites.\n\n- **Eventos que no burbujean.** `focus`, `blur`, `mouseenter` y `mouseleave` no suben. Sus equivalentes que sí burbujean son `focusin`, `focusout` y, con cuidado, `mouseover`/`mouseout`.\n- **Con pocos elementos no compensa.** Para tres botones, un listener por botón es más directo de leer. La delegación gana con listas largas o con contenido que cambia.\n- **`stopPropagation()` a mitad de camino te deja sin evento.** Si un componente intermedio detiene la propagación, tu listener delegado no se entera nunca. Es un fallo difícil de diagnosticar y una buena razón para usar `stopPropagation` con mucha moderación.\n- **El filtrado se vuelve frágil si abusas.** Un `closest('.select')` que depende de una clase de CSS ata tu comportamiento a tus estilos. Un atributo `data-action` es más estable.",
+        "en": "No technique is free, and in an interview the complete answer includes its limits.\n\n- **Events that don't bubble.** `focus`, `blur`, `mouseenter` and `mouseleave` don't travel up. Their bubbling counterparts are `focusin`, `focusout` and, carefully, `mouseover`/`mouseout`.\n- **It doesn't pay off for a handful of elements.** For three buttons, one listener each reads more directly. Delegation wins on long lists or changing content.\n- **A `stopPropagation()` along the way leaves you with nothing.** If an intermediate component halts propagation, your delegated listener never hears about it. It's a nasty thing to debug and a good reason to use `stopPropagation` sparingly.\n- **Filtering gets brittle if you overdo it.** A `closest('.select')` that keys off a CSS class ties behaviour to styling. A `data-action` attribute is sturdier."
+      },
+      "task": {
+        "es": "Comprueba que el refactor sigue funcionando y ejecuta el benchmark de nuevo para comparar tiempos.",
+        "en": "Confirm the refactor still works and run the benchmark again to compare timings."
+      },
+      "focusFile": "app.js",
+      "ruleIds": [
+        "still-works"
+      ],
+      "xp": 40
+    }
+  ],
+  "drills": [],
+  "reward": {
+    "baseXp": 260,
+    "flawlessBonus": 90,
+    "noHintBonus": 60,
+    "comboMultiplierCap": 3,
+    "achievements": [
+      "dom-tamer",
+      "bubble-rider"
+    ]
+  },
+  "solution": {
+    "files": [
+      {
+        "path": "app.js",
+        "content": "const table = document.querySelector('#grid tbody');\nconst selected = document.querySelector('#selected');\n\nexport function renderRows(rows) {\n  table.innerHTML = '';\n\n  for (const row of rows) {\n    const tr = document.createElement('tr');\n    tr.dataset.name = row.name;\n    tr.innerHTML = `\n      <td>${row.id}</td>\n      <td>${row.name}</td>\n      <td><button class=\"select\" data-action=\"select\">Seleccionar</button></td>\n    `;\n    table.appendChild(tr);\n  }\n}\n\ntable.addEventListener('click', (event) => {\n  const button = event.target.closest('[data-action=\"select\"]');\n  if (!button) return;\n\n  selected.textContent = button.closest('tr').dataset.name;\n});\n\nrenderRows(window.__ROWS__);\n"
+      }
+    ],
+    "explanation": {
+      "es": "El listener vive en el `tbody` y se registra una sola vez, fuera de `renderRows` — así repintar la tabla no acumula manejadores. `closest('[data-action=\"select\"]')` hace dos trabajos a la vez: descarta los clics que no vienen de un botón y funciona aunque el usuario pulse sobre un icono dentro del botón. El dato de la fila viaja en un `data-` en lugar de en una closure, que es lo que permitía la fuga de memoria.",
+      "en": "The listener lives on the `tbody` and is registered once, outside `renderRows` — so repainting the table never stacks handlers. `closest('[data-action=\"select\"]')` does two jobs at once: it discards clicks that didn't come from a button, and it still works when the user hits an icon inside the button. The row's data rides in a `data-` attribute instead of a closure, which is what made the memory leak possible."
+    }
+  }
+}

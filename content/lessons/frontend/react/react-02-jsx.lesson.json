@@ -1,0 +1,299 @@
+{
+  "$schema": "../../../schema/lesson.schema.json",
+  "schemaVersion": 1,
+
+  "id": "react-02-jsx",
+  "track": "frontend",
+  "module": "react",
+  "order": 2,
+
+  "kind": "drill",
+  "difficulty": "novice",
+  "estimatedMinutes": 18,
+
+  "title": {
+    "es": "JSX: JavaScript disfrazado de HTML",
+    "en": "JSX: JavaScript wearing an HTML costume"
+  },
+  "summary": {
+    "es": "Las llaves, `className`, las listas con `key` y el renderizado condicional. Cuatro patrones que vas a escribir cientos de veces: aquí se graban en la memoria muscular.",
+    "en": "Curly braces, `className`, lists with `key`, and conditional rendering. Four patterns you'll write hundreds of times: here's where they stick."
+  },
+  "concepts": ["react", "jsx", "conditional-rendering", "lists", "keys"],
+  "prerequisites": ["react-01-components", "js-03-array-map"],
+
+  "runtime": {
+    "kind": "sandpack",
+    "dependencies": { "react": "^19.0.0", "react-dom": "^19.0.0" },
+    "timeoutMs": 15000
+  },
+
+  "workspace": {
+    "entry": "src/App.jsx",
+    "allowCreate": false,
+    "allowDelete": false,
+    "protectedPaths": ["src/main.jsx"],
+    "files": [
+      {
+        "path": "src/App.jsx",
+        "content": "const player = { name: 'Ada', level: 7, online: true };\nconst skills = ['JavaScript', 'CSS', 'React'];\n\nexport default function App() {\n  return (\n    <div class=\"profile\">\n      {/* TODO 1: el atributo de clase está mal escrito para JSX */}\n\n      {/* TODO 2: pinta el nombre y el nivel del jugador */}\n      <h1>NOMBRE</h1>\n      <p>Nivel NIVEL</p>\n\n      {/* TODO 3: muestra \"En línea\" solo si player.online es true */}\n\n      {/* TODO 4: pinta un <li> por cada habilidad */}\n      <ul></ul>\n    </div>\n  );\n}\n",
+        "active": true
+      },
+      {
+        "path": "src/main.jsx",
+        "content": "import { createRoot } from 'react-dom/client';\nimport App from './App';\n\ncreateRoot(document.getElementById('root')).render(<App />);\n",
+        "readOnly": true
+      }
+    ]
+  },
+
+  "rules": [
+    {
+      "id": "uses-classname",
+      "kind": "regex-must",
+      "file": "src/App.jsx",
+      "pattern": "className\\s*=",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "En JSX el atributo se llama `className`, no `class`: `class` es palabra reservada de JavaScript.",
+        "en": "In JSX the attribute is `className`, not `class`: `class` is a reserved JavaScript word."
+      },
+      "points": 15
+    },
+    {
+      "id": "no-class-attr",
+      "kind": "regex-forbid",
+      "file": "src/App.jsx",
+      "pattern": "\\sclass\\s*=\\s*[\"']",
+      "phase": "type",
+      "severity": "damage",
+      "message": {
+        "es": "¡Daño! `class=` no funciona en JSX. React lo ignora y el estilo no se aplica.",
+        "en": "Damage! `class=` doesn't work in JSX. React ignores it and the styling never lands."
+      },
+      "points": 0
+    },
+    {
+      "id": "interpolates-name",
+      "kind": "dom-assert",
+      "selector": "h1",
+      "assert": "textEquals",
+      "expected": "Ada",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "El `<h1>` debe mostrar el nombre del jugador, no el texto literal.",
+        "en": "The `<h1>` should show the player's name, not the literal text."
+      },
+      "points": 20
+    },
+    {
+      "id": "conditional-online",
+      "kind": "regex-must",
+      "file": "src/App.jsx",
+      "pattern": "player\\.online\\s*&&|player\\.online\\s*\\?",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Falta el renderizado condicional del estado «En línea».",
+        "en": "The conditional rendering of the \"Online\" state is missing."
+      },
+      "points": 25
+    },
+    {
+      "id": "list-with-map",
+      "kind": "dom-assert",
+      "selector": "li",
+      "assert": "countEquals",
+      "count": 3,
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Deben aparecer tres `<li>`, uno por habilidad.",
+        "en": "Three `<li>` elements should appear, one per skill."
+      },
+      "points": 25
+    },
+    {
+      "id": "has-key",
+      "kind": "regex-must",
+      "file": "src/App.jsx",
+      "pattern": "key\\s*=\\s*\\{",
+      "phase": "submit",
+      "severity": "warn",
+      "message": {
+        "es": "Cada elemento de una lista necesita `key`. Sin ella React avisa por consola y, en listas que cambian, reutiliza los nodos equivocados.",
+        "en": "Every item in a list needs a `key`. Without it React warns in the console and, in changing lists, reuses the wrong nodes."
+      },
+      "points": 20
+    }
+  ],
+
+  "steps": [
+    {
+      "id": "step-1-braces",
+      "title": {
+        "es": "Las llaves son la puerta a JavaScript",
+        "en": "Curly braces are the door back to JavaScript"
+      },
+      "body": {
+        "es": "JSX parece HTML pero es JavaScript. Dentro de él, **las llaves abren una ventana a cualquier expresión**:\n\n```jsx\n<h1>{usuario.nombre}</h1>\n<img src={urlAvatar} />\n<p>{2 + 2} intentos</p>\n```\n\nLa palabra importante es **expresión**: algo que produce un valor. `usuario.nombre` vale; `if (x) {...}` no, porque una sentencia `if` no produce un valor. Por eso las condiciones en JSX se escriben con operadores:\n\n```jsx\n{estaConectado && <span>En línea</span>}      // muestra o no muestra\n{estaConectado ? <Verde /> : <Gris />}        // uno u otro\n```\n\nY hay tres diferencias con HTML que te van a morder el primer día:\n\n- `class` → **`className`** (`class` es palabra reservada en JavaScript).\n- `for` → **`htmlFor`** (por lo mismo).\n- Los atributos compuestos van en camelCase: `onclick` → `onClick`, `tabindex` → `tabIndex`.",
+        "en": "JSX looks like HTML but it's JavaScript. Inside it, **curly braces open a window onto any expression**:\n\n```jsx\n<h1>{user.name}</h1>\n<img src={avatarUrl} />\n<p>{2 + 2} attempts</p>\n```\n\nThe key word is **expression**: something that produces a value. `user.name` qualifies; `if (x) {...}` doesn't, because an `if` statement produces no value. That's why conditions in JSX are written with operators:\n\n```jsx\n{isOnline && <span>Online</span>}       // show or don't\n{isOnline ? <Green /> : <Grey />}       // one or the other\n```\n\nAnd three differences from HTML will bite you on day one:\n\n- `class` → **`className`** (`class` is a reserved word in JavaScript).\n- `for` → **`htmlFor`** (same reason).\n- Compound attributes go camelCase: `onclick` → `onClick`, `tabindex` → `tabIndex`."
+      },
+      "task": {
+        "es": "Arregla el atributo de clase, pinta el nombre y el nivel, y muestra «En línea» solo cuando corresponda.",
+        "en": "Fix the class attribute, render the name and level, and show \"Online\" only when appropriate."
+      },
+      "focusFile": "src/App.jsx",
+      "focusLines": [6, 13],
+      "ruleIds": ["uses-classname", "no-class-attr", "interpolates-name", "conditional-online"],
+      "xp": 45,
+      "hints": [
+        {
+          "id": "h-and",
+          "tier": 1,
+          "text": {
+            "es": "Con `&&`, si la izquierda es falsa React no pinta nada. Cuidado con los números: `0 && <X/>` pinta un `0` en pantalla, porque `0` no es `false` sino un valor falsy que sí se renderiza.",
+            "en": "With `&&`, if the left side is false React renders nothing. Careful with numbers: `0 && <X/>` prints a `0` on screen, because `0` isn't `false` but a falsy value that does get rendered."
+          },
+          "xpPenalty": 5,
+          "autoOfferAfterSeconds": 75
+        }
+      ]
+    },
+    {
+      "id": "step-2-lists",
+      "title": {
+        "es": "Listas: `.map()` otra vez, y la `key`",
+        "en": "Lists: `.map()` again, and the `key`"
+      },
+      "body": {
+        "es": "Para pintar una lista no hay sintaxis especial: se usa el `.map()` que ya conoces, porque JSX admite un **array de elementos** donde espera contenido.\n\n```jsx\n<ul>\n  {habilidades.map((h) => <li key={h}>{h}</li>)}\n</ul>\n```\n\nLa parte que hay que entender de verdad es la `key`. React no repinta la lista entera cuando cambia: compara la anterior con la nueva y mueve, crea o borra lo justo. La `key` es lo que le dice **qué elemento es cuál** entre un render y el siguiente.\n\nSin `key`, React usa la posición. Y ahí llega el bug clásico: si borras el primer elemento de la lista, todos suben una posición, React cree que cambiaron de contenido, y cualquier estado interno —el texto de un `input`, un checkbox marcado— se queda pegado a la fila equivocada.\n\nPor eso **el índice del array es una mala `key`** en listas que se reordenan o se filtran: es exactamente la posición que ya usaba. Usa un identificador estable del dato.",
+        "en": "Rendering a list needs no special syntax: you use the `.map()` you already know, because JSX accepts an **array of elements** wherever it expects content.\n\n```jsx\n<ul>\n  {skills.map((skill) => <li key={skill}>{skill}</li>)}\n</ul>\n```\n\nThe part worth truly understanding is `key`. React doesn't repaint the whole list when it changes: it diffs the old against the new and moves, creates or deletes only what's needed. The `key` is what tells it **which element is which** between one render and the next.\n\nWithout a `key`, React falls back to position. And there's the classic bug: delete the first item and everything shifts up one, React thinks their contents changed, and any internal state — an `input`'s text, a ticked checkbox — stays glued to the wrong row.\n\nThat's why **the array index is a bad `key`** in lists that reorder or filter: it's exactly the position React was already using. Use a stable identifier from the data."
+      },
+      "task": {
+        "es": "Pinta un `<li>` por cada habilidad, con su `key`.",
+        "en": "Render one `<li>` per skill, each with its `key`."
+      },
+      "focusFile": "src/App.jsx",
+      "focusLines": [15, 16],
+      "ruleIds": ["list-with-map", "has-key"],
+      "xp": 45,
+      "bestPractice": {
+        "es": "**Regla práctica sobre `key`:** usa el `id` del dato. Si no hay `id`, un campo único como el nombre. El índice solo es aceptable si la lista es estática y nunca se reordena ni se filtra — y en cuanto alguien añada un filtro, dejará de serlo sin que nadie se acuerde.",
+        "en": "**Rule of thumb for `key`:** use the data's `id`. If there's no `id`, a unique field like the name. The index is only acceptable when the list is static and never reorders or filters — and the moment someone adds a filter, that stops being true and nobody remembers."
+      }
+    }
+  ],
+
+  "drills": [
+    {
+      "id": "drill-1",
+      "prompt": {
+        "es": "Interpola una variable dentro de un atributo: el `src` de una imagen.",
+        "en": "Interpolate a variable into an attribute: an image's `src`."
+      },
+      "starter": "<img src=",
+      "solution": "<img src={avatarUrl} alt=\"Avatar\" />",
+      "targetSeconds": 25,
+      "rules": [
+        {
+          "id": "d1-attr",
+          "kind": "regex-must",
+          "file": "src/App.jsx",
+          "pattern": "src\\s*=\\s*\\{",
+          "message": {
+            "es": "Los atributos dinámicos van con llaves, sin comillas alrededor.",
+            "en": "Dynamic attributes take braces, with no quotes around them."
+          },
+          "points": 10
+        }
+      ]
+    },
+    {
+      "id": "drill-2",
+      "prompt": {
+        "es": "Muestra `<Badge />` solo si `isAdmin` es cierto.",
+        "en": "Show `<Badge />` only when `isAdmin` is true."
+      },
+      "starter": "{",
+      "solution": "{isAdmin && <Badge />}",
+      "targetSeconds": 25,
+      "rules": [
+        {
+          "id": "d2-and",
+          "kind": "regex-must",
+          "file": "src/App.jsx",
+          "pattern": "isAdmin\\s*&&",
+          "message": { "es": "Usa `&&`.", "en": "Use `&&`." },
+          "points": 10
+        }
+      ]
+    },
+    {
+      "id": "drill-3",
+      "prompt": {
+        "es": "Uno u otro: `<Online />` si `connected`, si no `<Offline />`.",
+        "en": "One or the other: `<Online />` when `connected`, else `<Offline />`."
+      },
+      "starter": "{connected ",
+      "solution": "{connected ? <Online /> : <Offline />}",
+      "targetSeconds": 30,
+      "rules": [
+        {
+          "id": "d3-ternary",
+          "kind": "regex-must",
+          "file": "src/App.jsx",
+          "pattern": "connected\\s*\\?[\\s\\S]*:",
+          "message": { "es": "Operador ternario.", "en": "Ternary operator." },
+          "points": 10
+        }
+      ]
+    },
+    {
+      "id": "drill-4",
+      "prompt": {
+        "es": "Lista de objetos `users` con `id` y `name`, cada uno en un `<li>`.",
+        "en": "List of `users` objects with `id` and `name`, each in an `<li>`."
+      },
+      "starter": "<ul>{users.map(",
+      "solution": "<ul>{users.map((user) => <li key={user.id}>{user.name}</li>)}</ul>",
+      "targetSeconds": 45,
+      "rules": [
+        {
+          "id": "d4-key-id",
+          "kind": "regex-must",
+          "file": "src/App.jsx",
+          "pattern": "key\\s*=\\s*\\{\\s*\\w+\\.id\\s*\\}",
+          "message": {
+            "es": "La `key` debe ser el `id` del dato, no el índice.",
+            "en": "The `key` should be the data's `id`, not the index."
+          },
+          "points": 15
+        }
+      ]
+    }
+  ],
+
+  "reward": {
+    "baseXp": 140,
+    "flawlessBonus": 55,
+    "noHintBonus": 30,
+    "comboMultiplierCap": 3,
+    "achievements": ["jsx-fluent"]
+  },
+
+  "solution": {
+    "files": [
+      {
+        "path": "src/App.jsx",
+        "content": "const player = { name: 'Ada', level: 7, online: true };\nconst skills = ['JavaScript', 'CSS', 'React'];\n\nexport default function App() {\n  return (\n    <div className=\"profile\">\n      <h1>{player.name}</h1>\n      <p>Nivel {player.level}</p>\n\n      {player.online && <span>En línea</span>}\n\n      <ul>\n        {skills.map((skill) => (\n          <li key={skill}>{skill}</li>\n        ))}\n      </ul>\n    </div>\n  );\n}\n"
+      }
+    ],
+    "explanation": {
+      "es": "La `key` es el propio nombre de la habilidad porque aquí son únicos y estables. Si mañana pudieran repetirse, haría falta un `id` de verdad.",
+      "en": "The `key` is the skill name itself because here they're unique and stable. If tomorrow they could repeat, a real `id` would be needed."
+    }
+  }
+}

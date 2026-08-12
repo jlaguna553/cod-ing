@@ -1,0 +1,62 @@
+{
+  "name": "codequest",
+  "version": "1.0.0",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "tsx --conditions=react-server --test tests/*.test.ts",
+    "content:check": "tsx scripts/validate-content.ts",
+    "content:schema": "tsx scripts/generate-json-schema.ts",
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "i18n:check": "tsx scripts/check-i18n-parity.ts",
+    "check": "npm run content:check && npm run i18n:check && npm run test && npm run build",
+    "e2e": "playwright test",
+    "dev:local": "next dev -p 4300 -H 0.0.0.0",
+    "db:migrate": "tsx --conditions=react-server scripts/migrate.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "type": "module",
+  "devDependencies": {
+    "@playwright/test": "^1.62.1",
+    "@tailwindcss/postcss": "^4.3.3",
+    "@types/canvas-confetti": "^1.9.0",
+    "@types/esquery": "^1.5.4",
+    "@types/node": "^26.2.0",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "drizzle-kit": "^0.31.10",
+    "tailwindcss": "^4.3.3",
+    "tsx": "^4.23.12",
+    "typescript": "^7.0.2",
+    "zod": "^4.4.3"
+  },
+  "dependencies": {
+    "@codesandbox/sandpack-client": "^2.19.8",
+    "@electric-sql/pglite": "^0.5.4",
+    "@monaco-editor/react": "^4.7.0",
+    "@xterm/addon-fit": "^0.11.0",
+    "@xterm/xterm": "^6.0.0",
+    "acorn": "^8.18.0",
+    "acorn-jsx": "^5.3.2",
+    "canvas-confetti": "^1.9.4",
+    "drizzle-orm": "^0.45.2",
+    "esquery": "^1.7.0",
+    "lucide-react": "^1.31.0",
+    "monaco-editor": "^0.56.0",
+    "next": "^16.3.0",
+    "next-intl": "^4.13.6",
+    "postgres": "^3.4.9",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "react-markdown": "^10.1.0",
+    "server-only": "^0.0.1",
+    "zustand": "^5.0.14"
+  }
+}

@@ -1,0 +1,161 @@
+{
+  "meta": {
+    "appName": "CodeQuest",
+    "tagline": "Sube de nivel escribiendo código de verdad"
+  },
+  "nav": {
+    "home": "Base",
+    "tracks": "Rutas",
+    "profile": "Perfil",
+    "language": "Idioma",
+    "switchTo": "Cambiar a {locale}"
+  },
+  "locale": {
+    "es": "Español",
+    "en": "Inglés"
+  },
+  "home": {
+    "title": "Elige tu ruta",
+    "subtitle": "Tres disciplinas. De primer contacto a entrevista técnica.",
+    "continue": "Continuar donde lo dejaste",
+    "start": "Empezar",
+    "streak": "{days} días seguidos"
+  },
+  "tracks": {
+    "frontend": {
+      "name": "Frontend",
+      "description": "HTML, CSS, JavaScript, TypeScript, React, Vue y Next.js. Del primer div al render bajo carga."
+    },
+    "backend": {
+      "name": "Backend y Datos",
+      "description": "Node, Python, Go, SQL y diseño de APIs. Modela, sirve y aguanta el tráfico."
+    },
+    "devops": {
+      "name": "DevOps",
+      "description": "Bash, Linux, Docker, CI/CD, Nginx y Kubernetes. Que llegue a producción y siga en pie."
+    },
+    "empty": "Todavía no hay lecciones en esta ruta. Estamos en ello.",
+    "locked": "Requiere {count} lección(es) previa(s)"
+  },
+  "difficulty": {
+    "novice": "Novato",
+    "apprentice": "Aprendiz",
+    "adept": "Adepto",
+    "expert": "Experto",
+    "interview": "Entrevista"
+  },
+  "lessonKind": {
+    "concept": "Concepto",
+    "drill": "Repetición",
+    "challenge": "Reto",
+    "interview": "Boss",
+    "system-design": "Diseño"
+  },
+  "hud": {
+    "level": "Nivel {level}",
+    "xp": "{current} / {next} XP",
+    "energy": "Energía",
+    "combo": "{count}x Combo",
+    "comboSpree": "¡Racha de código!",
+    "keystrokes": "{count} pulsaciones",
+    "sessionTime": "Sesión: {minutes} min",
+    "bestCombo": "Mejor: {count}"
+  },
+  "panels": {
+    "files": "Archivos",
+    "achievements": "Logros",
+    "guide": "Guía",
+    "hints": "Pistas",
+    "tests": "Pruebas",
+    "output": "Salida",
+    "preview": "Vista previa",
+    "terminal": "Terminal",
+    "console": "Consola"
+  },
+  "editor": {
+    "run": "Ejecutar",
+    "reset": "Reiniciar",
+    "submit": "Validar paso",
+    "performanceMode": "Modo rendimiento",
+    "performanceModeHint": "Desactiva partículas y sacudidas"
+  },
+  "steps": {
+    "counter": "Paso {current} de {total}",
+    "next": "Siguiente",
+    "previous": "Anterior",
+    "task": "Tu turno",
+    "bestPractice": "Estándar de la industria",
+    "editFile": "Edita {file}",
+    "done": "Paso superado. Pulsa Siguiente.",
+    "finish": "Terminar lección"
+  },
+  "hints": {
+    "reveal": "Revelar pista",
+    "cost": "Cuesta {xp} XP",
+    "revealed": "{used} de {total} usadas",
+    "none": "Sin pistas para este paso"
+  },
+  "tests": {
+    "passed": "Superada",
+    "failed": "Fallida",
+    "pending": "Pendiente",
+    "allPassed": "¡Todas las pruebas superadas!",
+    "runFirst": "Ejecuta el código para ver los resultados",
+    "none": "Este paso no tiene comprobaciones automáticas",
+    "expected": "esperado",
+    "actual": "obtenido",
+    "checking": "Comprobando…",
+    "syntaxError": "El código no compila (línea {line})",
+    "syntaxHint": "Mientras haya un error de sintaxis, las comprobaciones no pueden evaluarse."
+  },
+  "achievements": {
+    "unlocked": "¡Logro desbloqueado!",
+    "progress": "{unlocked} de {total}",
+    "locked": "Bloqueado"
+  },
+  "empty": {
+    "noLesson": "Ninguna lección cargada",
+    "buildingWorld": "Construyendo el mundo…"
+  },
+  "interview": {
+    "brief": "Briefing de entrevista",
+    "constraints": "Restricciones",
+    "complexity": "Complejidad objetivo",
+    "followUps": "Preguntas de seguimiento"
+  },
+  "files": {
+    "modified": "Modificado"
+  },
+  "runner": {
+    "booting": "Arrancando entorno…",
+    "clear": "Limpiar salida",
+    "ready": "Listo",
+    "failed": "El entorno no pudo arrancar"
+  },
+  "combo": {
+    "warm": "¡Calentando!",
+    "spree": "¡Racha de código!",
+    "fire": "¡En llamas!",
+    "unstoppable": "¡Imparable!",
+    "legendary": "¡Legendario!"
+  },
+  "sound": {
+    "pack": "Sonido de tecleo",
+    "volume": "Volumen",
+    "packs": {
+      "silent": "Silencio",
+      "mechanical": "Teclado mecánico",
+      "typewriter": "Máquina de escribir",
+      "duck": "Pato",
+      "blades": "Espadas",
+      "retro": "Retro 8 bits"
+    }
+  },
+  "lesson": {
+    "completed": "Lección completada",
+    "next": "Siguiente lección",
+    "backToMap": "Volver al mapa",
+    "lastOfModule": "Has terminado el último ejercicio de este módulo. Vuelve al mapa para elegir otro.",
+    "alreadyDone": "Ya la habías completado"
+  }
+}

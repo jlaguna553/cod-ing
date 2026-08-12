@@ -1,0 +1,276 @@
+{
+  "$schema": "../../../schema/lesson.schema.json",
+  "schemaVersion": 1,
+  "id": "js-03-array-map",
+  "track": "frontend",
+  "module": "javascript",
+  "order": 3,
+  "kind": "drill",
+  "difficulty": "apprentice",
+  "estimatedMinutes": 12,
+  "title": {
+    "es": "Transformar arrays con .map()",
+    "en": "Transforming arrays with .map()"
+  },
+  "summary": {
+    "es": "Aprende a transformar cada elemento de un array sin mutar el original, y graba la sintaxis en la memoria muscular.",
+    "en": "Learn to transform every element of an array without mutating the original, and burn the syntax into muscle memory."
+  },
+  "concepts": [
+    "arrays",
+    "higher-order-functions",
+    "immutability",
+    "arrow-functions"
+  ],
+  "prerequisites": [
+    "js-01-variables",
+    "js-02-functions"
+  ],
+  "runtime": {
+    "kind": "dom",
+    "dependencies": {},
+    "timeoutMs": 5000
+  },
+  "workspace": {
+    "entry": "index.js",
+    "files": [
+      {
+        "path": "index.js",
+        "content": "const prices = [10, 25, 40, 5];\n\n// TODO: crea `withTax` aplicando un 21% a cada precio\nconst withTax = null;\n\nconsole.log(withTax);\n",
+        "active": true
+      },
+      {
+        "path": "index.html",
+        "content": "<!doctype html>\n<html>\n  <body>\n    <ul id=\"cart\"></ul>\n    <script type=\"module\" src=\"./index.js\"></script>\n  </body>\n</html>\n",
+        "readOnly": true
+      }
+    ]
+  },
+  "rules": [
+    {
+      "id": "uses-map",
+      "kind": "ast-query",
+      "phase": "submit",
+      "severity": "error",
+      "file": "index.js",
+      "query": "CallExpression[callee.type=\"MemberExpression\"][callee.property.name=\"map\"]",
+      "minMatches": 1,
+      "message": {
+        "es": "Usa el método .map() para transformar el array.",
+        "en": "Use the .map() method to transform the array."
+      },
+      "successMessage": {
+        "es": "¡Bien! .map() devuelve un array nuevo.",
+        "en": "Nice! .map() returns a brand-new array."
+      },
+      "points": 30
+    },
+    {
+      "id": "no-mutation",
+      "kind": "regex-forbid",
+      "phase": "type",
+      "severity": "damage",
+      "file": "index.js",
+      "pattern": "prices\\s*\\[\\s*\\d+\\s*\\]\\s*=|prices\\.push|prices\\.splice",
+      "message": {
+        "es": "¡Daño! Estás mutando el array original. .map() existe justamente para evitarlo.",
+        "en": "Damage! You're mutating the original array. That's exactly what .map() avoids."
+      },
+      "points": 0
+    },
+    {
+      "id": "no-for-loop",
+      "kind": "regex-forbid",
+      "phase": "submit",
+      "severity": "warn",
+      "file": "index.js",
+      "pattern": "\\bfor\\s*\\(",
+      "message": {
+        "es": "Funciona, pero el estándar de la industria aquí es .map(): expresa la intención en lugar del mecanismo.",
+        "en": "It works, but the industry standard here is .map(): it states the intent rather than the mechanism."
+      },
+      "points": 5
+    },
+    {
+      "id": "output-correct",
+      "kind": "stdout-match",
+      "phase": "run",
+      "severity": "error",
+      "matches": "12\\.1.*30\\.25.*48\\.4.*6\\.05",
+      "message": {
+        "es": "La salida esperada es [12.1, 30.25, 48.4, 6.05].",
+        "en": "Expected output is [12.1, 30.25, 48.4, 6.05]."
+      },
+      "points": 40
+    }
+  ],
+  "steps": [
+    {
+      "id": "step-1-concept",
+      "title": {
+        "es": "Un array nuevo, no el mismo",
+        "en": "A new array, not the same one"
+      },
+      "body": {
+        "es": "`.map()` recorre un array y devuelve **uno nuevo** con el resultado de aplicar tu función a cada elemento. El original no se toca.\n\n```js\nconst dobles = nums.map((n) => n * 2);\n```\n\nTres cosas que ocurren en esa línea: recibes cada elemento (`n`), devuelves su versión transformada (`n * 2`), y `.map()` junta todos los resultados en un array nuevo.",
+        "en": "`.map()` walks an array and returns **a new one** holding the result of applying your function to each element. The original is untouched.\n\n```js\nconst doubles = nums.map((n) => n * 2);\n```\n\nThree things happen on that line: you receive each element (`n`), you return its transformed version (`n * 2`), and `.map()` collects every result into a brand-new array."
+      },
+      "task": {
+        "es": "Sustituye `null` por un `.map()` que multiplique cada precio por 1.21.",
+        "en": "Replace `null` with a `.map()` that multiplies each price by 1.21."
+      },
+      "focusFile": "index.js",
+      "focusLines": [
+        3,
+        4
+      ],
+      "ruleIds": [
+        "uses-map",
+        "no-mutation",
+        "no-for-loop",
+        "output-correct"
+      ],
+      "xp": 40,
+      "hints": [
+        {
+          "id": "h1",
+          "tier": 1,
+          "text": {
+            "es": "La función que pasas a `.map()` debe **devolver** algo. Con arrow function de una línea, el `return` es implícito.",
+            "en": "The function you pass to `.map()` must **return** something. With a one-line arrow function, the `return` is implicit."
+          },
+          "xpPenalty": 5,
+          "autoOfferAfterSeconds": 60
+        },
+        {
+          "id": "h2",
+          "tier": 3,
+          "text": {
+            "es": "`const withTax = prices.map((price) => price * 1.21);`",
+            "en": "`const withTax = prices.map((price) => price * 1.21);`"
+          },
+          "xpPenalty": 20
+        }
+      ],
+      "bestPractice": {
+        "es": "**Inmutabilidad (Clean Code):** transformar en vez de mutar hace el código predecible y es la base de cómo React decide si re-renderizar. Mutar `prices` aquí te costaría un bug de re-render mañana.",
+        "en": "**Immutability (Clean Code):** transforming instead of mutating keeps code predictable and underpins how React decides whether to re-render. Mutating `prices` here buys you a re-render bug tomorrow."
+      }
+    }
+  ],
+  "drills": [
+    {
+      "id": "drill-1",
+      "prompt": {
+        "es": "Dado `names = ['ana', 'luis']`, crea `upper` con cada nombre en mayúsculas.",
+        "en": "Given `names = ['ana', 'luis']`, build `upper` with each name uppercased."
+      },
+      "starter": "const names = ['ana', 'luis'];\nconst upper = ",
+      "solution": "const upper = names.map((n) => n.toUpperCase());",
+      "targetSeconds": 30,
+      "rules": [
+        {
+          "id": "d1-map",
+          "kind": "regex-must",
+          "file": "index.js",
+          "pattern": "names\\.map\\(",
+          "message": {
+            "es": "Usa names.map(...)",
+            "en": "Use names.map(...)"
+          },
+          "points": 10
+        }
+      ]
+    },
+    {
+      "id": "drill-2",
+      "prompt": {
+        "es": "Dado `users = [{name:'Ana'}, {name:'Luis'}]`, crea `justNames` con solo los nombres.",
+        "en": "Given `users = [{name:'Ana'}, {name:'Luis'}]`, build `justNames` with just the names."
+      },
+      "starter": "const users = [{ name: 'Ana' }, { name: 'Luis' }];\nconst justNames = ",
+      "solution": "const justNames = users.map((u) => u.name);",
+      "targetSeconds": 30,
+      "rules": [
+        {
+          "id": "d2-map",
+          "kind": "regex-must",
+          "file": "index.js",
+          "pattern": "users\\.map\\(",
+          "message": {
+            "es": "Usa users.map(...)",
+            "en": "Use users.map(...)"
+          },
+          "points": 10
+        }
+      ]
+    },
+    {
+      "id": "drill-3",
+      "prompt": {
+        "es": "Dado `nums = [1, 2, 3]`, crea `labels` con la forma `'#1'`, `'#2'`, `'#3'`.",
+        "en": "Given `nums = [1, 2, 3]`, build `labels` shaped like `'#1'`, `'#2'`, `'#3'`."
+      },
+      "starter": "const nums = [1, 2, 3];\nconst labels = ",
+      "solution": "const labels = nums.map((n) => `#${n}`);",
+      "targetSeconds": 35,
+      "rules": [
+        {
+          "id": "d3-map",
+          "kind": "regex-must",
+          "file": "index.js",
+          "pattern": "nums\\.map\\(",
+          "message": {
+            "es": "Usa nums.map(...)",
+            "en": "Use nums.map(...)"
+          },
+          "points": 10
+        }
+      ]
+    },
+    {
+      "id": "drill-4",
+      "prompt": {
+        "es": "Encadena: de `prices`, obtén los que superan 20 ya con IVA aplicado.",
+        "en": "Chain it: from `prices`, get the ones above 20 with tax already applied."
+      },
+      "starter": "const prices = [10, 25, 40, 5];\nconst result = ",
+      "solution": "const result = prices.filter((p) => p > 20).map((p) => p * 1.21);",
+      "targetSeconds": 50,
+      "rules": [
+        {
+          "id": "d4-chain",
+          "kind": "regex-must",
+          "file": "index.js",
+          "pattern": "\\.filter\\([^)]*\\)[\\s\\S]*\\.map\\(",
+          "message": {
+            "es": "Encadena .filter() antes de .map() — filtra primero, transforma después.",
+            "en": "Chain .filter() before .map() — narrow first, transform after."
+          },
+          "points": 15
+        }
+      ]
+    }
+  ],
+  "reward": {
+    "baseXp": 120,
+    "flawlessBonus": 60,
+    "noHintBonus": 30,
+    "comboMultiplierCap": 3,
+    "achievements": [
+      "array-alchemist"
+    ]
+  },
+  "solution": {
+    "files": [
+      {
+        "path": "index.js",
+        "content": "const prices = [10, 25, 40, 5];\n\nconst withTax = prices.map((price) => price * 1.21);\n\nconsole.log(withTax);\n"
+      }
+    ],
+    "explanation": {
+      "es": "`.map()` recibe un callback por elemento y construye un array nuevo con lo que devuelves. `prices` sigue intacto — puedes comprobarlo con un `console.log(prices)` al final.",
+      "en": "`.map()` takes a per-element callback and builds a new array out of whatever you return. `prices` stays intact — check it with a `console.log(prices)` at the end."
+    }
+  }
+}

@@ -1,0 +1,148 @@
+@import "tailwindcss";
+
+/**
+ * Sistema de diseño — terminal CRT / cyberpunk.
+ *
+ * Una sola familia de acentos neón sobre un fondo casi negro azulado. La regla
+ * que mantiene esto legible: el neón es para ESTADO (combo, daño, XP, foco),
+ * nunca para texto largo. El cuerpo de las lecciones va en gris claro sobre
+ * fondo oscuro, con contraste AA — nadie lee 2.000 palabras en cian puro.
+ */
+@theme {
+  /* Superficies, de más profunda a más elevada */
+  --color-void: #05070d;
+  --color-abyss: #0a0e17;
+  --color-panel: #111726;
+  --color-raised: #1a2233;
+  --color-border: #263148;
+  --color-border-glow: #3b4a6b;
+
+  /* Texto */
+  --color-ink: #e6edf7;
+  --color-ink-dim: #93a3bd;
+  --color-ink-faint: #5a6b87;
+
+  /* Acentos de estado */
+  --color-neon: #22d3ee;       /* cian — foco, XP, acción primaria */
+  --color-neon-alt: #c084fc;   /* magenta — combo, logros */
+  --color-power: #fbbf24;      /* ámbar — energía, avisos */
+  --color-success: #4ade80;    /* verde — test superado */
+  --color-damage: #f43f5e;     /* rojo — daño, test fallido */
+
+  /* Por track */
+  --color-track-frontend: #22d3ee;
+  --color-track-backend: #4ade80;
+  --color-track-devops: #c084fc;
+
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --font-display: "Chakra Petch", system-ui, sans-serif;
+
+  --radius-panel: 0.75rem;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  background-color: var(--color-void);
+  color: var(--color-ink);
+  font-family: var(--font-mono);
+  /* Rejilla tenue de fondo: da textura de "consola" sin distraer del código. */
+  background-image:
+    linear-gradient(rgba(34, 211, 238, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(34, 211, 238, 0.03) 1px, transparent 1px);
+  background-size: 42px 42px;
+}
+
+/* ── Utilidades de "juice" ────────────────────────────────────────────
+   Definidas aquí y no en componentes para que el Modo Rendimiento pueda
+   apagarlas todas de golpe con un atributo en <html> (ver más abajo). */
+
+@utility glow-neon {
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-neon) 40%, transparent),
+    0 0 24px -6px var(--color-neon);
+}
+
+@utility text-glow {
+  text-shadow: 0 0 12px currentColor;
+}
+
+@keyframes damage-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-3px); }
+  40% { transform: translateX(3px); }
+  60% { transform: translateX(-2px); }
+  80% { transform: translateX(2px); }
+}
+
+@keyframes damage-flash {
+  0%, 100% { background-color: transparent; }
+  50% { background-color: color-mix(in srgb, var(--color-damage) 22%, transparent); }
+}
+
+/* Aplicada por Monaco vía deltaDecorations sobre la línea con error (Fase 4-5). */
+.line-damage {
+  animation: damage-shake 240ms ease-in-out, damage-flash 480ms ease-in-out;
+}
+
+@keyframes combo-pop {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.28); }
+  100% { transform: scale(1); }
+}
+
+.combo-pop {
+  animation: combo-pop 200ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/**
+ * Modo rendimiento y accesibilidad.
+ *
+ * Se implementa desde la Fase 1, no al final: cuando el "juice" ya está
+ * repartido por veinte componentes, apagarlo se vuelve imposible. Un único
+ * atributo en <html> mata todas las animaciones, y `prefers-reduced-motion`
+ * hace lo mismo sin que el usuario tenga que pedirlo.
+ */
+html[data-performance-mode="true"] *,
+html[data-performance-mode="true"] *::before,
+html[data-performance-mode="true"] *::after {
+  animation: none !important;
+  transition: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--color-abyss); }
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 6px;
+}
+::-webkit-scrollbar-thumb:hover { background: var(--color-border-glow); }
+
+/* ── Decoraciones del editor (Monaco) ──────────────────────────────
+   Monaco pinta el texto en canvas pero las decoraciones de línea son
+   DOM, así que sí responden a estas clases y al modo rendimiento. */
+
+.line-warn {
+  background-color: color-mix(in srgb, var(--color-power) 12%, transparent);
+  border-left: 2px solid var(--color-power);
+}
+
+.glyph-damage::before {
+  content: "";
+  display: block;
+  width: 6px;
+  height: 6px;
+  margin: 7px auto;
+  border-radius: 999px;
+  background: var(--color-damage);
+  box-shadow: 0 0 8px var(--color-damage);
+}

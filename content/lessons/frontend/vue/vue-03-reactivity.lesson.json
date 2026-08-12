@@ -1,0 +1,237 @@
+{
+  "$schema": "../../../schema/lesson.schema.json",
+  "schemaVersion": 1,
+
+  "id": "vue-03-reactivity",
+  "track": "frontend",
+  "module": "vue",
+  "order": 3,
+
+  "kind": "concept",
+  "difficulty": "apprentice",
+  "estimatedMinutes": 22,
+
+  "title": {
+    "es": "Reactividad en Vue: `ref`, `reactive` y el `.value`",
+    "en": "Vue reactivity: `ref`, `reactive`, and that `.value`"
+  },
+  "summary": {
+    "es": "Entiende de una vez cuándo hace falta `.value` y cuándo no, por qué desestructurar un objeto reactivo rompe la reactividad, y cuándo usar `computed` en lugar de recalcular a mano.",
+    "en": "Finally understand when you need `.value` and when you don't, why destructuring a reactive object breaks reactivity, and when to reach for `computed` instead of recomputing by hand."
+  },
+  "concepts": ["vue", "reactivity", "composition-api", "computed"],
+  "prerequisites": ["vue-01-template-syntax", "vue-02-components"],
+
+  "runtime": {
+    "kind": "sandpack",
+    "command": "npm run dev",
+    "previewPort": 5173,
+    "dependencies": { "vue": "^3.4.0" },
+    "timeoutMs": 15000
+  },
+
+  "workspace": {
+    "entry": "src/Cart.vue",
+    "allowCreate": false,
+    "allowDelete": false,
+    "protectedPaths": [],
+    "files": [
+      {
+        "path": "src/Cart.vue",
+        "content": "<script setup>\nimport { ref, reactive } from 'vue';\n\nconst items = reactive([\n  { name: 'Teclado', price: 89, qty: 1 },\n  { name: 'Monitor', price: 210, qty: 2 },\n]);\n\n// TODO 1: `total` no se actualiza al cambiar las cantidades\nlet total = 0;\nfor (const item of items) {\n  total += item.price * item.qty;\n}\n\n// TODO 2: este contador no repinta al pulsar el botón\nconst clicks = ref(0);\nfunction addClick() {\n  clicks = clicks + 1;\n}\n</script>\n\n<template>\n  <ul>\n    <li v-for=\"item in items\" :key=\"item.name\">\n      {{ item.name }} — {{ item.qty }} ×  {{ item.price }} €\n      <button @click=\"item.qty++\">+1</button>\n    </li>\n  </ul>\n\n  <p class=\"total\">Total: {{ total }} €</p>\n  <button class=\"clicker\" @click=\"addClick\">Clicks: {{ clicks }}</button>\n</template>\n",
+        "active": true
+      },
+      {
+        "path": "src/main.js",
+        "content": "import { createApp } from 'vue';\nimport Cart from './Cart.vue';\n\ncreateApp(Cart).mount('#app');\n",
+        "readOnly": true
+      }
+    ]
+  },
+
+  "rules": [
+    {
+      "id": "uses-computed",
+      "kind": "regex-must",
+      "file": "src/Cart.vue",
+      "pattern": "computed\\s*\\(",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "El total tiene que derivarse de los items, no calcularse una vez. Eso es exactamente lo que hace `computed`.",
+        "en": "The total has to derive from the items, not be computed once. That's precisely what `computed` is for."
+      },
+      "successMessage": {
+        "es": "Ahora el total se recalcula solo cuando cambia algo del que depende.",
+        "en": "Now the total recomputes on its own whenever something it depends on changes."
+      },
+      "points": 30
+    },
+    {
+      "id": "imports-computed",
+      "kind": "regex-must",
+      "file": "src/Cart.vue",
+      "pattern": "import\\s*\\{[^}]*computed[^}]*\\}\\s*from\\s*['\"]vue['\"]",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "`computed` hay que importarlo de `vue`.",
+        "en": "`computed` needs to be imported from `vue`."
+      },
+      "points": 10
+    },
+    {
+      "id": "no-let-total",
+      "kind": "regex-forbid",
+      "file": "src/Cart.vue",
+      "pattern": "let\\s+total\\s*=",
+      "phase": "type",
+      "severity": "damage",
+      "message": {
+        "es": "¡Daño! Una variable normal se calcula una vez y ahí se queda. Vue no puede saber que debería recalcularse.",
+        "en": "Damage! A plain variable is computed once and stays there. Vue has no way to know it should recompute."
+      },
+      "points": 0
+    },
+    {
+      "id": "ref-value-in-script",
+      "kind": "regex-must",
+      "file": "src/Cart.vue",
+      "pattern": "clicks\\.value",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Dentro de `<script>`, un `ref` se lee y se escribe con `.value`. Reasignar la variable entera destruye el ref.",
+        "en": "Inside `<script>`, a `ref` is read and written through `.value`. Reassigning the whole variable destroys the ref."
+      },
+      "points": 25
+    },
+    {
+      "id": "total-renders",
+      "kind": "dom-assert",
+      "selector": ".total",
+      "assert": "textContains",
+      "expected": "509",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "El total inicial debe ser 509 € (89 × 1 + 210 × 2).",
+        "en": "The initial total should be 509 € (89 × 1 + 210 × 2)."
+      },
+      "points": 25
+    }
+  ],
+
+  "steps": [
+    {
+      "id": "step-1-value",
+      "title": {
+        "es": "El `.value` que todo el mundo olvida",
+        "en": "The `.value` everyone forgets"
+      },
+      "body": {
+        "es": "Vue necesita **interceptar** las lecturas y escrituras para saber qué repintar. Con un objeto puede hacerlo con un Proxy, pero con un número o un string no: en JavaScript no hay forma de detectar que alguien reasignó una variable.\n\nPor eso `ref` envuelve el valor en un objeto con una única propiedad, `.value`. Ese objeto sí se puede interceptar.\n\n```js\nconst n = ref(0);\nn.value++;      // ✅ Vue se entera\nn = n + 1;      // ❌ destruye el ref y Vue pierde el rastro\n```\n\nY la parte que confunde: **en el `<template>` no se escribe `.value`.** Vue lo desenvuelve solo. Esa asimetría —`.value` en el script, sin `.value` en la plantilla— es la fuente número uno de tropiezos al empezar.\n\n`reactive`, en cambio, es para objetos y arrays, y ahí no hay `.value` en ningún sitio. A cambio tiene su propia trampa, que verás en el paso 3.",
+        "en": "Vue needs to **intercept** reads and writes to know what to repaint. With an object it can do that through a Proxy, but with a number or a string it can't: JavaScript gives you no way to detect that someone reassigned a variable.\n\nSo `ref` wraps the value in an object with a single property, `.value`. That object *can* be intercepted.\n\n```js\nconst n = ref(0);\nn.value++;      // ✅ Vue notices\nn = n + 1;      // ❌ destroys the ref and Vue loses track\n```\n\nAnd here's the confusing part: **in the `<template>` you don't write `.value`.** Vue unwraps it for you. That asymmetry — `.value` in the script, no `.value` in the template — is the number one stumbling block for beginners.\n\n`reactive`, by contrast, is for objects and arrays, and there's no `.value` anywhere. In exchange it has its own trap, which you'll meet in step 3."
+      },
+      "task": {
+        "es": "Arregla `addClick` para que el contador suba al pulsar el botón.",
+        "en": "Fix `addClick` so the counter goes up when the button is clicked."
+      },
+      "focusFile": "src/Cart.vue",
+      "focusLines": [16, 19],
+      "ruleIds": ["ref-value-in-script"],
+      "xp": 40,
+      "hints": [
+        {
+          "id": "h-value",
+          "tier": 1,
+          "text": {
+            "es": "La variable `clicks` no debe reasignarse nunca. Lo que cambia es lo que hay **dentro** del ref.",
+            "en": "The `clicks` variable should never be reassigned. What changes is what lives **inside** the ref."
+          },
+          "xpPenalty": 5,
+          "autoOfferAfterSeconds": 60
+        }
+      ]
+    },
+    {
+      "id": "step-2-computed",
+      "title": {
+        "es": "Deriva, no calcules",
+        "en": "Derive, don't compute"
+      },
+      "body": {
+        "es": "El total del carrito no es un dato: es una **consecuencia** de los items. Guardarlo en una variable normal significa que hay dos fuentes de verdad, y que la segunda se queda desactualizada en cuanto cambia la primera.\n\n`computed` expresa esa dependencia. Le das una función que calcula el valor a partir de otros datos reactivos, y Vue:\n\n1. registra de qué depende mientras la ejecuta,\n2. cachea el resultado,\n3. y solo la vuelve a ejecutar cuando alguna de esas dependencias cambia.\n\nEso último es la diferencia con llamar a una función en la plantilla: una función se ejecuta en **cada** repintado, un `computed` solo cuando de verdad hace falta.\n\nEl valor de un `computed` se lee con `.value` en el script —es un ref— y sin `.value` en la plantilla.",
+        "en": "The cart total isn't data: it's a **consequence** of the items. Storing it in a plain variable means two sources of truth, and the second goes stale the moment the first changes.\n\n`computed` expresses that dependency. You hand it a function that derives the value from other reactive data, and Vue:\n\n1. records what it depends on while running it,\n2. caches the result,\n3. and re-runs it only when one of those dependencies changes.\n\nThat last point is the difference from calling a function in the template: a function runs on **every** repaint, a `computed` only when it actually needs to.\n\nA `computed`'s value is read with `.value` in the script — it is a ref — and without `.value` in the template."
+      },
+      "task": {
+        "es": "Convierte `total` en un valor derivado que se recalcule al cambiar las cantidades.",
+        "en": "Turn `total` into a derived value that recomputes when the quantities change."
+      },
+      "focusFile": "src/Cart.vue",
+      "focusLines": [9, 14],
+      "ruleIds": ["uses-computed", "imports-computed", "no-let-total", "total-renders"],
+      "xp": 60,
+      "hints": [
+        {
+          "id": "h-reduce",
+          "tier": 2,
+          "text": {
+            "es": "Dentro del `computed` puedes usar cualquier JavaScript. `reduce` va como anillo al dedo para sumar `price * qty`.",
+            "en": "Inside the `computed` you can use any JavaScript. `reduce` is a natural fit for summing `price * qty`."
+          },
+          "xpPenalty": 10
+        }
+      ],
+      "bestPractice": {
+        "es": "**DRY y fuente única de verdad:** todo estado que puede derivarse de otro estado **debe** derivarse. Guardar `total` junto a `items` es duplicar información, y la duplicación siempre acaba desincronizándose. Vale para `computed` en Vue, `useMemo` y valores derivados en React, y selectores en cualquier gestor de estado.",
+        "en": "**DRY and single source of truth:** any state that can be derived from other state **should** be derived. Storing `total` next to `items` duplicates information, and duplication always drifts out of sync eventually. This holds for `computed` in Vue, derived values and `useMemo` in React, and selectors in any state manager."
+      }
+    },
+    {
+      "id": "step-3-destructuring",
+      "title": {
+        "es": "La trampa de desestructurar",
+        "en": "The destructuring trap"
+      },
+      "body": {
+        "es": "Queda un detalle que muerde a todo el mundo tarde o temprano.\n\nLa reactividad de `reactive` vive en el **Proxy** del objeto, no en los valores que contiene. Cuando desestructuras, extraes los valores y los sacas del Proxy:\n\n```js\nconst estado = reactive({ nombre: 'Ana' });\nconst { nombre } = estado;   // `nombre` ya es un string suelto\n```\n\nA partir de ahí, cambiar `estado.nombre` no afecta a la copia: no hay nada que interceptar en un string.\n\nHay dos salidas. Acceder siempre a través del objeto (`estado.nombre`), o usar la utilidad de Vue que convierte cada propiedad en un ref antes de desestructurar — así cada una conserva su conexión. Búscala en la documentación de la Composition API: su nombre describe justo lo que hace, «convertir a refs».",
+        "en": "One detail remains, and it bites everyone sooner or later.\n\n`reactive`'s reactivity lives in the object's **Proxy**, not in the values it holds. When you destructure, you pull the values out of the Proxy:\n\n```js\nconst state = reactive({ name: 'Ana' });\nconst { name } = state;   // `name` is now a loose string\n```\n\nFrom there, changing `state.name` doesn't touch the copy: there's nothing to intercept on a string.\n\nThere are two ways out. Always go through the object (`state.name`), or use the Vue helper that turns each property into a ref before destructuring — so each one keeps its connection. Look it up in the Composition API docs: its name describes exactly what it does, \"to refs\"."
+      },
+      "task": {
+        "es": "Sin cambiar código: explica en voz alta por qué desestructurar `items` rompería la lista, y comprueba que el total sigue reaccionando al pulsar los botones `+1`.",
+        "en": "No code change: say out loud why destructuring `items` would break the list, and confirm the total still reacts when you press the `+1` buttons."
+      },
+      "focusFile": "src/Cart.vue",
+      "ruleIds": [],
+      "xp": 35,
+      "bestPractice": {
+        "es": "**Preferencia práctica:** muchos equipos usan `ref` para todo, incluso objetos, precisamente para no tener que razonar sobre esto. El coste es escribir `.value`; la ganancia es una única regla mental en lugar de dos.",
+        "en": "**Practical preference:** many teams use `ref` for everything, objects included, precisely so they never have to reason about this. The cost is writing `.value`; the payoff is one mental rule instead of two."
+      }
+    }
+  ],
+
+  "drills": [],
+
+  "reward": {
+    "baseXp": 180,
+    "flawlessBonus": 70,
+    "noHintBonus": 40,
+    "comboMultiplierCap": 3,
+    "achievements": ["reactive-mind"]
+  },
+
+  "solution": {
+    "files": [
+      {
+        "path": "src/Cart.vue",
+        "content": "<script setup>\nimport { ref, reactive, computed } from 'vue';\n\nconst items = reactive([\n  { name: 'Teclado', price: 89, qty: 1 },\n  { name: 'Monitor', price: 210, qty: 2 },\n]);\n\nconst total = computed(() =>\n  items.reduce((sum, item) => sum + item.price * item.qty, 0),\n);\n\nconst clicks = ref(0);\nfunction addClick() {\n  clicks.value += 1;\n}\n</script>\n"
+      }
+    ],
+    "explanation": {
+      "es": "`computed` registra que depende de `items` mientras ejecuta la función, así que cualquier cambio en `qty` lo invalida y lo recalcula. Y `clicks.value += 1` escribe dentro del ref en lugar de reemplazarlo, que es lo que mantiene viva la reactividad.",
+      "en": "`computed` records its dependency on `items` while running the function, so any change to `qty` invalidates and recomputes it. And `clicks.value += 1` writes inside the ref instead of replacing it, which is what keeps reactivity alive."
+    }
+  }
+}

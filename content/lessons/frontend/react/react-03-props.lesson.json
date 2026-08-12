@@ -1,0 +1,230 @@
+{
+  "$schema": "../../../schema/lesson.schema.json",
+  "schemaVersion": 1,
+
+  "id": "react-03-props",
+  "track": "frontend",
+  "module": "react",
+  "order": 3,
+
+  "kind": "challenge",
+  "difficulty": "apprentice",
+  "estimatedMinutes": 24,
+
+  "title": {
+    "es": "Props: los parámetros de un componente",
+    "en": "Props: a component's parameters"
+  },
+  "summary": {
+    "es": "Convierte un componente rígido en uno reutilizable pasándole datos desde fuera. Y entiende por qué las props son de solo lectura, que es lo que hace predecible a React.",
+    "en": "Turn a rigid component into a reusable one by passing data from outside. And understand why props are read-only — the thing that makes React predictable."
+  },
+  "concepts": ["react", "props", "composition", "children", "unidirectional-data-flow"],
+  "prerequisites": ["react-02-jsx"],
+
+  "runtime": {
+    "kind": "sandpack",
+    "dependencies": { "react": "^19.0.0", "react-dom": "^19.0.0" },
+    "timeoutMs": 15000
+  },
+
+  "workspace": {
+    "entry": "src/App.jsx",
+    "allowCreate": true,
+    "allowDelete": false,
+    "protectedPaths": ["src/main.jsx"],
+    "files": [
+      {
+        "path": "src/App.jsx",
+        "content": "const players = [\n  { id: 1, name: 'Ada', level: 7, badge: 'Algoritmos' },\n  { id: 2, name: 'Linus', level: 4, badge: 'Kernel' },\n  { id: 3, name: 'Grace', level: 9, badge: 'Compiladores' },\n];\n\n// Este componente solo sabe pintar a Ada. Hazlo reutilizable.\nfunction PlayerCard() {\n  return (\n    <article className=\"card\">\n      <h2>Ada</h2>\n      <p>Nivel 7</p>\n      <span>Algoritmos</span>\n    </article>\n  );\n}\n\nexport default function App() {\n  return (\n    <section>\n      {/* TODO: pinta una tarjeta por jugador */}\n      <PlayerCard />\n    </section>\n  );\n}\n",
+        "active": true
+      },
+      {
+        "path": "src/main.jsx",
+        "content": "import { createRoot } from 'react-dom/client';\nimport App from './App';\n\ncreateRoot(document.getElementById('root')).render(<App />);\n",
+        "readOnly": true
+      }
+    ]
+  },
+
+  "rules": [
+    {
+      "id": "receives-props",
+      "kind": "regex-must",
+      "file": "src/App.jsx",
+      "pattern": "function\\s+PlayerCard\\s*\\(\\s*[\\{\\w]",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "`PlayerCard` no recibe nada. Un componente reutilizable necesita parámetros, igual que una función.",
+        "en": "`PlayerCard` takes nothing. A reusable component needs parameters, just like a function."
+      },
+      "points": 25
+    },
+    {
+      "id": "renders-all-cards",
+      "kind": "dom-assert",
+      "selector": ".card",
+      "assert": "countEquals",
+      "count": 3,
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Deben aparecer tres tarjetas, una por jugador.",
+        "en": "Three cards should appear, one per player."
+      },
+      "points": 30
+    },
+    {
+      "id": "no-hardcoded-name",
+      "kind": "regex-forbid",
+      "file": "src/App.jsx",
+      "pattern": "<h2>Ada</h2>",
+      "phase": "type",
+      "severity": "damage",
+      "message": {
+        "es": "¡Daño! Mientras el nombre esté escrito a mano, el componente solo sirve para un jugador.",
+        "en": "Damage! While the name is hardcoded, the component only works for one player."
+      },
+      "points": 0
+    },
+    {
+      "id": "no-prop-mutation",
+      "kind": "regex-forbid",
+      "file": "src/App.jsx",
+      "pattern": "props\\.\\w+\\s*=[^=]|\\bprops\\s*=\\s*\\{",
+      "phase": "type",
+      "severity": "damage",
+      "message": {
+        "es": "¡Daño! Las props son de solo lectura. Modificarlas rompe el flujo de datos y React no se entera del cambio.",
+        "en": "Damage! Props are read-only. Mutating them breaks the data flow and React never learns about the change."
+      },
+      "points": 0
+    },
+    {
+      "id": "list-has-key",
+      "kind": "regex-must",
+      "file": "src/App.jsx",
+      "pattern": "key\\s*=\\s*\\{\\s*\\w+\\.id\\s*\\}",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Cada tarjeta de la lista necesita `key`, y aquí hay un `id` estable para usarlo.",
+        "en": "Each card in the list needs a `key`, and there's a stable `id` right there to use."
+      },
+      "points": 20
+    },
+    {
+      "id": "shows-all-names",
+      "kind": "dom-assert",
+      "selector": ".card:last-child h2",
+      "assert": "textEquals",
+      "expected": "Grace",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "La última tarjeta debe mostrar a Grace: cada tarjeta pinta su propio jugador.",
+        "en": "The last card should show Grace: each card renders its own player."
+      },
+      "points": 25
+    }
+  ],
+
+  "steps": [
+    {
+      "id": "step-1-parameters",
+      "title": {
+        "es": "De un caso concreto a un molde",
+        "en": "From one specific case to a mould"
+      },
+      "body": {
+        "es": "`PlayerCard` funciona, pero solo para Ada. Todo lo que la distingue está escrito a mano dentro del componente, así que para tres jugadores harían falta tres componentes casi idénticos.\n\nLa solución es la misma que con cualquier función: **lo que varía se convierte en parámetro**. En React esos parámetros se llaman **props**, y llegan agrupados en un único objeto:\n\n```jsx\nfunction Saludo(props) {\n  return <h1>Hola, {props.nombre}</h1>;\n}\n\n<Saludo nombre=\"Ada\" />\n```\n\nEn la práctica casi siempre se desestructura en la propia firma, porque se lee mejor y deja a la vista qué necesita el componente:\n\n```jsx\nfunction Saludo({ nombre }) {\n  return <h1>Hola, {nombre}</h1>;\n}\n```\n\nEsa firma es documentación: quien la lea sabe qué hay que pasarle sin recorrer el cuerpo entero.\n\nDos detalles de sintaxis: los valores que no son texto van entre llaves (`nivel={7}`, no `nivel=\"7\"`, que pasaría el string `\"7\"`), y para dar un valor por defecto se usa el de la desestructuración: `function Saludo({ nombre = 'invitado' })`.",
+        "en": "`PlayerCard` works, but only for Ada. Everything that distinguishes her is hardcoded inside the component, so three players would need three near-identical components.\n\nThe fix is the same as with any function: **what varies becomes a parameter**. In React those parameters are called **props**, and they arrive bundled in a single object:\n\n```jsx\nfunction Greeting(props) {\n  return <h1>Hello, {props.name}</h1>;\n}\n\n<Greeting name=\"Ada\" />\n```\n\nIn practice people almost always destructure right in the signature, because it reads better and puts the component's requirements on display:\n\n```jsx\nfunction Greeting({ name }) {\n  return <h1>Hello, {name}</h1>;\n}\n```\n\nThat signature is documentation: whoever reads it knows what to pass without scanning the whole body.\n\nTwo syntax details: non-string values go in braces (`level={7}`, not `level=\"7\"`, which would pass the string `\"7\"`), and defaults come from the destructuring itself: `function Greeting({ name = 'guest' })`."
+      },
+      "task": {
+        "es": "Convierte `PlayerCard` en un componente que reciba los datos del jugador por props.",
+        "en": "Turn `PlayerCard` into a component that receives the player's data through props."
+      },
+      "focusFile": "src/App.jsx",
+      "focusLines": [7, 16],
+      "ruleIds": ["receives-props", "no-hardcoded-name"],
+      "xp": 45,
+      "hints": [
+        {
+          "id": "h-destructure",
+          "tier": 1,
+          "text": {
+            "es": "Puedes recibir los campos sueltos (`{ name, level, badge }`) o el objeto entero (`{ player }`). Ambas valen; la primera hace más explícito qué usa el componente.",
+            "en": "You can take the fields individually (`{ name, level, badge }`) or the whole object (`{ player }`). Both work; the first makes the component's needs more explicit."
+          },
+          "xpPenalty": 5,
+          "autoOfferAfterSeconds": 75
+        }
+      ]
+    },
+    {
+      "id": "step-2-render-list",
+      "title": {
+        "es": "Un componente, muchos datos",
+        "en": "One component, many data points"
+      },
+      "body": {
+        "es": "Ahora que el componente es un molde, pintar tres tarjetas es recorrer el array y pasarle a cada una sus datos.\n\nAquí se juntan las dos cosas que ya sabes: `.map()` para transformar el array en elementos, y `key` para que React sepa qué tarjeta es cuál. La `key` va en el **componente**, no dentro de él:\n\n```jsx\n{jugadores.map((jugador) => (\n  <TarjetaJugador key={jugador.id} nombre={jugador.nombre} />\n))}\n```\n\nSi el componente necesita muchos campos, existe el atajo de propagación: `<TarjetaJugador key={jugador.id} {...jugador} />` pasa todas las propiedades del objeto como props. Cómodo, pero úsalo con cuidado: deja de verse qué recibe realmente el componente, y ahí empiezan los props fantasma que nadie sabe de dónde salen.",
+        "en": "Now that the component is a mould, rendering three cards is a matter of walking the array and handing each one its data.\n\nThis brings together two things you already know: `.map()` to turn the array into elements, and `key` so React knows which card is which. The `key` goes on the **component**, not inside it:\n\n```jsx\n{players.map((player) => (\n  <PlayerCard key={player.id} name={player.name} />\n))}\n```\n\nIf the component needs many fields, there's the spread shortcut: `<PlayerCard key={player.id} {...player} />` passes every property of the object as props. Convenient, but use it carefully: it hides what the component actually receives, and that's where phantom props nobody can trace come from."
+      },
+      "task": {
+        "es": "Pinta una `PlayerCard` por cada jugador del array, con su `key`.",
+        "en": "Render one `PlayerCard` per player in the array, each with its `key`."
+      },
+      "focusFile": "src/App.jsx",
+      "focusLines": [18, 25],
+      "ruleIds": ["renders-all-cards", "list-has-key", "shows-all-names"],
+      "xp": 50
+    },
+    {
+      "id": "step-3-readonly",
+      "title": {
+        "es": "Por qué las props no se tocan",
+        "en": "Why props are never touched"
+      },
+      "body": {
+        "es": "Queda la regla que más define a React: **las props son de solo lectura**. Un componente no modifica lo que recibe; lo lee y pinta a partir de ello.\n\n```jsx\nfunction Tarjeta({ nivel }) {\n  nivel = nivel + 1;   // ❌ no hagas esto\n  ...\n}\n```\n\nLa razón es que los datos en React fluyen **en una sola dirección**: de padre a hijo. El padre es el dueño del dato; el hijo solo lo muestra. Cuando un hijo modifica lo que recibe, el padre no se entera, React no repinta, y acabas con la pantalla mostrando una cosa distinta de la que hay en memoria.\n\nEsa restricción es justo lo que hace depurable una aplicación de React: ante un dato incorrecto en pantalla, subes por el árbol hasta encontrar quién lo tiene, y no hay más caminos posibles. En librerías con enlace bidireccional, ese dato podría haber sido modificado desde cualquier punto.\n\n¿Y si el hijo necesita cambiar algo? Recibe también una **función** del padre y la llama. El dato sigue viviendo arriba; el hijo solo avisa. Lo verás en la siguiente lección, junto a `useState`.",
+        "en": "One rule defines React more than any other: **props are read-only**. A component doesn't modify what it receives; it reads it and renders from it.\n\n```jsx\nfunction Card({ level }) {\n  level = level + 1;   // ❌ don't\n  ...\n}\n```\n\nThe reason is that data in React flows **one way**: parent to child. The parent owns the data; the child only displays it. When a child mutates what it received, the parent never finds out, React doesn't repaint, and you end up with the screen showing something different from what's in memory.\n\nThat restriction is precisely what makes a React app debuggable: given wrong data on screen, you walk up the tree until you find who owns it, and there are no other possible paths. In libraries with two-way binding, that value could have been changed from anywhere.\n\nAnd if the child needs to change something? It also receives a **function** from the parent and calls it. The data still lives above; the child just reports. You'll see that next lesson, alongside `useState`."
+      },
+      "task": {
+        "es": "Sin cambiar código: identifica quién es el dueño de `players` y por dónde tendría que pasar un cambio de nivel.",
+        "en": "No code change: identify who owns `players` and where a level change would have to travel."
+      },
+      "focusFile": "src/App.jsx",
+      "ruleIds": ["no-prop-mutation"],
+      "xp": 35,
+      "bestPractice": {
+        "es": "**Flujo unidireccional:** esta es la idea que React popularizó y que hoy siguen Vue, Svelte y Angular moderno. El dato baja, los eventos suben. Cuando un componente necesita un dato que no le pertenece, se «eleva el estado» al ancestro común más cercano en lugar de duplicarlo.",
+        "en": "**Unidirectional data flow:** this is the idea React popularized and that Vue, Svelte and modern Angular all follow today. Data flows down, events flow up. When a component needs data it doesn't own, you \"lift state up\" to the nearest common ancestor instead of duplicating it."
+      }
+    }
+  ],
+
+  "drills": [],
+
+  "reward": {
+    "baseXp": 170,
+    "flawlessBonus": 65,
+    "noHintBonus": 35,
+    "comboMultiplierCap": 3,
+    "achievements": ["prop-plumber"]
+  },
+
+  "solution": {
+    "files": [
+      {
+        "path": "src/App.jsx",
+        "content": "const players = [\n  { id: 1, name: 'Ada', level: 7, badge: 'Algoritmos' },\n  { id: 2, name: 'Linus', level: 4, badge: 'Kernel' },\n  { id: 3, name: 'Grace', level: 9, badge: 'Compiladores' },\n];\n\nfunction PlayerCard({ name, level, badge }) {\n  return (\n    <article className=\"card\">\n      <h2>{name}</h2>\n      <p>Nivel {level}</p>\n      <span>{badge}</span>\n    </article>\n  );\n}\n\nexport default function App() {\n  return (\n    <section>\n      {players.map((player) => (\n        <PlayerCard\n          key={player.id}\n          name={player.name}\n          level={player.level}\n          badge={player.badge}\n        />\n      ))}\n    </section>\n  );\n}\n"
+      }
+    ],
+    "explanation": {
+      "es": "Las props se desestructuran en la firma, así que leer `PlayerCard` basta para saber qué necesita. La `key` usa el `id`, que es estable aunque la lista se reordene o se filtre.",
+      "en": "Props are destructured in the signature, so reading `PlayerCard` is enough to know what it needs. The `key` uses the `id`, which stays stable even if the list reorders or filters."
+    }
+  }
+}

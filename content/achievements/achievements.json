@@ -1,0 +1,146 @@
+[
+  {
+    "id": "first-steps",
+    "title": { "es": "Primeros pasos", "en": "First steps" },
+    "description": {
+      "es": "Completaste tu primera lección. Todo lo demás sale de aquí.",
+      "en": "You finished your first lesson. Everything else grows from here."
+    },
+    "icon": "🌱",
+    "tier": "bronze",
+    "xpReward": 50,
+    "trigger": { "type": "lessons-completed", "value": 1 }
+  },
+  {
+    "id": "syntax-ninja",
+    "title": { "es": "Ninja de la sintaxis", "en": "Syntax ninja" },
+    "description": {
+      "es": "50 pulsaciones seguidas sin romper el ritmo.",
+      "en": "50 keystrokes in a row without breaking the rhythm."
+    },
+    "icon": "🥷",
+    "tier": "silver",
+    "xpReward": 120,
+    "trigger": { "type": "combo-reached", "value": 50 }
+  },
+  {
+    "id": "coding-spree",
+    "title": { "es": "Racha imparable", "en": "Unstoppable spree" },
+    "description": {
+      "es": "150 pulsaciones encadenadas. Las manos ya van solas.",
+      "en": "150 chained keystrokes. Your hands are on autopilot."
+    },
+    "icon": "⚡",
+    "tier": "gold",
+    "xpReward": 250,
+    "trigger": { "type": "combo-reached", "value": 150 }
+  },
+  {
+    "id": "keyboard-warrior",
+    "title": { "es": "Guerrero del teclado", "en": "Keyboard warrior" },
+    "description": {
+      "es": "10.000 pulsaciones acumuladas. Eso es músculo de verdad.",
+      "en": "10,000 keystrokes logged. That's real muscle."
+    },
+    "icon": "⌨️",
+    "tier": "gold",
+    "xpReward": 300,
+    "trigger": { "type": "keystrokes-total", "value": 10000 }
+  },
+  {
+    "id": "flawless-run",
+    "title": { "es": "Sin un rasguño", "en": "Not a scratch" },
+    "description": {
+      "es": "Tres lecciones seguidas sin recibir un solo daño.",
+      "en": "Three lessons in a row without taking a single hit."
+    },
+    "icon": "🛡️",
+    "tier": "silver",
+    "xpReward": 180,
+    "trigger": { "type": "flawless-streak", "value": 3 }
+  },
+  {
+    "id": "no-hands-held",
+    "title": { "es": "Sin ayuda", "en": "No hand-holding" },
+    "description": {
+      "es": "Cinco lecciones resueltas sin gastar una sola pista.",
+      "en": "Five lessons solved without spending a single hint."
+    },
+    "icon": "🧭",
+    "tier": "gold",
+    "xpReward": 280,
+    "trigger": { "type": "no-hint-lessons", "value": 5 }
+  },
+  {
+    "id": "javascript-adept",
+    "title": { "es": "Adepto de JavaScript", "en": "JavaScript adept" },
+    "description": {
+      "es": "Completaste el módulo de JavaScript de principio a fin.",
+      "en": "You finished the JavaScript module end to end."
+    },
+    "icon": "📜",
+    "tier": "gold",
+    "xpReward": 400,
+    "trigger": { "type": "module-completed", "module": "javascript" }
+  },
+  {
+    "id": "react-adept",
+    "title": { "es": "Adepto de React", "en": "React adept" },
+    "description": {
+      "es": "Completaste el módulo de React, boss incluido.",
+      "en": "You finished the React module, boss included."
+    },
+    "icon": "⚛️",
+    "tier": "gold",
+    "xpReward": 400,
+    "trigger": { "type": "module-completed", "module": "react" }
+  },
+  {
+    "id": "algorithm-slayer",
+    "title": { "es": "Cazador de algoritmos", "en": "Algorithm slayer" },
+    "description": {
+      "es": "Superaste un reto de entrevista de optimización.",
+      "en": "You beat an optimization interview challenge."
+    },
+    "icon": "⚔️",
+    "tier": "legendary",
+    "xpReward": 500,
+    "trigger": { "type": "interview-solved", "category": "optimization", "value": 1 }
+  },
+  {
+    "id": "docker-master",
+    "title": { "es": "Maestro de Docker", "en": "Docker master" },
+    "description": {
+      "es": "Domaste la caché de capas y adelgazaste la imagen.",
+      "en": "You tamed the layer cache and slimmed the image down."
+    },
+    "icon": "🐳",
+    "tier": "legendary",
+    "xpReward": 500,
+    "trigger": { "type": "interview-solved", "category": "infra", "value": 1 }
+  },
+  {
+    "id": "speed-runner",
+    "title": { "es": "Velocista", "en": "Speed runner" },
+    "description": {
+      "es": "Resolviste una lección completa en menos de cinco minutos.",
+      "en": "You cleared a whole lesson in under five minutes."
+    },
+    "icon": "🏃",
+    "tier": "silver",
+    "xpReward": 150,
+    "trigger": { "type": "speed-clear", "underSeconds": 300 }
+  },
+  {
+    "id": "frontend-pilgrim",
+    "title": { "es": "Peregrino del frontend", "en": "Frontend pilgrim" },
+    "description": {
+      "es": "Diez lecciones de frontend a tus espaldas.",
+      "en": "Ten frontend lessons behind you."
+    },
+    "icon": "🎨",
+    "tier": "silver",
+    "xpReward": 200,
+    "trigger": { "type": "lessons-completed", "track": "frontend", "value": 10 }
+  }
+]

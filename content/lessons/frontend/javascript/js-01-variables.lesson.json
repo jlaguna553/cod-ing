@@ -1,0 +1,187 @@
+{
+  "$schema": "../../../schema/lesson.schema.json",
+  "schemaVersion": 1,
+  "id": "js-01-variables",
+  "track": "frontend",
+  "module": "javascript",
+  "order": 1,
+  "kind": "concept",
+  "difficulty": "novice",
+  "estimatedMinutes": 14,
+  "title": {
+    "es": "Guardar datos: `const`, `let` y por qué nunca `var`",
+    "en": "Storing data: `const`, `let`, and why never `var`"
+  },
+  "summary": {
+    "es": "Aprende a declarar variables como se hace hoy en cualquier equipo profesional, y entiende qué significa realmente que algo sea `const`.",
+    "en": "Learn to declare variables the way every professional team does today, and understand what `const` actually promises."
+  },
+  "concepts": [
+    "javascript",
+    "variables",
+    "scope",
+    "immutability"
+  ],
+  "prerequisites": [],
+  "runtime": {
+    "kind": "dom",
+    "dependencies": {},
+    "timeoutMs": 5000
+  },
+  "workspace": {
+    "entry": "index.js",
+    "allowCreate": false,
+    "allowDelete": false,
+    "protectedPaths": [],
+    "files": [
+      {
+        "path": "index.js",
+        "content": "// El nombre del jugador no cambia en toda la partida.\nvar playerName = 'Ada';\n\n// La puntuación sube con cada acierto.\nvar score = 0;\nscore = score + 10;\n\n// El equipo se decide al empezar y ya no cambia.\nvar team = 'cyan';\n\nconsole.log(playerName, score, team);\n",
+        "active": true
+      }
+    ]
+  },
+  "rules": [
+    {
+      "id": "no-var",
+      "kind": "regex-forbid",
+      "file": "index.js",
+      "pattern": "\\bvar\\s+",
+      "phase": "type",
+      "severity": "damage",
+      "message": {
+        "es": "¡Daño! `var` es la forma antigua. Tiene reglas de alcance que sorprenden y hoy no se usa en código nuevo.",
+        "en": "Damage! `var` is the old way. Its scoping rules surprise people and it isn't used in new code today."
+      },
+      "points": 0
+    },
+    {
+      "id": "const-by-default",
+      "kind": "ast-query",
+      "file": "index.js",
+      "query": "VariableDeclaration[kind=\"const\"]",
+      "minMatches": 2,
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "`playerName` y `team` no cambian nunca: deben ser `const`.",
+        "en": "`playerName` and `team` never change: they should be `const`."
+      },
+      "successMessage": {
+        "es": "Bien: lo que no cambia, declarado como que no cambia.",
+        "en": "Good: what doesn't change is declared as not changing."
+      },
+      "points": 30
+    },
+    {
+      "id": "let-for-score",
+      "kind": "regex-must",
+      "file": "index.js",
+      "pattern": "let\\s+score",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "`score` sí cambia, así que necesita `let`. Con `const` el reasignarlo lanzaría un error.",
+        "en": "`score` does change, so it needs `let`. With `const`, reassigning it would throw."
+      },
+      "points": 25
+    },
+    {
+      "id": "output-correct",
+      "kind": "stdout-match",
+      "matches": "Ada.*10.*cyan",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "La salida esperada es `Ada 10 cyan`.",
+        "en": "Expected output is `Ada 10 cyan`."
+      },
+      "points": 20
+    }
+  ],
+  "steps": [
+    {
+      "id": "step-1-const-let",
+      "title": {
+        "es": "Declara la intención, no solo el dato",
+        "en": "Declare the intent, not just the data"
+      },
+      "body": {
+        "es": "Al declarar una variable estás diciendo dos cosas: qué guardas y **si va a cambiar**. Esa segunda parte es información valiosa para quien lea el código después — normalmente tú, tres meses más tarde.\n\n- `const` → esta referencia no se va a reasignar. Es el valor por defecto.\n- `let` → esto va a cambiar, y quiero que se note.\n\nLa regla que siguen la mayoría de equipos: **empieza siempre con `const` y cambia a `let` solo cuando el compilador te obligue.** No es purismo; es que al leer un `let` sabes que hay que seguirle la pista, y al leer un `const` puedes dejar de pensar en esa variable.\n\n`var` es la forma anterior a 2015. Sigue funcionando —JavaScript no rompe la web— pero tiene un alcance distinto que produce bugs sutiles, y hoy no se escribe en código nuevo.",
+        "en": "Declaring a variable says two things: what you're storing and **whether it will change**. That second part is valuable information for whoever reads the code later — usually you, three months on.\n\n- `const` → this binding won't be reassigned. It's the default.\n- `let` → this will change, and I want that to be visible.\n\nThe rule most teams follow: **always start with `const` and switch to `let` only when the compiler makes you.** It isn't purism; it's that a `let` tells you to track that variable, while a `const` lets you stop thinking about it.\n\n`var` is the pre-2015 form. It still works — JavaScript doesn't break the web — but it scopes differently and produces subtle bugs, so it isn't written in new code today."
+      },
+      "task": {
+        "es": "Sustituye los tres `var` por `const` o `let` según si el valor cambia o no.",
+        "en": "Replace the three `var`s with `const` or `let` depending on whether the value changes."
+      },
+      "focusFile": "index.js",
+      "focusLines": [
+        1,
+        9
+      ],
+      "ruleIds": [
+        "no-var",
+        "const-by-default",
+        "let-for-score",
+        "output-correct"
+      ],
+      "xp": 40,
+      "hints": [
+        {
+          "id": "h1",
+          "tier": 1,
+          "text": {
+            "es": "Recorre el archivo y pregúntate por cada variable: ¿aparece a la izquierda de un `=` más de una vez? Si sí, `let`. Si no, `const`.",
+            "en": "Walk the file and ask of each variable: does it appear on the left of an `=` more than once? If yes, `let`. If not, `const`."
+          },
+          "xpPenalty": 5,
+          "autoOfferAfterSeconds": 60
+        }
+      ]
+    },
+    {
+      "id": "step-2-const-truth",
+      "title": {
+        "es": "Lo que `const` NO significa",
+        "en": "What `const` does NOT mean"
+      },
+      "body": {
+        "es": "Aquí hay una confusión que arrastra mucha gente durante años.\n\n`const` **no** hace el valor inmutable. Lo que congela es la **referencia**: la variable no puede apuntar a otra cosa. Si lo que guarda es un objeto o un array, su contenido sí se puede modificar.\n\n```js\nconst equipo = ['Ada'];\nequipo.push('Linus');   // ✅ permitido: el array cambia, la referencia no\nequipo = ['otro'];      // ❌ TypeError: eso sí es reasignar\n```\n\nDicho de otro modo: `const` promete «esta caja siempre será la misma caja», no «lo que hay dentro no cambiará». Para congelar el contenido existe `Object.freeze`, aunque en la práctica se usa poco: lo habitual es simplemente no mutar (lo verás en la lección de `.map()`).",
+        "en": "Here's a confusion people carry for years.\n\n`const` does **not** make the value immutable. It freezes the **binding**: the variable can't point at something else. If what it holds is an object or an array, its contents can still be changed.\n\n```js\nconst team = ['Ada'];\nteam.push('Linus');   // ✅ allowed: the array changes, the binding doesn't\nteam = ['other'];     // ❌ TypeError: that's reassignment\n```\n\nPut differently: `const` promises \"this box will always be the same box\", not \"what's inside won't change\". To freeze the contents there's `Object.freeze`, though in practice it's rare: the usual approach is simply not to mutate (you'll see this in the `.map()` lesson)."
+      },
+      "task": {
+        "es": "Sin cambiar código: predice cuál de las dos líneas del ejemplo lanzaría un error y por qué.",
+        "en": "No code change: predict which of the two example lines would throw, and why."
+      },
+      "focusFile": "index.js",
+      "ruleIds": [],
+      "xp": 25,
+      "bestPractice": {
+        "es": "**Clean Code:** un archivo lleno de `const` se lee más rápido porque cada `let` es una señal de «aquí hay estado que cambia, préstale atención». Si todo es `let`, la señal desaparece y hay que seguir la pista de todo.",
+        "en": "**Clean Code:** a file full of `const` reads faster because every `let` becomes a signal — \"there's changing state here, pay attention\". If everything is `let`, the signal disappears and you have to track everything."
+      }
+    }
+  ],
+  "drills": [],
+  "reward": {
+    "baseXp": 90,
+    "flawlessBonus": 35,
+    "noHintBonus": 20,
+    "comboMultiplierCap": 3,
+    "achievements": [
+      "first-steps"
+    ]
+  },
+  "solution": {
+    "files": [
+      {
+        "path": "index.js",
+        "content": "// El nombre del jugador no cambia en toda la partida.\nconst playerName = 'Ada';\n\n// La puntuación sube con cada acierto.\nlet score = 0;\nscore = score + 10;\n\n// El equipo se decide al empezar y ya no cambia.\nconst team = 'cyan';\n\nconsole.log(playerName, score, team);\n"
+      }
+    ],
+    "explanation": {
+      "es": "Dos `const` y un `let`. La proporción es la normal en código real: la mayoría de las variables no se reasignan nunca, y marcarlo hace el archivo más fácil de leer.",
+      "en": "Two `const` and one `let`. That ratio is normal in real code: most variables are never reassigned, and marking it makes the file easier to read."
+    }
+  }
+}

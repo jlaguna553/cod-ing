@@ -1,0 +1,3080 @@
+{
+  "$id": "https://codequest.dev/schema/lesson.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "schemaVersion": {
+      "type": "number",
+      "const": 1
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+    },
+    "track": {
+      "type": "string",
+      "enum": [
+        "frontend",
+        "backend",
+        "devops"
+      ]
+    },
+    "module": {
+      "type": "string",
+      "minLength": 1
+    },
+    "order": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "concept",
+        "drill",
+        "challenge",
+        "interview",
+        "system-design"
+      ]
+    },
+    "difficulty": {
+      "type": "string",
+      "enum": [
+        "novice",
+        "apprentice",
+        "adept",
+        "expert",
+        "interview"
+      ]
+    },
+    "estimatedMinutes": {
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991
+    },
+    "title": {
+      "type": "object",
+      "properties": {
+        "es": {
+          "type": "string",
+          "minLength": 1
+        },
+        "en": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "es",
+        "en"
+      ]
+    },
+    "summary": {
+      "type": "object",
+      "properties": {
+        "es": {
+          "type": "string",
+          "minLength": 1
+        },
+        "en": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "es",
+        "en"
+      ]
+    },
+    "concepts": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "prerequisites": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "runtime": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "dom",
+            "sandpack",
+            "webcontainer",
+            "pyodide",
+            "remote",
+            "cli-sim"
+          ]
+        },
+        "command": {
+          "type": "string"
+        },
+        "terminal": {
+          "default": {},
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "default": false,
+              "type": "boolean"
+            },
+            "allowedCommands": {
+              "default": [],
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "greeting": {
+              "type": "object",
+              "properties": {
+                "es": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "en": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "required": [
+                "es",
+                "en"
+              ]
+            }
+          }
+        },
+        "dependencies": {
+          "default": {},
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "previewPort": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "language": {
+          "type": "string"
+        },
+        "cliScenario": {
+          "type": "string"
+        },
+        "timeoutMs": {
+          "default": 10000,
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "kind"
+      ]
+    },
+    "workspace": {
+      "type": "object",
+      "properties": {
+        "files": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string",
+                "minLength": 1
+              },
+              "content": {
+                "type": "string"
+              },
+              "readOnly": {
+                "default": false,
+                "type": "boolean"
+              },
+              "hidden": {
+                "default": false,
+                "type": "boolean"
+              },
+              "active": {
+                "default": false,
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "path",
+              "content"
+            ]
+          }
+        },
+        "entry": {
+          "type": "string",
+          "minLength": 1
+        },
+        "allowCreate": {
+          "default": false,
+          "type": "boolean"
+        },
+        "allowDelete": {
+          "default": false,
+          "type": "boolean"
+        },
+        "protectedPaths": {
+          "default": [],
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "files",
+        "entry"
+      ]
+    },
+    "rules": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "phase": {
+                "default": "submit",
+                "type": "string",
+                "enum": [
+                  "type",
+                  "run",
+                  "submit"
+                ]
+              },
+              "severity": {
+                "default": "error",
+                "type": "string",
+                "enum": [
+                  "damage",
+                  "error",
+                  "warn"
+                ]
+              },
+              "message": {
+                "type": "object",
+                "properties": {
+                  "es": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "en": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "es",
+                  "en"
+                ]
+              },
+              "successMessage": {
+                "type": "object",
+                "properties": {
+                  "es": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "en": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "es",
+                  "en"
+                ]
+              },
+              "points": {
+                "default": 10,
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "hidden": {
+                "default": false,
+                "type": "boolean"
+              },
+              "kind": {
+                "type": "string",
+                "const": "regex-must"
+              },
+              "file": {
+                "type": "string"
+              },
+              "pattern": {
+                "type": "string"
+              },
+              "flags": {
+                "default": "m",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "message",
+              "kind",
+              "file",
+              "pattern"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "phase": {
+                "default": "submit",
+                "type": "string",
+                "enum": [
+                  "type",
+                  "run",
+                  "submit"
+                ]
+              },
+              "severity": {
+                "default": "error",
+                "type": "string",
+                "enum": [
+                  "damage",
+                  "error",
+                  "warn"
+                ]
+              },
+              "message": {
+                "type": "object",
+                "properties": {
+                  "es": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "en": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "es",
+                  "en"
+                ]
+              },
+              "successMessage": {
+                "type": "object",
+                "properties": {
+                  "es": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "en": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "es",
+                  "en"
+                ]
+              },
+              "points": {
+                "default": 10,
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "hidden": {
+                "default": false,
+                "type": "boolean"
+              },
+              "kind": {
+                "type": "string",
+                "const": "regex-forbid"
+              },
+              "file": {
+                "type": "string"
+              },
+              "pattern": {
+                "type": "string"
+              },
+              "flags": {
+                "default": "m",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "message",
+              "kind",
+              "file",
+              "pattern"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "phase": {
+                "default": "submit",
+                "type": "string",
+                "enum": [
+                  "type",
+                  "run",
+                  "submit"
+                ]
+              },
+              "severity": {
+                "default": "error",
+                "type": "string",
+                "enum": [
+                  "damage",
+                  "error",
+                  "warn"
+                ]
+              },
+              "message": {
+                "type": "object",
+                "properties": {
+                  "es": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "en": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "es",
+                  "en"
+                ]
+              },
+              "successMessage": {
+                "type": "object",
+                "properties": {
+                  "es": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "en": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "es",
+                  "en"
+                ]
+              },
+              "points": {
+                "default": 10,
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "hidden": {
+                "default": false,
+                "type": "boolean"
+              },
+              "kind": {
+                "type": "string",
+                "const": "ast-query"
+              },
+              "file": {
+                "type": "string"
+              },
+              "query": {
+                "type": "string"
+              },
+              "minMatches": {
+                "default": 1,
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "maxMatches": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "captureEquals": {
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "id",
+              "message",
+              "kind",
+              "file",
+              "query"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "phase": {
+                "default": "submit",
+                "type": "string",
+                "enum": [
+                  "type",
+                  "run",
+                  "submit"
+                ]
+              },
+              "severity": {
+                "default": "error",
+                "type": "string",
+                "enum": [
+                  "damage",
+                  "error",
+                  "warn"
+                ]
+              },
+              "message": {
+                "type": "object",
+                "properties": {
+                  "es": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "en": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "es",
+                  "en"
+                ]
+              },
+              "successMessage": {
+                "type": "object",
+                "properties": {
+                  "es": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "en": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "es",
+                  "en"
+                ]
+              },
+              "points": {
+                "default": 10,
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "hidden": {
+                "default": false,
+                "type": "boolean"
+              },
+              "kind": {
+                "type": "string",
+                "const": "dom-assert"
+              },
+              "selector": {
+                "type": "string"
+              },
+              "assert": {
+                "type": "string",
+                "enum": [
+                  "exists",
+                  "notExists",
+                  "textEquals",
+                  "textContains",
+                  "attrEquals",
+                  "styleEquals",
+                  "countEquals"
+                ]
+              },
+              "attribute": {
+                "type": "string"
+              },
+              "expected": {
+                "type": "string"
+              },
+              "count": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              }
+            },
+            "required": [
+              "id",
+              "message",
+              "kind",
+              "selector",
+              "assert"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "phase": {
+                "default": "submit",
+                "type": "string",
+                "enum": [
+                  "type",
+                  "run",
+                  "submit"
+                ]
+              },
+              "severity": {
+                "default": "error",
+                "type": "string",
+                "enum": [
+                  "damage",
+                  "error",
+                  "warn"
+                ]
+              },
+              "message": {
+                "type": "object",
+                "properties": {
+                  "es": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "en": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "es",
+                  "en"
+                ]
+              },
+              "successMessage": {
+                "type": "object",
+                "properties": {
+                  "es": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "en": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "es",
+                  "en"
+                ]
+              },
+              "points": {
+                "default": 10,
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "hidden": {
+                "default": false,
+                "type": "boolean"
+              },
+              "kind": {
+                "type": "string",
+                "const": "stdout-match"
+              },
+              "equals": {
+                "type": "string"
+              },
+              "matches": {
+                "type": "string"
+              },
+              "expectExitCode": {
+                "default": 0,
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              }
+            },
+            "required": [
+              "id",
+              "message",
+              "kind"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "phase": {
+                "default": "submit",
+                "type": "string",
+                "enum": [
+                  "type",
+                  "run",
+                  "submit"
+                ]
+              },
+              "severity": {
+                "default": "error",
+                "type": "string",
+                "enum": [
+                  "damage",
+                  "error",
+                  "warn"
+                ]
+              },
+              "message": {
+                "type": "object",
+                "properties": {
+                  "es": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "en": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "es",
+                  "en"
+                ]
+              },
+              "successMessage": {
+                "type": "object",
+                "properties": {
+                  "es": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "en": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "es",
+                  "en"
+                ]
+              },
+              "points": {
+                "default": 10,
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "hidden": {
+                "default": false,
+                "type": "boolean"
+              },
+              "kind": {
+                "type": "string",
+                "const": "unit-test"
+              },
+              "testFile": {
+                "type": "string"
+              },
+              "framework": {
+                "type": "string",
+                "enum": [
+                  "vitest",
+                  "jest",
+                  "pytest",
+                  "go-test"
+                ]
+              },
+              "testName": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "message",
+              "kind",
+              "testFile",
+              "framework"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "phase": {
+                "default": "submit",
+                "type": "string",
+                "enum": [
+                  "type",
+                  "run",
+                  "submit"
+                ]
+              },
+              "severity": {
+                "default": "error",
+                "type": "string",
+                "enum": [
+                  "damage",
+                  "error",
+                  "warn"
+                ]
+              },
+              "message": {
+                "type": "object",
+                "properties": {
+                  "es": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "en": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "es",
+                  "en"
+                ]
+              },
+              "successMessage": {
+                "type": "object",
+                "properties": {
+                  "es": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "en": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "es",
+                  "en"
+                ]
+              },
+              "points": {
+                "default": 10,
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "hidden": {
+                "default": false,
+                "type": "boolean"
+              },
+              "kind": {
+                "type": "string",
+                "const": "http-assert"
+              },
+              "method": {
+                "default": "GET",
+                "type": "string",
+                "enum": [
+                  "GET",
+                  "POST",
+                  "PUT",
+                  "PATCH",
+                  "DELETE"
+                ]
+              },
+              "path": {
+                "type": "string"
+              },
+              "body": {},
+              "headers": {
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {
+                  "type": "string"
+                }
+              },
+              "expectStatus": {
+                "default": 200,
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "expectJson": {
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {}
+              }
+            },
+            "required": [
+              "id",
+              "message",
+              "kind",
+              "path"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "phase": {
+                "default": "submit",
+                "type": "string",
+                "enum": [
+                  "type",
+                  "run",
+                  "submit"
+                ]
+              },
+              "severity": {
+                "default": "error",
+                "type": "string",
+                "enum": [
+                  "damage",
+                  "error",
+                  "warn"
+                ]
+              },
+              "message": {
+                "type": "object",
+                "properties": {
+                  "es": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "en": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "es",
+                  "en"
+                ]
+              },
+              "successMessage": {
+                "type": "object",
+                "properties": {
+                  "es": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "en": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "es",
+                  "en"
+                ]
+              },
+              "points": {
+                "default": 10,
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "hidden": {
+                "default": false,
+                "type": "boolean"
+              },
+              "kind": {
+                "type": "string",
+                "const": "file-exists"
+              },
+              "file": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "message",
+              "kind",
+              "file"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "phase": {
+                "default": "submit",
+                "type": "string",
+                "enum": [
+                  "type",
+                  "run",
+                  "submit"
+                ]
+              },
+              "severity": {
+                "default": "error",
+                "type": "string",
+                "enum": [
+                  "damage",
+                  "error",
+                  "warn"
+                ]
+              },
+              "message": {
+                "type": "object",
+                "properties": {
+                  "es": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "en": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "es",
+                  "en"
+                ]
+              },
+              "successMessage": {
+                "type": "object",
+                "properties": {
+                  "es": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "en": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "es",
+                  "en"
+                ]
+              },
+              "points": {
+                "default": 10,
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "hidden": {
+                "default": false,
+                "type": "boolean"
+              },
+              "kind": {
+                "type": "string",
+                "const": "dockerfile-lint"
+              },
+              "file": {
+                "default": "Dockerfile",
+                "type": "string"
+              },
+              "rules": {
+                "minItems": 1,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "multi-stage",
+                    "cache-order",
+                    "non-root-user",
+                    "pinned-base-image",
+                    "no-secrets",
+                    "minimal-layers",
+                    "has-dockerignore",
+                    "healthcheck"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "id",
+              "message",
+              "kind",
+              "rules"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "phase": {
+                "default": "submit",
+                "type": "string",
+                "enum": [
+                  "type",
+                  "run",
+                  "submit"
+                ]
+              },
+              "severity": {
+                "default": "error",
+                "type": "string",
+                "enum": [
+                  "damage",
+                  "error",
+                  "warn"
+                ]
+              },
+              "message": {
+                "type": "object",
+                "properties": {
+                  "es": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "en": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "es",
+                  "en"
+                ]
+              },
+              "successMessage": {
+                "type": "object",
+                "properties": {
+                  "es": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "en": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "es",
+                  "en"
+                ]
+              },
+              "points": {
+                "default": 10,
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "hidden": {
+                "default": false,
+                "type": "boolean"
+              },
+              "kind": {
+                "type": "string",
+                "const": "yaml-path"
+              },
+              "file": {
+                "type": "string"
+              },
+              "path": {
+                "type": "string"
+              },
+              "equals": {},
+              "matches": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "message",
+              "kind",
+              "file",
+              "path"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "phase": {
+                "default": "submit",
+                "type": "string",
+                "enum": [
+                  "type",
+                  "run",
+                  "submit"
+                ]
+              },
+              "severity": {
+                "default": "error",
+                "type": "string",
+                "enum": [
+                  "damage",
+                  "error",
+                  "warn"
+                ]
+              },
+              "message": {
+                "type": "object",
+                "properties": {
+                  "es": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "en": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "es",
+                  "en"
+                ]
+              },
+              "successMessage": {
+                "type": "object",
+                "properties": {
+                  "es": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "en": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "es",
+                  "en"
+                ]
+              },
+              "points": {
+                "default": 10,
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "hidden": {
+                "default": false,
+                "type": "boolean"
+              },
+              "kind": {
+                "type": "string",
+                "const": "cli-transcript"
+              },
+              "expectedCommands": {
+                "minItems": 1,
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "allowExtra": {
+                "default": true,
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "id",
+              "message",
+              "kind",
+              "expectedCommands"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "phase": {
+                "default": "submit",
+                "type": "string",
+                "enum": [
+                  "type",
+                  "run",
+                  "submit"
+                ]
+              },
+              "severity": {
+                "default": "error",
+                "type": "string",
+                "enum": [
+                  "damage",
+                  "error",
+                  "warn"
+                ]
+              },
+              "message": {
+                "type": "object",
+                "properties": {
+                  "es": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "en": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "es",
+                  "en"
+                ]
+              },
+              "successMessage": {
+                "type": "object",
+                "properties": {
+                  "es": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "en": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "es",
+                  "en"
+                ]
+              },
+              "points": {
+                "default": 10,
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "hidden": {
+                "default": false,
+                "type": "boolean"
+              },
+              "kind": {
+                "type": "string",
+                "const": "custom"
+              },
+              "handler": {
+                "type": "string"
+              },
+              "args": {
+                "default": {},
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {}
+              }
+            },
+            "required": [
+              "id",
+              "message",
+              "kind",
+              "handler"
+            ]
+          }
+        ]
+      }
+    },
+    "steps": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "title": {
+            "type": "object",
+            "properties": {
+              "es": {
+                "type": "string",
+                "minLength": 1
+              },
+              "en": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "es",
+              "en"
+            ]
+          },
+          "body": {
+            "type": "object",
+            "properties": {
+              "es": {
+                "type": "string",
+                "minLength": 1
+              },
+              "en": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "es",
+              "en"
+            ]
+          },
+          "task": {
+            "type": "object",
+            "properties": {
+              "es": {
+                "type": "string",
+                "minLength": 1
+              },
+              "en": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "es",
+              "en"
+            ]
+          },
+          "focusFile": {
+            "type": "string"
+          },
+          "focusLines": {
+            "type": "array",
+            "prefixItems": [
+              {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              }
+            ]
+          },
+          "ruleIds": {
+            "default": [],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "hints": {
+            "default": [],
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "tier": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 3
+                },
+                "text": {
+                  "type": "object",
+                  "properties": {
+                    "es": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "en": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "required": [
+                    "es",
+                    "en"
+                  ]
+                },
+                "xpPenalty": {
+                  "default": 5,
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "autoOfferAfterSeconds": {
+                  "default": 0,
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                }
+              },
+              "required": [
+                "id",
+                "tier",
+                "text"
+              ]
+            }
+          },
+          "xp": {
+            "default": 25,
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "bestPractice": {
+            "type": "object",
+            "properties": {
+              "es": {
+                "type": "string",
+                "minLength": 1
+              },
+              "en": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "es",
+              "en"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "body",
+          "task"
+        ]
+      }
+    },
+    "drills": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "prompt": {
+            "type": "object",
+            "properties": {
+              "es": {
+                "type": "string",
+                "minLength": 1
+              },
+              "en": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "es",
+              "en"
+            ]
+          },
+          "starter": {
+            "default": "",
+            "type": "string"
+          },
+          "solution": {
+            "type": "string"
+          },
+          "rules": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "phase": {
+                      "default": "submit",
+                      "type": "string",
+                      "enum": [
+                        "type",
+                        "run",
+                        "submit"
+                      ]
+                    },
+                    "severity": {
+                      "default": "error",
+                      "type": "string",
+                      "enum": [
+                        "damage",
+                        "error",
+                        "warn"
+                      ]
+                    },
+                    "message": {
+                      "type": "object",
+                      "properties": {
+                        "es": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "en": {
+                          "type": "string",
+                          "minLength": 1
+                        }
+                      },
+                      "required": [
+                        "es",
+                        "en"
+                      ]
+                    },
+                    "successMessage": {
+                      "type": "object",
+                      "properties": {
+                        "es": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "en": {
+                          "type": "string",
+                          "minLength": 1
+                        }
+                      },
+                      "required": [
+                        "es",
+                        "en"
+                      ]
+                    },
+                    "points": {
+                      "default": 10,
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    "hidden": {
+                      "default": false,
+                      "type": "boolean"
+                    },
+                    "kind": {
+                      "type": "string",
+                      "const": "regex-must"
+                    },
+                    "file": {
+                      "type": "string"
+                    },
+                    "pattern": {
+                      "type": "string"
+                    },
+                    "flags": {
+                      "default": "m",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "message",
+                    "kind",
+                    "file",
+                    "pattern"
+                  ]
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "phase": {
+                      "default": "submit",
+                      "type": "string",
+                      "enum": [
+                        "type",
+                        "run",
+                        "submit"
+                      ]
+                    },
+                    "severity": {
+                      "default": "error",
+                      "type": "string",
+                      "enum": [
+                        "damage",
+                        "error",
+                        "warn"
+                      ]
+                    },
+                    "message": {
+                      "type": "object",
+                      "properties": {
+                        "es": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "en": {
+                          "type": "string",
+                          "minLength": 1
+                        }
+                      },
+                      "required": [
+                        "es",
+                        "en"
+                      ]
+                    },
+                    "successMessage": {
+                      "type": "object",
+                      "properties": {
+                        "es": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "en": {
+                          "type": "string",
+                          "minLength": 1
+                        }
+                      },
+                      "required": [
+                        "es",
+                        "en"
+                      ]
+                    },
+                    "points": {
+                      "default": 10,
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    "hidden": {
+                      "default": false,
+                      "type": "boolean"
+                    },
+                    "kind": {
+                      "type": "string",
+                      "const": "regex-forbid"
+                    },
+                    "file": {
+                      "type": "string"
+                    },
+                    "pattern": {
+                      "type": "string"
+                    },
+                    "flags": {
+                      "default": "m",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "message",
+                    "kind",
+                    "file",
+                    "pattern"
+                  ]
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "phase": {
+                      "default": "submit",
+                      "type": "string",
+                      "enum": [
+                        "type",
+                        "run",
+                        "submit"
+                      ]
+                    },
+                    "severity": {
+                      "default": "error",
+                      "type": "string",
+                      "enum": [
+                        "damage",
+                        "error",
+                        "warn"
+                      ]
+                    },
+                    "message": {
+                      "type": "object",
+                      "properties": {
+                        "es": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "en": {
+                          "type": "string",
+                          "minLength": 1
+                        }
+                      },
+                      "required": [
+                        "es",
+                        "en"
+                      ]
+                    },
+                    "successMessage": {
+                      "type": "object",
+                      "properties": {
+                        "es": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "en": {
+                          "type": "string",
+                          "minLength": 1
+                        }
+                      },
+                      "required": [
+                        "es",
+                        "en"
+                      ]
+                    },
+                    "points": {
+                      "default": 10,
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    "hidden": {
+                      "default": false,
+                      "type": "boolean"
+                    },
+                    "kind": {
+                      "type": "string",
+                      "const": "ast-query"
+                    },
+                    "file": {
+                      "type": "string"
+                    },
+                    "query": {
+                      "type": "string"
+                    },
+                    "minMatches": {
+                      "default": 1,
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    "maxMatches": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    "captureEquals": {
+                      "type": "object",
+                      "propertyNames": {
+                        "type": "string"
+                      },
+                      "additionalProperties": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "message",
+                    "kind",
+                    "file",
+                    "query"
+                  ]
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "phase": {
+                      "default": "submit",
+                      "type": "string",
+                      "enum": [
+                        "type",
+                        "run",
+                        "submit"
+                      ]
+                    },
+                    "severity": {
+                      "default": "error",
+                      "type": "string",
+                      "enum": [
+                        "damage",
+                        "error",
+                        "warn"
+                      ]
+                    },
+                    "message": {
+                      "type": "object",
+                      "properties": {
+                        "es": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "en": {
+                          "type": "string",
+                          "minLength": 1
+                        }
+                      },
+                      "required": [
+                        "es",
+                        "en"
+                      ]
+                    },
+                    "successMessage": {
+                      "type": "object",
+                      "properties": {
+                        "es": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "en": {
+                          "type": "string",
+                          "minLength": 1
+                        }
+                      },
+                      "required": [
+                        "es",
+                        "en"
+                      ]
+                    },
+                    "points": {
+                      "default": 10,
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    "hidden": {
+                      "default": false,
+                      "type": "boolean"
+                    },
+                    "kind": {
+                      "type": "string",
+                      "const": "dom-assert"
+                    },
+                    "selector": {
+                      "type": "string"
+                    },
+                    "assert": {
+                      "type": "string",
+                      "enum": [
+                        "exists",
+                        "notExists",
+                        "textEquals",
+                        "textContains",
+                        "attrEquals",
+                        "styleEquals",
+                        "countEquals"
+                      ]
+                    },
+                    "attribute": {
+                      "type": "string"
+                    },
+                    "expected": {
+                      "type": "string"
+                    },
+                    "count": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "message",
+                    "kind",
+                    "selector",
+                    "assert"
+                  ]
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "phase": {
+                      "default": "submit",
+                      "type": "string",
+                      "enum": [
+                        "type",
+                        "run",
+                        "submit"
+                      ]
+                    },
+                    "severity": {
+                      "default": "error",
+                      "type": "string",
+                      "enum": [
+                        "damage",
+                        "error",
+                        "warn"
+                      ]
+                    },
+                    "message": {
+                      "type": "object",
+                      "properties": {
+                        "es": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "en": {
+                          "type": "string",
+                          "minLength": 1
+                        }
+                      },
+                      "required": [
+                        "es",
+                        "en"
+                      ]
+                    },
+                    "successMessage": {
+                      "type": "object",
+                      "properties": {
+                        "es": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "en": {
+                          "type": "string",
+                          "minLength": 1
+                        }
+                      },
+                      "required": [
+                        "es",
+                        "en"
+                      ]
+                    },
+                    "points": {
+                      "default": 10,
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    "hidden": {
+                      "default": false,
+                      "type": "boolean"
+                    },
+                    "kind": {
+                      "type": "string",
+                      "const": "stdout-match"
+                    },
+                    "equals": {
+                      "type": "string"
+                    },
+                    "matches": {
+                      "type": "string"
+                    },
+                    "expectExitCode": {
+                      "default": 0,
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "message",
+                    "kind"
+                  ]
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "phase": {
+                      "default": "submit",
+                      "type": "string",
+                      "enum": [
+                        "type",
+                        "run",
+                        "submit"
+                      ]
+                    },
+                    "severity": {
+                      "default": "error",
+                      "type": "string",
+                      "enum": [
+                        "damage",
+                        "error",
+                        "warn"
+                      ]
+                    },
+                    "message": {
+                      "type": "object",
+                      "properties": {
+                        "es": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "en": {
+                          "type": "string",
+                          "minLength": 1
+                        }
+                      },
+                      "required": [
+                        "es",
+                        "en"
+                      ]
+                    },
+                    "successMessage": {
+                      "type": "object",
+                      "properties": {
+                        "es": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "en": {
+                          "type": "string",
+                          "minLength": 1
+                        }
+                      },
+                      "required": [
+                        "es",
+                        "en"
+                      ]
+                    },
+                    "points": {
+                      "default": 10,
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    "hidden": {
+                      "default": false,
+                      "type": "boolean"
+                    },
+                    "kind": {
+                      "type": "string",
+                      "const": "unit-test"
+                    },
+                    "testFile": {
+                      "type": "string"
+                    },
+                    "framework": {
+                      "type": "string",
+                      "enum": [
+                        "vitest",
+                        "jest",
+                        "pytest",
+                        "go-test"
+                      ]
+                    },
+                    "testName": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "message",
+                    "kind",
+                    "testFile",
+                    "framework"
+                  ]
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "phase": {
+                      "default": "submit",
+                      "type": "string",
+                      "enum": [
+                        "type",
+                        "run",
+                        "submit"
+                      ]
+                    },
+                    "severity": {
+                      "default": "error",
+                      "type": "string",
+                      "enum": [
+                        "damage",
+                        "error",
+                        "warn"
+                      ]
+                    },
+                    "message": {
+                      "type": "object",
+                      "properties": {
+                        "es": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "en": {
+                          "type": "string",
+                          "minLength": 1
+                        }
+                      },
+                      "required": [
+                        "es",
+                        "en"
+                      ]
+                    },
+                    "successMessage": {
+                      "type": "object",
+                      "properties": {
+                        "es": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "en": {
+                          "type": "string",
+                          "minLength": 1
+                        }
+                      },
+                      "required": [
+                        "es",
+                        "en"
+                      ]
+                    },
+                    "points": {
+                      "default": 10,
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    "hidden": {
+                      "default": false,
+                      "type": "boolean"
+                    },
+                    "kind": {
+                      "type": "string",
+                      "const": "http-assert"
+                    },
+                    "method": {
+                      "default": "GET",
+                      "type": "string",
+                      "enum": [
+                        "GET",
+                        "POST",
+                        "PUT",
+                        "PATCH",
+                        "DELETE"
+                      ]
+                    },
+                    "path": {
+                      "type": "string"
+                    },
+                    "body": {},
+                    "headers": {
+                      "type": "object",
+                      "propertyNames": {
+                        "type": "string"
+                      },
+                      "additionalProperties": {
+                        "type": "string"
+                      }
+                    },
+                    "expectStatus": {
+                      "default": 200,
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "expectJson": {
+                      "type": "object",
+                      "propertyNames": {
+                        "type": "string"
+                      },
+                      "additionalProperties": {}
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "message",
+                    "kind",
+                    "path"
+                  ]
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "phase": {
+                      "default": "submit",
+                      "type": "string",
+                      "enum": [
+                        "type",
+                        "run",
+                        "submit"
+                      ]
+                    },
+                    "severity": {
+                      "default": "error",
+                      "type": "string",
+                      "enum": [
+                        "damage",
+                        "error",
+                        "warn"
+                      ]
+                    },
+                    "message": {
+                      "type": "object",
+                      "properties": {
+                        "es": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "en": {
+                          "type": "string",
+                          "minLength": 1
+                        }
+                      },
+                      "required": [
+                        "es",
+                        "en"
+                      ]
+                    },
+                    "successMessage": {
+                      "type": "object",
+                      "properties": {
+                        "es": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "en": {
+                          "type": "string",
+                          "minLength": 1
+                        }
+                      },
+                      "required": [
+                        "es",
+                        "en"
+                      ]
+                    },
+                    "points": {
+                      "default": 10,
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    "hidden": {
+                      "default": false,
+                      "type": "boolean"
+                    },
+                    "kind": {
+                      "type": "string",
+                      "const": "file-exists"
+                    },
+                    "file": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "message",
+                    "kind",
+                    "file"
+                  ]
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "phase": {
+                      "default": "submit",
+                      "type": "string",
+                      "enum": [
+                        "type",
+                        "run",
+                        "submit"
+                      ]
+                    },
+                    "severity": {
+                      "default": "error",
+                      "type": "string",
+                      "enum": [
+                        "damage",
+                        "error",
+                        "warn"
+                      ]
+                    },
+                    "message": {
+                      "type": "object",
+                      "properties": {
+                        "es": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "en": {
+                          "type": "string",
+                          "minLength": 1
+                        }
+                      },
+                      "required": [
+                        "es",
+                        "en"
+                      ]
+                    },
+                    "successMessage": {
+                      "type": "object",
+                      "properties": {
+                        "es": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "en": {
+                          "type": "string",
+                          "minLength": 1
+                        }
+                      },
+                      "required": [
+                        "es",
+                        "en"
+                      ]
+                    },
+                    "points": {
+                      "default": 10,
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    "hidden": {
+                      "default": false,
+                      "type": "boolean"
+                    },
+                    "kind": {
+                      "type": "string",
+                      "const": "dockerfile-lint"
+                    },
+                    "file": {
+                      "default": "Dockerfile",
+                      "type": "string"
+                    },
+                    "rules": {
+                      "minItems": 1,
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "enum": [
+                          "multi-stage",
+                          "cache-order",
+                          "non-root-user",
+                          "pinned-base-image",
+                          "no-secrets",
+                          "minimal-layers",
+                          "has-dockerignore",
+                          "healthcheck"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "message",
+                    "kind",
+                    "rules"
+                  ]
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "phase": {
+                      "default": "submit",
+                      "type": "string",
+                      "enum": [
+                        "type",
+                        "run",
+                        "submit"
+                      ]
+                    },
+                    "severity": {
+                      "default": "error",
+                      "type": "string",
+                      "enum": [
+                        "damage",
+                        "error",
+                        "warn"
+                      ]
+                    },
+                    "message": {
+                      "type": "object",
+                      "properties": {
+                        "es": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "en": {
+                          "type": "string",
+                          "minLength": 1
+                        }
+                      },
+                      "required": [
+                        "es",
+                        "en"
+                      ]
+                    },
+                    "successMessage": {
+                      "type": "object",
+                      "properties": {
+                        "es": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "en": {
+                          "type": "string",
+                          "minLength": 1
+                        }
+                      },
+                      "required": [
+                        "es",
+                        "en"
+                      ]
+                    },
+                    "points": {
+                      "default": 10,
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    "hidden": {
+                      "default": false,
+                      "type": "boolean"
+                    },
+                    "kind": {
+                      "type": "string",
+                      "const": "yaml-path"
+                    },
+                    "file": {
+                      "type": "string"
+                    },
+                    "path": {
+                      "type": "string"
+                    },
+                    "equals": {},
+                    "matches": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "message",
+                    "kind",
+                    "file",
+                    "path"
+                  ]
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "phase": {
+                      "default": "submit",
+                      "type": "string",
+                      "enum": [
+                        "type",
+                        "run",
+                        "submit"
+                      ]
+                    },
+                    "severity": {
+                      "default": "error",
+                      "type": "string",
+                      "enum": [
+                        "damage",
+                        "error",
+                        "warn"
+                      ]
+                    },
+                    "message": {
+                      "type": "object",
+                      "properties": {
+                        "es": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "en": {
+                          "type": "string",
+                          "minLength": 1
+                        }
+                      },
+                      "required": [
+                        "es",
+                        "en"
+                      ]
+                    },
+                    "successMessage": {
+                      "type": "object",
+                      "properties": {
+                        "es": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "en": {
+                          "type": "string",
+                          "minLength": 1
+                        }
+                      },
+                      "required": [
+                        "es",
+                        "en"
+                      ]
+                    },
+                    "points": {
+                      "default": 10,
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    "hidden": {
+                      "default": false,
+                      "type": "boolean"
+                    },
+                    "kind": {
+                      "type": "string",
+                      "const": "cli-transcript"
+                    },
+                    "expectedCommands": {
+                      "minItems": 1,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "allowExtra": {
+                      "default": true,
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "message",
+                    "kind",
+                    "expectedCommands"
+                  ]
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "phase": {
+                      "default": "submit",
+                      "type": "string",
+                      "enum": [
+                        "type",
+                        "run",
+                        "submit"
+                      ]
+                    },
+                    "severity": {
+                      "default": "error",
+                      "type": "string",
+                      "enum": [
+                        "damage",
+                        "error",
+                        "warn"
+                      ]
+                    },
+                    "message": {
+                      "type": "object",
+                      "properties": {
+                        "es": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "en": {
+                          "type": "string",
+                          "minLength": 1
+                        }
+                      },
+                      "required": [
+                        "es",
+                        "en"
+                      ]
+                    },
+                    "successMessage": {
+                      "type": "object",
+                      "properties": {
+                        "es": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "en": {
+                          "type": "string",
+                          "minLength": 1
+                        }
+                      },
+                      "required": [
+                        "es",
+                        "en"
+                      ]
+                    },
+                    "points": {
+                      "default": 10,
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    "hidden": {
+                      "default": false,
+                      "type": "boolean"
+                    },
+                    "kind": {
+                      "type": "string",
+                      "const": "custom"
+                    },
+                    "handler": {
+                      "type": "string"
+                    },
+                    "args": {
+                      "default": {},
+                      "type": "object",
+                      "propertyNames": {
+                        "type": "string"
+                      },
+                      "additionalProperties": {}
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "message",
+                    "kind",
+                    "handler"
+                  ]
+                }
+              ]
+            }
+          },
+          "targetSeconds": {
+            "default": 45,
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "id",
+          "prompt",
+          "solution",
+          "rules"
+        ]
+      }
+    },
+    "interview": {
+      "type": "object",
+      "properties": {
+        "prompt": {
+          "type": "object",
+          "properties": {
+            "es": {
+              "type": "string",
+              "minLength": 1
+            },
+            "en": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "es",
+            "en"
+          ]
+        },
+        "company_style": {
+          "default": "generic",
+          "type": "string",
+          "enum": [
+            "faang",
+            "startup",
+            "enterprise",
+            "generic"
+          ]
+        },
+        "category": {
+          "type": "string",
+          "enum": [
+            "algorithms",
+            "data-structures",
+            "system-design",
+            "debugging",
+            "optimization",
+            "security",
+            "infra"
+          ]
+        },
+        "constraints": {
+          "default": [],
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "es": {
+                "type": "string",
+                "minLength": 1
+              },
+              "en": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "es",
+              "en"
+            ]
+          }
+        },
+        "complexity": {
+          "type": "object",
+          "properties": {
+            "time": {
+              "type": "string"
+            },
+            "space": {
+              "type": "string"
+            }
+          }
+        },
+        "followUps": {
+          "default": [],
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "question": {
+                "type": "object",
+                "properties": {
+                  "es": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "en": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "es",
+                  "en"
+                ]
+              },
+              "answer": {
+                "type": "object",
+                "properties": {
+                  "es": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "en": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "es",
+                  "en"
+                ]
+              }
+            },
+            "required": [
+              "question",
+              "answer"
+            ]
+          }
+        },
+        "rubric": {
+          "default": [],
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "criterion": {
+                "type": "object",
+                "properties": {
+                  "es": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "en": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "es",
+                  "en"
+                ]
+              },
+              "weight": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              }
+            },
+            "required": [
+              "criterion",
+              "weight"
+            ]
+          }
+        }
+      },
+      "required": [
+        "prompt",
+        "category"
+      ]
+    },
+    "reward": {
+      "default": {},
+      "type": "object",
+      "properties": {
+        "baseXp": {
+          "default": 100,
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "flawlessBonus": {
+          "default": 50,
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "noHintBonus": {
+          "default": 25,
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "comboMultiplierCap": {
+          "default": 3,
+          "type": "number",
+          "minimum": 1,
+          "maximum": 5
+        },
+        "achievements": {
+          "default": [],
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "solution": {
+      "type": "object",
+      "properties": {
+        "files": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string"
+              },
+              "content": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "path",
+              "content"
+            ]
+          }
+        },
+        "explanation": {
+          "type": "object",
+          "properties": {
+            "es": {
+              "type": "string",
+              "minLength": 1
+            },
+            "en": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "es",
+            "en"
+          ]
+        }
+      },
+      "required": [
+        "files",
+        "explanation"
+      ]
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "id",
+    "track",
+    "module",
+    "order",
+    "kind",
+    "difficulty",
+    "estimatedMinutes",
+    "title",
+    "summary",
+    "runtime",
+    "workspace",
+    "steps"
+  ]
+}

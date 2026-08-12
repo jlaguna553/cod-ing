@@ -1,0 +1,328 @@
+{
+  "$schema": "../../../schema/lesson.schema.json",
+  "schemaVersion": 1,
+
+  "id": "docker-07-layer-cache",
+  "track": "devops",
+  "module": "docker",
+  "order": 7,
+
+  "kind": "interview",
+  "difficulty": "interview",
+  "estimatedMinutes": 30,
+
+  "title": {
+    "es": "Boss: el build de 9 minutos",
+    "en": "Boss fight: the 9-minute build"
+  },
+  "summary": {
+    "es": "Un Dockerfile real de producción tarda 9 minutos en cada commit. Diagnostica por qué se invalida la caché y reescríbelo con multi-stage. Pregunta clásica de entrevista de plataforma.",
+    "en": "A real production Dockerfile takes 9 minutes on every commit. Diagnose why the cache keeps busting and rewrite it multi-stage. A classic platform-engineering interview question."
+  },
+  "concepts": ["docker", "layer-cache", "multi-stage", "image-size", "container-security"],
+  "prerequisites": ["docker-03-dockerfile-basics", "docker-05-images-layers"],
+
+  "runtime": {
+    "kind": "cli-sim",
+    "cliScenario": "docker/layer-cache",
+    "command": "docker build -t api .",
+    "dependencies": {},
+    "timeoutMs": 15000
+  },
+
+  "workspace": {
+    "entry": "Dockerfile",
+    "files": [
+      {
+        "path": "Dockerfile",
+        "content": "FROM node:latest\n\nWORKDIR /app\n\nCOPY . .\n\nRUN npm install\nRUN npm run build\n\nENV API_KEY=sk-live-8f3a2b91c4\n\nEXPOSE 3000\nCMD [\"node\", \"dist/server.js\"]\n",
+        "active": true
+      },
+      {
+        "path": "package.json",
+        "content": "{\n  \"name\": \"api\",\n  \"scripts\": { \"build\": \"tsc\", \"start\": \"node dist/server.js\" },\n  \"dependencies\": { \"express\": \"4.19.2\" },\n  \"devDependencies\": { \"typescript\": \"5.4.5\" }\n}\n",
+        "readOnly": true
+      },
+      {
+        "path": ".dockerignore",
+        "content": "",
+        "active": false
+      },
+      {
+        "path": "src/server.ts",
+        "content": "import express from 'express';\nconst app = express();\napp.get('/health', (_, res) => res.json({ ok: true }));\napp.listen(3000);\n",
+        "readOnly": true
+      }
+    ]
+  },
+
+  "rules": [
+    {
+      "id": "pinned-image",
+      "kind": "dockerfile-lint",
+      "file": "Dockerfile",
+      "rules": ["pinned-base-image"],
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "`node:latest` no es reproducible: el build de hoy y el de mañana pueden usar versiones distintas de Node. Fija la versión (ej. `node:20-alpine`).",
+        "en": "`node:latest` isn't reproducible: today's build and tomorrow's may use different Node versions. Pin it (e.g. `node:20-alpine`)."
+      },
+      "points": 15
+    },
+    {
+      "id": "cache-order",
+      "kind": "dockerfile-lint",
+      "file": "Dockerfile",
+      "rules": ["cache-order"],
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Aquí está el bug de los 9 minutos: `COPY . .` antes de `npm install` invalida la capa de dependencias con **cualquier** cambio de código. Copia primero los manifests, instala, y copia el resto después.",
+        "en": "Here's the 9-minute bug: `COPY . .` before `npm install` busts the dependency layer on **any** code change. Copy the manifests first, install, then copy the rest."
+      },
+      "successMessage": {
+        "es": "Caché arreglada. Un cambio en src/ ya no reinstala node_modules.",
+        "en": "Cache fixed. A change in src/ no longer reinstalls node_modules."
+      },
+      "points": 35
+    },
+    {
+      "id": "multi-stage",
+      "kind": "dockerfile-lint",
+      "file": "Dockerfile",
+      "rules": ["multi-stage"],
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "La imagen final arrastra TypeScript y todo el devDependencies. Usa un stage `builder` y copia solo `dist/` y las deps de producción al stage final.",
+        "en": "The final image drags TypeScript and every devDependency along. Use a `builder` stage and copy only `dist/` plus production deps into the final stage."
+      },
+      "points": 30
+    },
+    {
+      "id": "no-secrets",
+      "kind": "dockerfile-lint",
+      "file": "Dockerfile",
+      "rules": ["no-secrets"],
+      "phase": "type",
+      "severity": "damage",
+      "message": {
+        "es": "⚠️ OWASP: una API key en `ENV` queda grabada en la capa de la imagen para siempre. Cualquiera con la imagen la puede leer con `docker history`. Inyéctala en runtime.",
+        "en": "⚠️ OWASP: an API key in `ENV` is baked into the image layer forever. Anyone with the image can read it via `docker history`. Inject it at runtime."
+      },
+      "points": 25
+    },
+    {
+      "id": "non-root",
+      "kind": "dockerfile-lint",
+      "file": "Dockerfile",
+      "rules": ["non-root-user"],
+      "phase": "submit",
+      "severity": "warn",
+      "message": {
+        "es": "El contenedor corre como root. Añade `USER node` — si alguien escapa del proceso, no debería aterrizar como root.",
+        "en": "The container runs as root. Add `USER node` — if someone escapes the process, they shouldn't land as root."
+      },
+      "points": 15
+    },
+    {
+      "id": "dockerignore",
+      "kind": "regex-must",
+      "file": ".dockerignore",
+      "pattern": "node_modules",
+      "phase": "submit",
+      "severity": "warn",
+      "message": {
+        "es": "`.dockerignore` está vacío: estás enviando `node_modules` y `.git` al daemon en cada build. Añade al menos `node_modules`.",
+        "en": "`.dockerignore` is empty: you're shipping `node_modules` and `.git` to the daemon on every build. Add at least `node_modules`."
+      },
+      "points": 10
+    },
+    {
+      "id": "verified-cache-hit",
+      "kind": "cli-transcript",
+      "expectedCommands": ["docker build -t api .", "docker build -t api ."],
+      "allowExtra": true,
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Ejecuta el build dos veces (con un cambio en `src/` entre medias) y demuestra que el segundo reutiliza la capa de `npm ci`.",
+        "en": "Run the build twice (with a change in `src/` in between) and prove the second one reuses the `npm ci` layer."
+      },
+      "points": 20
+    }
+  ],
+
+  "steps": [
+    {
+      "id": "step-1-diagnose",
+      "title": {
+        "es": "Diagnostica antes de tocar nada",
+        "en": "Diagnose before touching anything"
+      },
+      "body": {
+        "es": "En una entrevista, reescribir el Dockerfile de golpe es la respuesta mediocre. La buena empieza explicando el modelo mental: **cada instrucción es una capa, y una capa invalidada invalida todas las siguientes.**\n\nEjecuta `docker build -t api .` dos veces en la terminal y observa qué capas dicen `CACHED` y cuáles no.",
+        "en": "In an interview, rewriting the Dockerfile straight away is the mediocre answer. The good one starts by stating the mental model: **each instruction is a layer, and one busted layer busts every layer after it.**\n\nRun `docker build -t api .` twice in the terminal and watch which layers say `CACHED` and which don't."
+      },
+      "task": {
+        "es": "Ejecuta el build dos veces e identifica la primera capa que NO se cachea.",
+        "en": "Run the build twice and spot the first layer that does NOT get cached."
+      },
+      "focusFile": "Dockerfile",
+      "focusLines": [5, 7],
+      "ruleIds": ["verified-cache-hit"],
+      "xp": 40,
+      "hints": [
+        {
+          "id": "h1",
+          "tier": 1,
+          "text": {
+            "es": "Pregúntate: ¿qué entrada tiene la capa `COPY . .`? Si esa entrada cambia con cada commit, la capa se rehace... y con ella `npm install`.",
+            "en": "Ask yourself: what's the input to the `COPY . .` layer? If that input changes on every commit, the layer is rebuilt... and `npm install` with it."
+          },
+          "xpPenalty": 5,
+          "autoOfferAfterSeconds": 90
+        }
+      ]
+    },
+    {
+      "id": "step-2-cache-order",
+      "title": {
+        "es": "Reordena para aprovechar la caché",
+        "en": "Reorder to exploit the cache"
+      },
+      "body": {
+        "es": "La regla es simple y la repetirás toda tu carrera: **lo que cambia poco va arriba; lo que cambia mucho, abajo.**\n\nLas dependencias cambian una vez a la semana; el código, veinte veces al día. Docker invalida una capa cuando cambian sus entradas — así que si la instalación de dependencias depende de *todo* el código, se rehace con *cualquier* cambio.\n\nLa forma general, en cualquier ecosistema, son tres movimientos:\n\n1. Copiar **solo** el manifiesto de dependencias (`requirements.txt`, `go.mod`, `pom.xml`, lo que aplique).\n2. Instalar.\n3. Copiar ya el resto del código.\n\nUn detalle extra para el paso 2: en un build de imagen quieres el comando *reproducible* de tu gestor —el que instala exactamente lo que dice el lockfile y falla si discrepa— no el que resuelve versiones a su aire.",
+        "en": "The rule is simple and you'll reuse it your whole career: **what rarely changes goes on top; what changes constantly goes at the bottom.**\n\nDependencies change once a week; code changes twenty times a day. Docker invalidates a layer when its inputs change — so if installing dependencies depends on *all* your code, it gets redone on *any* change.\n\nThe general shape, in any ecosystem, is three moves:\n\n1. Copy **only** the dependency manifest (`requirements.txt`, `go.mod`, `pom.xml`, whatever applies).\n2. Install.\n3. Then copy the rest of the code.\n\nOne extra detail for move 2: in an image build you want your package manager's *reproducible* command — the one that installs exactly what the lockfile says and fails if they disagree — not the one that resolves versions on its own."
+      },
+      "task": {
+        "es": "Reordena el Dockerfile para que un cambio en `src/` no reinstale dependencias. Fija también la imagen base.",
+        "en": "Reorder the Dockerfile so a change in `src/` doesn't reinstall dependencies. Pin the base image too."
+      },
+      "focusFile": "Dockerfile",
+      "ruleIds": ["cache-order", "pinned-image", "dockerignore"],
+      "xp": 60,
+      "bestPractice": {
+        "es": "**Estándar de industria:** ordenar capas de menos a más volátil es la optimización #1 de cualquier Dockerfile. Suele bajar los builds de CI de minutos a segundos.",
+        "en": "**Industry standard:** ordering layers from least to most volatile is the #1 Dockerfile optimization. It routinely drops CI builds from minutes to seconds."
+      }
+    },
+    {
+      "id": "step-3-multistage",
+      "title": {
+        "es": "Multi-stage: que la imagen final solo lleve lo que corre",
+        "en": "Multi-stage: ship only what actually runs"
+      },
+      "body": {
+        "es": "Compilas con TypeScript, pero **ejecutas** JavaScript. El compilador no tiene por qué viajar a producción: es peso, superficie de ataque y tiempo de pull.\n\nUn multi-stage nombra varias fases y copia entre ellas solo el artefacto final. Así se ve en un proyecto Go, para que veas la forma sin que sea tu ejercicio:\n\n```dockerfile\nFROM golang:1.22 AS builder\nWORKDIR /src\nCOPY . .\nRUN go build -o /bin/app ./cmd/api\n\nFROM alpine:3.20\nCOPY --from=builder /bin/app /bin/app\nUSER nobody\nCMD [\"/bin/app\"]\n```\n\nFíjate en las dos piezas que importan: `AS <nombre>` bautiza una fase, y `COPY --from=<nombre>` cruza el artefacto. Todo lo demás de la fase de build —el compilador de Go entero— se queda fuera de la imagen final.\n\nAhora aplica esa misma forma a tu Dockerfile de Node: ¿qué fase compila, qué fase ejecuta, y qué es lo único que necesita cruzar entre ellas?",
+        "en": "You compile with TypeScript, but you **run** JavaScript. The compiler has no business going to production: it's weight, attack surface, and pull time.\n\nA multi-stage build names several stages and copies only the final artifact between them. Here's the shape in a Go project, so you see the pattern without it being your exercise:\n\n```dockerfile\nFROM golang:1.22 AS builder\nWORKDIR /src\nCOPY . .\nRUN go build -o /bin/app ./cmd/api\n\nFROM alpine:3.20\nCOPY --from=builder /bin/app /bin/app\nUSER nobody\nCMD [\"/bin/app\"]\n```\n\nNote the two pieces that matter: `AS <name>` christens a stage, and `COPY --from=<name>` ferries the artifact across. Everything else from the build stage — the entire Go compiler — stays out of the final image.\n\nNow apply that same shape to your Node Dockerfile: which stage compiles, which stage runs, and what is the only thing that needs to cross between them?"
+      },
+      "task": {
+        "es": "Divide el Dockerfile en `builder` y `runtime`, saca el secreto de `ENV` y ejecuta como usuario no-root.",
+        "en": "Split the Dockerfile into `builder` and `runtime`, get the secret out of `ENV`, and run as a non-root user."
+      },
+      "focusFile": "Dockerfile",
+      "ruleIds": ["multi-stage", "no-secrets", "non-root"],
+      "xp": 80,
+      "hints": [
+        {
+          "id": "h2",
+          "tier": 2,
+          "text": {
+            "es": "`COPY --from=builder /app/dist ./dist` es lo que cruza artefactos entre stages. Todo lo que no copies, se queda fuera de la imagen final.",
+            "en": "`COPY --from=builder /app/dist ./dist` is what moves artifacts across stages. Anything you don't copy stays out of the final image."
+          },
+          "xpPenalty": 10
+        }
+      ],
+      "bestPractice": {
+        "es": "**OWASP / secretos:** las variables de entorno con secretos deben inyectarse en runtime (`docker run -e`, un secret manager, o `--mount=type=secret` en BuildKit). Nunca en el Dockerfile: quedan en el historial de capas aunque las borres después.",
+        "en": "**OWASP / secrets:** env vars holding secrets must be injected at runtime (`docker run -e`, a secret manager, or BuildKit's `--mount=type=secret`). Never in the Dockerfile: they persist in layer history even if you delete them later."
+      }
+    }
+  ],
+
+  "drills": [],
+
+  "interview": {
+    "prompt": {
+      "es": "Tu equipo se queja de que el pipeline tarda 9 minutos por commit. Te pasan este Dockerfile. Tienes 20 minutos: explica en voz alta qué está mal, en qué orden lo arreglarías, y cuánto esperas ahorrar con cada cambio.",
+      "en": "Your team complains the pipeline takes 9 minutes per commit. They hand you this Dockerfile. You have 20 minutes: talk through what's wrong, in what order you'd fix it, and how much each change should save."
+    },
+    "company_style": "faang",
+    "category": "infra",
+    "constraints": [
+      {
+        "es": "La imagen final debe pesar menos de 200 MB.",
+        "en": "The final image must weigh under 200 MB."
+      },
+      {
+        "es": "Un cambio solo en `src/` no puede reinstalar dependencias.",
+        "en": "A change limited to `src/` must not reinstall dependencies."
+      },
+      {
+        "es": "Ningún secreto puede quedar en las capas de la imagen.",
+        "en": "No secret may remain in the image layers."
+      }
+    ],
+    "followUps": [
+      {
+        "question": {
+          "es": "El build sigue siendo lento en CI aunque local va rápido. ¿Por qué?",
+          "en": "The build is still slow in CI even though it's fast locally. Why?"
+        },
+        "answer": {
+          "es": "Los runners de CI son efímeros: arrancan sin caché de capas. Necesitas caché remota — `docker buildx --cache-from/--cache-to` contra un registry, o `cache-from: type=gha` en GitHub Actions. Sin eso, tu optimización de orden de capas no se nota en CI aunque sea perfecta.",
+          "en": "CI runners are ephemeral: they start with no layer cache. You need a remote cache — `docker buildx --cache-from/--cache-to` against a registry, or `cache-from: type=gha` on GitHub Actions. Without it your layer ordering, however perfect, buys nothing in CI."
+        }
+      },
+      {
+        "question": {
+          "es": "¿Por qué `npm ci` y no `npm install`?",
+          "en": "Why `npm ci` over `npm install`?"
+        },
+        "answer": {
+          "es": "`npm ci` instala exactamente lo del lockfile, falla si `package.json` y el lock discrepan, y borra `node_modules` antes de instalar. Es determinista — que es justo lo que quieres en un build de imagen que debe ser reproducible.",
+          "en": "`npm ci` installs exactly what the lockfile says, fails if `package.json` and the lock disagree, and wipes `node_modules` first. It's deterministic — precisely what you want in an image build that must be reproducible."
+        }
+      },
+      {
+        "question": {
+          "es": "¿Cómo reducirías aún más la imagen tras el multi-stage?",
+          "en": "How would you shrink the image further after multi-stage?"
+        },
+        "answer": {
+          "es": "Base `alpine` o `distroless` (sin shell ni gestor de paquetes: menos superficie de ataque), instalar en la fase final solo las dependencias de producción —tu gestor tiene un flag para omitir las de desarrollo—, y un `.dockerignore` agresivo. Para Go, incluso `FROM scratch` con un binario estático.",
+          "en": "An `alpine` or `distroless` base (no shell, no package manager: less attack surface), installing only production dependencies in the final stage — your package manager has a flag to skip the dev ones — and an aggressive `.dockerignore`. For Go, even `FROM scratch` with a static binary."
+        }
+      }
+    ],
+    "rubric": []
+  },
+
+  "reward": {
+    "baseXp": 400,
+    "flawlessBonus": 150,
+    "noHintBonus": 100,
+    "comboMultiplierCap": 2,
+    "achievements": ["docker-master", "cache-whisperer", "secret-keeper"]
+  },
+
+  "solution": {
+    "files": [
+      {
+        "path": "Dockerfile",
+        "content": "FROM node:20-alpine AS builder\nWORKDIR /app\nCOPY package*.json ./\nRUN npm ci\nCOPY . .\nRUN npm run build\n\nFROM node:20-alpine AS runtime\nWORKDIR /app\nCOPY package*.json ./\nRUN npm ci --omit=dev\nCOPY --from=builder /app/dist ./dist\nUSER node\nEXPOSE 3000\nCMD [\"node\", \"dist/server.js\"]\n"
+      },
+      {
+        "path": ".dockerignore",
+        "content": "node_modules\ndist\n.git\n.env\nDockerfile\n"
+      }
+    ],
+    "explanation": {
+      "es": "Tres cambios, tres efectos medibles: (1) copiar manifests antes de instalar convierte `npm ci` en una capa cacheada — el build pasa de ~9 min a ~40 s cuando solo cambia `src/`; (2) el multi-stage deja fuera TypeScript y devDependencies, bajando la imagen de ~1.1 GB a ~120 MB; (3) sacar `API_KEY` del Dockerfile evita que el secreto quede en `docker history` para siempre. `USER node` es la guinda: menos privilegio en runtime, coste cero.",
+      "en": "Three changes, three measurable effects: (1) copying manifests before installing turns `npm ci` into a cached layer — builds drop from ~9 min to ~40 s when only `src/` changes; (2) multi-stage leaves TypeScript and devDependencies behind, shrinking the image from ~1.1 GB to ~120 MB; (3) pulling `API_KEY` out of the Dockerfile keeps the secret out of `docker history` forever. `USER node` is the free win: less runtime privilege at zero cost."
+    }
+  }
+}

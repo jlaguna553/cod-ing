@@ -1,0 +1,271 @@
+{
+  "$schema": "../../../schema/lesson.schema.json",
+  "schemaVersion": 1,
+  "id": "js-02-functions",
+  "track": "frontend",
+  "module": "javascript",
+  "order": 2,
+  "kind": "drill",
+  "difficulty": "novice",
+  "estimatedMinutes": 16,
+  "title": {
+    "es": "Funciones: entra algo, sale algo",
+    "en": "Functions: something in, something out"
+  },
+  "summary": {
+    "es": "Declara funciones en sus tres formas, entiende cuándo el `return` es implícito, y grábate la sintaxis de la arrow function en la memoria muscular.",
+    "en": "Declare functions in their three forms, understand when `return` is implicit, and burn arrow function syntax into muscle memory."
+  },
+  "concepts": [
+    "javascript",
+    "functions",
+    "arrow-functions",
+    "return",
+    "parameters"
+  ],
+  "prerequisites": [
+    "js-01-variables"
+  ],
+  "runtime": {
+    "kind": "dom",
+    "dependencies": {},
+    "timeoutMs": 5000
+  },
+  "workspace": {
+    "entry": "index.js",
+    "allowCreate": false,
+    "allowDelete": false,
+    "protectedPaths": [],
+    "files": [
+      {
+        "path": "index.js",
+        "content": "// TODO: escribe una función que reciba un nombre y devuelva un saludo\n// Ejemplo: greet('Ada') → 'Hola, Ada'\n\n\nconsole.log(greet('Ada'));\n",
+        "active": true
+      }
+    ]
+  },
+  "rules": [
+    {
+      "id": "declares-greet",
+      "kind": "regex-must",
+      "file": "index.js",
+      "pattern": "(function\\s+greet|const\\s+greet\\s*=)",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Falta declarar la función `greet`.",
+        "en": "The `greet` function still needs to be declared."
+      },
+      "points": 20
+    },
+    {
+      "id": "has-return",
+      "kind": "regex-must",
+      "file": "index.js",
+      "pattern": "return\\s+|=>\\s*[`'\"]",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "La función tiene que **devolver** el saludo, no imprimirlo. Una función que no devuelve nada da `undefined`.",
+        "en": "The function has to **return** the greeting, not print it. A function that returns nothing gives back `undefined`."
+      },
+      "points": 25
+    },
+    {
+      "id": "no-console-inside",
+      "kind": "ast-query",
+      "file": "index.js",
+      "query": "VariableDeclarator[id.name=\"greet\"] CallExpression[callee.object.name=\"console\"], FunctionDeclaration[id.name=\"greet\"] CallExpression[callee.object.name=\"console\"]",
+      "minMatches": 0,
+      "maxMatches": 0,
+      "phase": "submit",
+      "severity": "damage",
+      "message": {
+        "es": "¡Daño! `console.log` dentro de la función la deja inservible: imprime, pero no devuelve nada que puedas usar.",
+        "en": "Damage! A `console.log` inside the function makes it useless: it prints, but hands back nothing you can use."
+      },
+      "points": 0
+    },
+    {
+      "id": "output-correct",
+      "kind": "stdout-match",
+      "equals": "Hola, Ada",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "La salida esperada es exactamente `Hola, Ada`.",
+        "en": "Expected output is exactly `Hola, Ada`."
+      },
+      "points": 30
+    }
+  ],
+  "steps": [
+    {
+      "id": "step-1-shapes",
+      "title": {
+        "es": "Tres formas de escribir lo mismo",
+        "en": "Three ways to write the same thing"
+      },
+      "body": {
+        "es": "Una función es una máquina: recibe **parámetros**, hace algo, y **devuelve** un resultado. Esa última parte es la que más cuesta al principio.\n\nJavaScript tiene tres sintaxis para declararlas:\n\n```js\n// 1. Declaración clásica\nfunction doble(n) {\n  return n * 2;\n}\n\n// 2. Arrow function con cuerpo\nconst doble = (n) => {\n  return n * 2;\n};\n\n// 3. Arrow function de una expresión — el return es IMPLÍCITO\nconst doble = (n) => n * 2;\n```\n\nLas tres hacen exactamente lo mismo. La tercera es la que verás por todas partes en React y en callbacks, y su truco está en lo que **falta**: sin llaves, el valor de la expresión se devuelve solo.\n\nEl error clásico: poner llaves *y* esperar el return implícito. `(n) => { n * 2 }` devuelve `undefined`, porque con llaves hay que escribir `return`.",
+        "en": "A function is a machine: it takes **parameters**, does something, and **returns** a result. That last part is what trips people up at first.\n\nJavaScript has three syntaxes for declaring them:\n\n```js\n// 1. Classic declaration\nfunction double(n) {\n  return n * 2;\n}\n\n// 2. Arrow function with a body\nconst double = (n) => {\n  return n * 2;\n};\n\n// 3. Single-expression arrow — the return is IMPLICIT\nconst double = (n) => n * 2;\n```\n\nAll three do exactly the same thing. The third is the one you'll see everywhere in React and in callbacks, and its trick is in what's **missing**: with no braces, the expression's value is returned for you.\n\nThe classic mistake: using braces *and* expecting the implicit return. `(n) => { n * 2 }` returns `undefined`, because with braces you have to write `return`."
+      },
+      "task": {
+        "es": "Escribe `greet` para que `greet('Ada')` devuelva el texto `Hola, Ada`.",
+        "en": "Write `greet` so that `greet('Ada')` returns the text `Hola, Ada`."
+      },
+      "focusFile": "index.js",
+      "focusLines": [
+        1,
+        4
+      ],
+      "ruleIds": [
+        "declares-greet",
+        "has-return",
+        "no-console-inside",
+        "output-correct"
+      ],
+      "xp": 40,
+      "hints": [
+        {
+          "id": "h1",
+          "tier": 1,
+          "text": {
+            "es": "Para pegar un valor dentro de un texto tienes las plantillas con acentos graves: `` `Hola, ${nombre}` ``.",
+            "en": "To drop a value inside a string you have backtick templates: `` `Hola, ${name}` ``."
+          },
+          "xpPenalty": 5,
+          "autoOfferAfterSeconds": 60
+        },
+        {
+          "id": "h2",
+          "tier": 3,
+          "text": {
+            "es": "`const greet = (name) => `Hola, ${name}`;`",
+            "en": "`const greet = (name) => `Hola, ${name}`;`"
+          },
+          "xpPenalty": 20
+        }
+      ],
+      "bestPractice": {
+        "es": "**Una función, una responsabilidad:** `greet` devuelve texto, no lo imprime. Así puedes usarla en una consola, en el DOM o en un test. Una función que imprime por dentro solo sirve para imprimir.",
+        "en": "**One function, one job:** `greet` returns text, it doesn't print it. That way you can use it in a console, in the DOM or in a test. A function that prints internally is only good for printing."
+      }
+    }
+  ],
+  "drills": [
+    {
+      "id": "drill-1",
+      "prompt": {
+        "es": "Arrow de una expresión: `square(4)` → `16`.",
+        "en": "Single-expression arrow: `square(4)` → `16`."
+      },
+      "starter": "const square = ",
+      "solution": "const square = (n) => n * n;",
+      "targetSeconds": 25,
+      "rules": [
+        {
+          "id": "d1-arrow",
+          "kind": "regex-must",
+          "file": "index.js",
+          "pattern": "square\\s*=\\s*\\(?\\w+\\)?\\s*=>",
+          "message": {
+            "es": "Usa una arrow function.",
+            "en": "Use an arrow function."
+          },
+          "points": 10
+        }
+      ]
+    },
+    {
+      "id": "drill-2",
+      "prompt": {
+        "es": "Dos parámetros: `add(2, 3)` → `5`.",
+        "en": "Two parameters: `add(2, 3)` → `5`."
+      },
+      "starter": "const add = ",
+      "solution": "const add = (a, b) => a + b;",
+      "targetSeconds": 25,
+      "rules": [
+        {
+          "id": "d2-two-params",
+          "kind": "regex-must",
+          "file": "index.js",
+          "pattern": "add\\s*=\\s*\\(\\s*\\w+\\s*,\\s*\\w+\\s*\\)\\s*=>",
+          "message": {
+            "es": "Dos parámetros entre paréntesis.",
+            "en": "Two parameters in parentheses."
+          },
+          "points": 10
+        }
+      ]
+    },
+    {
+      "id": "drill-3",
+      "prompt": {
+        "es": "Valor por defecto: `greet()` sin argumento → `Hola, invitado`.",
+        "en": "Default value: `greet()` with no argument → `Hola, invitado`."
+      },
+      "starter": "const greet = (name",
+      "solution": "const greet = (name = 'invitado') => `Hola, ${name}`;",
+      "targetSeconds": 40,
+      "rules": [
+        {
+          "id": "d3-default",
+          "kind": "regex-must",
+          "file": "index.js",
+          "pattern": "\\(\\s*\\w+\\s*=\\s*['\"`]",
+          "message": {
+            "es": "El valor por defecto se escribe en el propio parámetro.",
+            "en": "The default value goes on the parameter itself."
+          },
+          "points": 15
+        }
+      ]
+    },
+    {
+      "id": "drill-4",
+      "prompt": {
+        "es": "Devuelve un objeto desde una arrow de una expresión (ojo: hacen falta paréntesis).",
+        "en": "Return an object from a single-expression arrow (careful: it needs parentheses)."
+      },
+      "starter": "const toUser = (name) => ",
+      "solution": "const toUser = (name) => ({ name, level: 1 });",
+      "targetSeconds": 45,
+      "rules": [
+        {
+          "id": "d4-object",
+          "kind": "regex-must",
+          "file": "index.js",
+          "pattern": "=>\\s*\\(\\s*\\{",
+          "message": {
+            "es": "Sin paréntesis, JavaScript lee las llaves como el cuerpo de la función en lugar de como un objeto.",
+            "en": "Without parentheses, JavaScript reads the braces as the function body instead of an object."
+          },
+          "points": 15
+        }
+      ]
+    }
+  ],
+  "reward": {
+    "baseXp": 110,
+    "flawlessBonus": 45,
+    "noHintBonus": 25,
+    "comboMultiplierCap": 3,
+    "achievements": [
+      "function-former"
+    ]
+  },
+  "solution": {
+    "files": [
+      {
+        "path": "index.js",
+        "content": "const greet = (name) => `Hola, ${name}`;\n\nconsole.log(greet('Ada'));\n"
+      }
+    ],
+    "explanation": {
+      "es": "Una línea. Sin llaves, el valor de la plantilla se devuelve solo. El `console.log` queda fuera de la función, que es lo que la hace reutilizable.",
+      "en": "One line. With no braces, the template's value is returned automatically. The `console.log` stays outside the function, which is what makes it reusable."
+    }
+  }
+}

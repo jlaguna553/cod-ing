@@ -1,0 +1,271 @@
+{
+  "$schema": "../../../schema/lesson.schema.json",
+  "schemaVersion": 1,
+
+  "id": "css-05-flexbox-centering",
+  "track": "frontend",
+  "module": "css",
+  "order": 5,
+
+  "kind": "drill",
+  "difficulty": "apprentice",
+  "estimatedMinutes": 18,
+
+  "title": {
+    "es": "Flexbox: los tres ejes que resuelven el 80%",
+    "en": "Flexbox: the three axes that solve 80% of layouts"
+  },
+  "summary": {
+    "es": "Centrar, repartir y alinear con Flexbox hasta que salga sin pensar. Tres propiedades bien entendidas cubren la mayoría de los layouts que vas a escribir.",
+    "en": "Center, distribute and align with Flexbox until it comes out without thinking. Three properly understood properties cover most layouts you'll ever write."
+  },
+  "concepts": ["css", "flexbox", "layout", "alignment"],
+  "prerequisites": ["css-03-box-model"],
+
+  "runtime": {
+    "kind": "dom",
+    "dependencies": {},
+    "timeoutMs": 5000
+  },
+
+  "workspace": {
+    "entry": "styles.css",
+    "allowCreate": false,
+    "allowDelete": false,
+    "protectedPaths": [],
+    "files": [
+      {
+        "path": "styles.css",
+        "content": ".card {\n  width: 320px;\n  height: 200px;\n  border: 2px solid #22d3ee;\n  border-radius: 12px;\n  /* TODO: centra .badge dentro de esta tarjeta */\n}\n\n.badge {\n  padding: 0.5rem 1rem;\n  background: #22d3ee;\n  color: #05070d;\n  border-radius: 999px;\n}\n",
+        "active": true
+      },
+      {
+        "path": "index.html",
+        "content": "<!doctype html>\n<html>\n  <head>\n    <link rel=\"stylesheet\" href=\"./styles.css\" />\n  </head>\n  <body>\n    <div class=\"card\">\n      <span class=\"badge\">LVL 7</span>\n    </div>\n  </body>\n</html>\n",
+        "readOnly": true
+      }
+    ]
+  },
+
+  "rules": [
+    {
+      "id": "is-flex",
+      "kind": "regex-must",
+      "file": "styles.css",
+      "pattern": "display\\s*:\\s*flex",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Nada de Flexbox funciona hasta que el contenedor es `display: flex`.",
+        "en": "None of Flexbox works until the container is `display: flex`."
+      },
+      "points": 20
+    },
+    {
+      "id": "centered-both-axes",
+      "kind": "dom-assert",
+      "selector": ".card",
+      "assert": "styleEquals",
+      "attribute": "justify-content",
+      "expected": "center",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Falta centrar en el eje principal.",
+        "en": "Still not centered along the main axis."
+      },
+      "points": 25
+    },
+    {
+      "id": "centered-cross-axis",
+      "kind": "dom-assert",
+      "selector": ".card",
+      "assert": "styleEquals",
+      "attribute": "align-items",
+      "expected": "center",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Falta centrar en el eje transversal.",
+        "en": "Still not centered along the cross axis."
+      },
+      "points": 25
+    },
+    {
+      "id": "no-magic-margins",
+      "kind": "regex-forbid",
+      "file": "styles.css",
+      "pattern": "margin-(top|left)\\s*:\\s*\\d+px|position\\s*:\\s*absolute",
+      "phase": "type",
+      "severity": "damage",
+      "message": {
+        "es": "¡Daño! Centrar con márgenes en píxeles o posición absoluta se rompe en cuanto cambia el tamaño del contenido. Flexbox lo hace sin números mágicos.",
+        "en": "Damage! Centering with pixel margins or absolute positioning breaks the moment the content changes size. Flexbox does it with no magic numbers."
+      },
+      "points": 0
+    }
+  ],
+
+  "steps": [
+    {
+      "id": "step-1-axes",
+      "title": {
+        "es": "Todo depende de en qué dirección apunta el eje",
+        "en": "It all depends on which way the axis points"
+      },
+      "body": {
+        "es": "Flexbox confunde al principio por una razón concreta: sus propiedades **no son «horizontal» y «vertical»**, son «eje principal» y «eje transversal». Cuál es cuál lo decide `flex-direction`.\n\n- `flex-direction: row` (el valor por defecto) → el eje principal es **horizontal**.\n- `flex-direction: column` → el eje principal es **vertical**.\n\nY las dos propiedades de alineación siempre significan lo mismo respecto a esos ejes:\n\n- `justify-content` → reparte a lo largo del **eje principal**.\n- `align-items` → alinea en el **eje transversal**.\n\nPor eso `justify-content: center` centra horizontalmente en `row` y verticalmente en `column`. No cambió la propiedad: cambió hacia dónde apunta el eje.\n\nSi interiorizas solo esto, dejas de probar propiedades al azar.",
+        "en": "Flexbox confuses people for one specific reason: its properties **aren't \"horizontal\" and \"vertical\"**, they're \"main axis\" and \"cross axis\". Which is which is decided by `flex-direction`.\n\n- `flex-direction: row` (the default) → the main axis runs **horizontally**.\n- `flex-direction: column` → the main axis runs **vertically**.\n\nAnd the two alignment properties always mean the same thing relative to those axes:\n\n- `justify-content` → distributes along the **main axis**.\n- `align-items` → aligns along the **cross axis**.\n\nThat's why `justify-content: center` centers horizontally in `row` and vertically in `column`. The property didn't change: the axis it points along did.\n\nInternalize just this and you stop guessing properties at random."
+      },
+      "task": {
+        "es": "Centra `.badge` dentro de `.card`, en horizontal y en vertical, usando Flexbox.",
+        "en": "Center `.badge` inside `.card`, horizontally and vertically, using Flexbox."
+      },
+      "focusFile": "styles.css",
+      "focusLines": [1, 7],
+      "ruleIds": ["is-flex", "centered-both-axes", "centered-cross-axis", "no-magic-margins"],
+      "xp": 45,
+      "hints": [
+        {
+          "id": "h1",
+          "tier": 1,
+          "text": {
+            "es": "Necesitas tres declaraciones: activar Flexbox, y una propiedad de alineación por cada eje.",
+            "en": "You need three declarations: turn Flexbox on, then one alignment property per axis."
+          },
+          "xpPenalty": 5,
+          "autoOfferAfterSeconds": 60
+        },
+        {
+          "id": "h2",
+          "tier": 3,
+          "text": {
+            "es": "`display: flex; justify-content: center; align-items: center;`",
+            "en": "`display: flex; justify-content: center; align-items: center;`"
+          },
+          "xpPenalty": 20
+        }
+      ],
+      "bestPractice": {
+        "es": "**Estándar de la industria:** este trío es el «centrado perfecto» y funciona sea cual sea el tamaño del hijo. Los trucos con `position: absolute` y `transform: translate(-50%, -50%)` siguen circulando, pero sacan el elemento del flujo y complican todo lo que venga después. Flexbox para alinear en una dimensión; Grid cuando necesites filas **y** columnas a la vez.",
+        "en": "**Industry standard:** this trio is \"perfect centering\" and it holds no matter the child's size. The old `position: absolute` plus `transform: translate(-50%, -50%)` trick still circulates, but it pulls the element out of flow and complicates everything downstream. Flexbox to align along one dimension; Grid when you need rows **and** columns at once."
+      }
+    }
+  ],
+
+  "drills": [
+    {
+      "id": "drill-1",
+      "prompt": {
+        "es": "Barra de navegación: logo a la izquierda, enlaces a la derecha, en la misma línea.",
+        "en": "Nav bar: logo on the left, links on the right, on the same line."
+      },
+      "starter": ".navbar {\n  display: flex;\n  \n}",
+      "solution": ".navbar { display: flex; justify-content: space-between; align-items: center; }",
+      "targetSeconds": 35,
+      "rules": [
+        {
+          "id": "d1-between",
+          "kind": "regex-must",
+          "file": "styles.css",
+          "pattern": "justify-content\\s*:\\s*space-between",
+          "message": {
+            "es": "`space-between` empuja el primer y el último elemento a los extremos.",
+            "en": "`space-between` pushes the first and last items to the edges."
+          },
+          "points": 10
+        }
+      ]
+    },
+    {
+      "id": "drill-2",
+      "prompt": {
+        "es": "Apila tres tarjetas en vertical con 1rem de separación.",
+        "en": "Stack three cards vertically with 1rem of spacing."
+      },
+      "starter": ".stack {\n  display: flex;\n  \n}",
+      "solution": ".stack { display: flex; flex-direction: column; gap: 1rem; }",
+      "targetSeconds": 30,
+      "rules": [
+        {
+          "id": "d2-column",
+          "kind": "regex-must",
+          "file": "styles.css",
+          "pattern": "flex-direction\\s*:\\s*column[\\s\\S]*gap\\s*:",
+          "message": {
+            "es": "Dirección columna + `gap`. Nada de márgenes entre hijos.",
+            "en": "Column direction + `gap`. No margins between children."
+          },
+          "points": 10
+        }
+      ]
+    },
+    {
+      "id": "drill-3",
+      "prompt": {
+        "es": "Un icono y un texto alineados por su línea base vertical, con 0.5rem entre ellos.",
+        "en": "An icon and a label vertically aligned to each other, 0.5rem apart."
+      },
+      "starter": ".chip {\n  display: flex;\n  \n}",
+      "solution": ".chip { display: flex; align-items: center; gap: 0.5rem; }",
+      "targetSeconds": 30,
+      "rules": [
+        {
+          "id": "d3-center",
+          "kind": "regex-must",
+          "file": "styles.css",
+          "pattern": "align-items\\s*:\\s*center",
+          "message": {
+            "es": "`align-items: center` alinea en el eje transversal.",
+            "en": "`align-items: center` aligns along the cross axis."
+          },
+          "points": 10
+        }
+      ]
+    },
+    {
+      "id": "drill-4",
+      "prompt": {
+        "es": "Un pie de página pegado abajo: el contenido crece y ocupa el espacio sobrante.",
+        "en": "A footer pinned to the bottom: the content grows to fill the leftover space."
+      },
+      "starter": ".layout {\n  display: flex;\n  flex-direction: column;\n  min-height: 100vh;\n}\n.content {\n  \n}",
+      "solution": ".content { flex: 1; }",
+      "targetSeconds": 40,
+      "rules": [
+        {
+          "id": "d4-grow",
+          "kind": "regex-must",
+          "file": "styles.css",
+          "pattern": "flex\\s*:\\s*1|flex-grow\\s*:\\s*1",
+          "message": {
+            "es": "`flex: 1` hace que ese hijo absorba todo el espacio libre y empuje el pie abajo.",
+            "en": "`flex: 1` makes that child soak up the free space and push the footer down."
+          },
+          "points": 15
+        }
+      ]
+    }
+  ],
+
+  "reward": {
+    "baseXp": 130,
+    "flawlessBonus": 60,
+    "noHintBonus": 30,
+    "comboMultiplierCap": 3,
+    "achievements": ["flex-master"]
+  },
+
+  "solution": {
+    "files": [
+      {
+        "path": "styles.css",
+        "content": ".card {\n  width: 320px;\n  height: 200px;\n  border: 2px solid #22d3ee;\n  border-radius: 12px;\n  display: flex;\n  justify-content: center;\n  align-items: center;\n}\n\n.badge {\n  padding: 0.5rem 1rem;\n  background: #22d3ee;\n  color: #05070d;\n  border-radius: 999px;\n}\n"
+      }
+    ],
+    "explanation": {
+      "es": "Tres líneas y el centrado aguanta cualquier tamaño de `.badge`. Prueba a cambiar su texto por uno mucho más largo: sigue centrado, sin tocar nada.",
+      "en": "Three lines and the centering survives any `.badge` size. Try swapping its text for something much longer: still centered, nothing else to change."
+    }
+  }
+}

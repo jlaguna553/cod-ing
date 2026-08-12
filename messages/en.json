@@ -1,0 +1,161 @@
+{
+  "meta": {
+    "appName": "CodeQuest",
+    "tagline": "Level up by writing real code"
+  },
+  "nav": {
+    "home": "Base",
+    "tracks": "Tracks",
+    "profile": "Profile",
+    "language": "Language",
+    "switchTo": "Switch to {locale}"
+  },
+  "locale": {
+    "es": "Spanish",
+    "en": "English"
+  },
+  "home": {
+    "title": "Pick your track",
+    "subtitle": "Three disciplines. From first contact to technical interview.",
+    "continue": "Pick up where you left off",
+    "start": "Start",
+    "streak": "{days}-day streak"
+  },
+  "tracks": {
+    "frontend": {
+      "name": "Frontend",
+      "description": "HTML, CSS, JavaScript, TypeScript, React, Vue and Next.js. From your first div to rendering under load."
+    },
+    "backend": {
+      "name": "Backend & Data",
+      "description": "Node, Python, Go, SQL and API design. Model it, serve it, make it hold up under traffic."
+    },
+    "devops": {
+      "name": "DevOps",
+      "description": "Bash, Linux, Docker, CI/CD, Nginx and Kubernetes. Ship it, then keep it standing."
+    },
+    "empty": "No lessons on this track yet. We're on it.",
+    "locked": "Requires {count} earlier lesson(s)"
+  },
+  "difficulty": {
+    "novice": "Novice",
+    "apprentice": "Apprentice",
+    "adept": "Adept",
+    "expert": "Expert",
+    "interview": "Interview"
+  },
+  "lessonKind": {
+    "concept": "Concept",
+    "drill": "Drill",
+    "challenge": "Challenge",
+    "interview": "Boss",
+    "system-design": "Design"
+  },
+  "hud": {
+    "level": "Level {level}",
+    "xp": "{current} / {next} XP",
+    "energy": "Energy",
+    "combo": "{count}x Combo",
+    "comboSpree": "Coding spree!",
+    "keystrokes": "{count} keystrokes",
+    "sessionTime": "Session: {minutes} min",
+    "bestCombo": "Best: {count}"
+  },
+  "panels": {
+    "files": "Files",
+    "achievements": "Achievements",
+    "guide": "Guide",
+    "hints": "Hints",
+    "tests": "Tests",
+    "output": "Output",
+    "preview": "Preview",
+    "terminal": "Terminal",
+    "console": "Console"
+  },
+  "editor": {
+    "run": "Run",
+    "reset": "Reset",
+    "submit": "Check step",
+    "performanceMode": "Performance mode",
+    "performanceModeHint": "Turns off particles and screen shake"
+  },
+  "steps": {
+    "counter": "Step {current} of {total}",
+    "next": "Next",
+    "previous": "Previous",
+    "task": "Your turn",
+    "bestPractice": "Industry standard",
+    "editFile": "Edit {file}",
+    "done": "Step cleared. Hit Next.",
+    "finish": "Finish lesson"
+  },
+  "hints": {
+    "reveal": "Reveal hint",
+    "cost": "Costs {xp} XP",
+    "revealed": "{used} of {total} used",
+    "none": "No hints for this step"
+  },
+  "tests": {
+    "passed": "Passed",
+    "failed": "Failed",
+    "pending": "Pending",
+    "allPassed": "All tests passed!",
+    "runFirst": "Run your code to see results",
+    "none": "This step has no automatic checks",
+    "expected": "expected",
+    "actual": "got",
+    "checking": "Checking…",
+    "syntaxError": "The code does not compile (line {line})",
+    "syntaxHint": "While there is a syntax error, the checks cannot be evaluated."
+  },
+  "achievements": {
+    "unlocked": "Achievement unlocked!",
+    "progress": "{unlocked} of {total}",
+    "locked": "Locked"
+  },
+  "empty": {
+    "noLesson": "No lesson loaded",
+    "buildingWorld": "Building the world…"
+  },
+  "interview": {
+    "brief": "Interview brief",
+    "constraints": "Constraints",
+    "complexity": "Target complexity",
+    "followUps": "Follow-up questions"
+  },
+  "files": {
+    "modified": "Modified"
+  },
+  "runner": {
+    "booting": "Starting environment…",
+    "clear": "Clear output",
+    "ready": "Ready",
+    "failed": "The environment failed to start"
+  },
+  "combo": {
+    "warm": "Warming up!",
+    "spree": "Coding spree!",
+    "fire": "On fire!",
+    "unstoppable": "Unstoppable!",
+    "legendary": "Legendary!"
+  },
+  "sound": {
+    "pack": "Typing sound",
+    "volume": "Volume",
+    "packs": {
+      "silent": "Silent",
+      "mechanical": "Mechanical keyboard",
+      "typewriter": "Typewriter",
+      "duck": "Duck",
+      "blades": "Blades",
+      "retro": "Retro 8-bit"
+    }
+  },
+  "lesson": {
+    "completed": "Lesson completed",
+    "next": "Next lesson",
+    "backToMap": "Back to the map",
+    "lastOfModule": "That was the last exercise in this module. Head back to the map to pick another.",
+    "alreadyDone": "You had already completed it"
+  }
+}
