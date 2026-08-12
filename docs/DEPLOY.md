@@ -1,6 +1,11 @@
-# Desplegar en Vercel
+# Desplegar en Vercel — referencia
 
-De cero a producción. Unos 15 minutos, la mayoría esperando.
+> **¿Solo quieres ponerlo en marcha, gratis y sin complicaciones?**
+> Usa **[DEPLOY-VERCEL.md](./DEPLOY-VERCEL.md)**: todo desde el panel de Vercel,
+> con la base de datos provisionada desde su Marketplace.
+>
+> Este documento es la referencia completa: cubre Supabase, qué variables
+> existen y por qué, y qué hacer cuando algo falla.
 
 ---
 

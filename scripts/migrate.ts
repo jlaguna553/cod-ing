@@ -6,16 +6,50 @@
  *
  *   DATABASE_URL='postgres://…' npm run db:migrate
  */
+import { existsSync, readFileSync } from 'node:fs';
 import postgres from 'postgres';
 import { DDL } from '../src/lib/db/client';
 
+/**
+ * Carga variables de un archivo `.env*` si no están ya en el entorno.
+ *
+ * `vercel env pull` deja las credenciales en `.env.local`, y sin esto habría
+ * que copiar la cadena a mano desde ese archivo a la línea de comandos — un
+ * paso extra que solo sirve para equivocarse al pegar.
+ */
+function loadEnvFile(file: string) {
+  if (!existsSync(file)) return;
+
+  for (const line of readFileSync(file, 'utf8').split('\n')) {
+    const match = line.match(/^\s*([A-Z_][A-Z0-9_]*)\s*=\s*(.*)$/i);
+    if (!match) continue;
+
+    const [, key, rawValue] = match;
+    if (process.env[key]) continue;
+
+    process.env[key] = rawValue.trim().replace(/^["']|["']$/g, '');
+  }
+}
+
 async function main() {
-  const url = process.env.DATABASE_URL;
+  loadEnvFile('.env.local');
+  loadEnvFile('.env');
+
+  const url = process.env.DATABASE_URL ?? process.env.POSTGRES_URL;
   if (!url) {
-    console.error('✖ Falta DATABASE_URL.');
-    console.error('  Uso: DATABASE_URL=postgres://… npm run db:migrate');
+    console.error('✖ No encuentro la cadena de conexión.');
+    console.error('');
+    console.error('  Si la base está en Vercel:');
+    console.error('    vercel link && vercel env pull .env.local');
+    console.error('    npm run db:migrate');
+    console.error('');
+    console.error('  O pásala directamente:');
+    console.error('    DATABASE_URL=postgres://… npm run db:migrate');
     process.exit(1);
   }
+
+  const host = url.replace(/\/\/[^@]*@/, '//***@').split('/')[2] ?? '';
+  console.log(`Conectando a ${host}…`);
 
   /*
    * `max: 1` porque es un script de un solo uso; no hace falta pool.

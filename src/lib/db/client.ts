@@ -84,8 +84,20 @@ CREATE TABLE IF NOT EXISTS user_achievements (
 );
 `;
 
+/**
+ * Cadena de conexión.
+ *
+ * Se aceptan varios nombres porque las integraciones del Marketplace de Vercel
+ * no siempre inyectan `DATABASE_URL`: Neon usa ese, pero otras ponen
+ * `POSTGRES_URL`. Buscar los dos evita el fallo más tonto posible —tener la
+ * base creada y conectada, y que la aplicación no la vea.
+ */
+export function databaseUrl(): string | undefined {
+  return process.env.DATABASE_URL ?? process.env.POSTGRES_URL;
+}
+
 async function create(): Promise<Database> {
-  const url = process.env.DATABASE_URL;
+  const url = databaseUrl();
 
   if (url) {
     const { default: postgres } = await import('postgres');
