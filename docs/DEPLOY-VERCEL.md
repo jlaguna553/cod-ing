@@ -74,27 +74,30 @@ que copiar ni pegar nada.
 
 La base existe pero está vacía. Desde tu máquina, una sola vez:
 
+**Copia la cadena de conexión del panel** y pásala al migrador:
+
+1. En Vercel: *Storage → tu base de datos → **Connect*** (o abre el panel de
+   Neon desde ahí).
+2. Copia la cadena que empieza por `postgresql://`.
+3. Ejecútalo con esa cadena:
+
 ```bash
 cd /home/jlaguna/projects/cod-ing
 
-npx vercel link          # elige tu cuenta y el proyecto cod-ing
-npx vercel env pull .env.local --environment=production
-npm run db:migrate
+DATABASE_URL='postgresql://…pega-aquí-la-cadena…' npm run db:migrate
 ```
 
-⚠️ **`--environment=production` es obligatorio.** Sin esa bandera, `vercel env
-pull` descarga las variables de *development*, donde `DATABASE_URL` no existe:
-las integraciones del Marketplace solo la inyectan en Production y Preview. El
-síntoma es que el archivo se actualiza pero el migrador sigue sin encontrar la
-cadena.
+> **Por qué a mano y no con `vercel env pull`.** Las variables que crean las
+> integraciones del Marketplace quedan marcadas como *Sensitive*, y Vercel **no
+> descarga su valor**: escribe el literal `[SENSITIVE]` en `.env.local`. El pull
+> parece funcionar —el archivo se actualiza— pero lo que llega no sirve. Es una
+> medida de seguridad suya, no un fallo.
+>
+> Si aun así quieres usar `vercel env pull`, recuerda añadir
+> `--environment=production`: sin esa bandera baja las de *development*, donde
+> `DATABASE_URL` ni siquiera existe.
 
-Para ver qué variables hay y en qué entorno:
-
-```bash
-npx vercel env ls
-```
-
-El migrador lee `.env.local` solo. Debe terminar así:
+Debe terminar así:
 
 ```
 Conectando a ep-algo-123.us-east-2.aws.neon.tech…

@@ -222,6 +222,7 @@ Runtime Logs*) y busca el mensaje:
 | `ETIMEDOUT` / `ENETUNREACH` | Con Supabase: estás usando el puerto 5432 (IPv6). Cambia al 6543 |
 | `prepared statement … already exists` | El cliente perdió `prepare: false` |
 | `relation "users" does not exist` | Falta ejecutar `npm run db:migrate` |
+| `TypeError: Invalid URL` al migrar | La cadena vale `[SENSITIVE]`: Vercel no descarga el valor de las variables de sus integraciones. Cópiala del panel |
 
 Luego, en el navegador: abre una lección, escribe algo, espera tres segundos
 (autosave) y recarga. El código debe seguir ahí.

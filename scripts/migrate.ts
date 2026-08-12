@@ -66,6 +66,31 @@ async function main() {
     process.exit(1);
   }
 
+  /*
+   * Vercel marca como «Sensitive» las variables que crean sus integraciones, y
+   * `vercel env pull` NO descarga su valor: escribe el literal `[SENSITIVE]`.
+   * El pull parece funcionar y el archivo se actualiza, pero lo que llega no
+   * sirve. Sin esta comprobación, el fallo era un `TypeError: Invalid URL` con
+   * un stack de `postgres/src/index.js` que no apunta a nada útil.
+   */
+  if (url.includes('[SENSITIVE]') || !/^postgres(ql)?:\/\//.test(url)) {
+    console.error('✖ La cadena de conexión no es válida.');
+    console.error('');
+    if (url.includes('[SENSITIVE]')) {
+      console.error('  Vale `[SENSITIVE]`: Vercel oculta el valor de las variables que');
+      console.error('  crean sus integraciones y `vercel env pull` no lo descarga.');
+      console.error('');
+      console.error('  Cópiala del panel y pásala directamente:');
+      console.error('    Vercel → Storage → tu base → Connect → connection string');
+      console.error('');
+      console.error("    DATABASE_URL='postgresql://…' npm run db:migrate");
+    } else {
+      console.error(`  Empieza por: ${url.slice(0, 12)}…`);
+      console.error('  Debe empezar por postgres:// o postgresql://');
+    }
+    process.exit(1);
+  }
+
   const host = url.replace(/\/\/[^@]*@/, '//***@').split('/')[2] ?? '';
   console.log(`Conectando a ${host}…`);
 
