@@ -17,8 +17,14 @@ async function main() {
     process.exit(1);
   }
 
-  // `max: 1` porque es un script de un solo uso; no hace falta pool.
-  const sql = postgres(url, { max: 1 });
+  /*
+   * `max: 1` porque es un script de un solo uso; no hace falta pool.
+   *
+   * `prepare: false` para que funcione también a través de un pooler en modo
+   * transacción (el de Supabase en el puerto 6543, por ejemplo), que no
+   * soporta prepared statements. Con una conexión directa no estorba.
+   */
+  const sql = postgres(url, { max: 1, prepare: false });
 
   try {
     await sql.unsafe(DDL);

@@ -25,51 +25,136 @@ ves ese error en el log, no es un fallo: es el guardia haciendo su trabajo.
 
 ## 1. Repositorio
 
-```bash
-cd /home/jlaguna/projects/cod-ing
-git init
-git add -A
-git commit -m "CodeQuest: plataforma de aprendizaje gamificada"
+Ya está subido a `jlaguna553/cod-ing` y `jlaguna553/cod-ing-portfolio`. Para
+cambios posteriores:
 
-gh repo create codequest --private --source=. --push
-# o crea el repo en github.com y luego:
-#   git remote add origin git@github.com:TU_USUARIO/codequest.git
-#   git push -u origin main
+```bash
+git add -A
+git commit -m "…"
+git push origin main             # cod-ing
+git push portfolio main          # cod-ing-portfolio
 ```
 
-`.gitignore` ya excluye `.env`, `.pglite/`, `.next/` y los informes de Playwright.
+`.gitignore` excluye `.env`, `.pglite/`, `.next/` y los informes de Playwright,
+y deja pasar `.env.example`, que documenta qué variables hacen falta.
 
 ---
 
-## 2. Base de datos
+## 2. Base de datos — Supabase
 
-Necesitas un Postgres accesible desde internet. Cualquiera vale; **Neon** tiene
-plan gratuito y es el que usa Vercel por debajo.
+Cualquier Postgres accesible desde internet sirve. Con **Supabase** hay un
+detalle que hay que acertar o la aplicación falla en producción, así que va
+primero y con detalle. (Al final está la alternativa con Neon o Vercel
+Postgres, que es más directa.)
 
-**Opción A — desde Vercel** (más simple)
+### 2.1 Crear el proyecto
 
-En el proyecto: *Storage → Create Database → Postgres*. Vercel crea la base y
-define `DATABASE_URL` en las variables de entorno por ti.
+1. Entra en [supabase.com](https://supabase.com) → **New project**.
+2. Elige una región **cercana a la de tu despliegue en Vercel**: cada consulta
+   cruza esa distancia, y con la base en Europa y las funciones en Virginia se
+   notan los ~100 ms de ida y vuelta en cada carga.
+3. Guarda la contraseña de la base que te muestra. **Solo se enseña una vez.**
 
-**Opción B — Neon directamente**
+### 2.2 La parte que importa: qué cadena de conexión usar
 
-Crea un proyecto en [neon.tech](https://neon.tech) y copia la cadena de
-conexión. Tiene esta forma:
+Supabase ofrece tres, y no son intercambiables. En *Project Settings →
+Database → Connection string*:
+
+| Cadena | Puerto | Para qué | En Vercel |
+|---|---|---|---|
+| **Direct connection** | 5432 | Migraciones, backends persistentes | ❌ es **IPv6**, y Vercel no lo tiene |
+| **Transaction pooler** | **6543** | Serverless y edge | ✅ **la que necesitas** |
+| **Session pooler** | 5432 | Backends persistentes sobre IPv4 | ❌ mantiene sesión por conexión |
+
+La del runtime es la de **transaction pooler**, puerto **6543**:
+
+```
+postgresql://postgres.abcdefgh:TU_CONTRASEÑA@aws-0-us-east-1.pooler.supabase.com:6543/postgres
+```
+
+Dos razones para esa y no otra:
+
+- **La conexión directa es IPv6.** Vercel no tiene salida IPv6, así que la
+  conexión simplemente no se establece. Es el error más común y el más
+  desconcertante, porque la misma cadena funciona desde tu portátil.
+- **Serverless abre y cierra conexiones constantemente.** El pooler en modo
+  transacción está hecho para eso; una conexión directa agota los slots del
+  servidor en cuanto hay algo de tráfico.
+
+El modo transacción **no soporta prepared statements**, y el cliente ya está
+configurado con `prepare: false` (`src/lib/db/client.ts`) precisamente por esto.
+No hace falta que toques nada, pero si alguna vez ves
+`prepared statement "s1" already exists`, es este parámetro.
+
+> Sustituye `TU_CONTRASEÑA` por la del paso 2.1. Si tiene caracteres raros
+> (`@`, `:`, `/`, `#`), hay que codificarlos en la URL o la cadena se
+> interpreta mal.
+
+### 2.3 Aplicar el esquema
+
+Una sola vez, antes del primer despliegue. Desde tu máquina:
+
+```bash
+DATABASE_URL='postgresql://postgres.abcdefgh:CONTRASEÑA@aws-0-us-east-1.pooler.supabase.com:6543/postgres' \
+  npm run db:migrate
+```
+
+Debe listar las cuatro tablas: `lesson_progress`, `user_achievements`,
+`user_stats`, `users`.
+
+Sirve tanto el pooler como la conexión directa: el script usa `prepare: false`
+para funcionar con ambos. Si tu red tiene IPv6 y prefieres la directa, también
+vale.
+
+### 2.4 Cierra la puerta de PostgREST ⚠️
+
+**Este paso no es opcional en Supabase.**
+
+Supabase expone automáticamente todas las tablas del esquema `public` a través
+de una API REST pública. Cualquiera con tu clave anónima —que va en el
+navegador y por tanto es visible— podría leer y modificar el progreso, el XP y
+los logros de todos los usuarios.
+
+En *SQL Editor*, ejecuta:
+
+```sql
+ALTER TABLE users              ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_stats         ENABLE ROW LEVEL SECURITY;
+ALTER TABLE lesson_progress    ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_achievements  ENABLE ROW LEVEL SECURITY;
+```
+
+Sin políticas, RLS **deniega todo** a través de PostgREST — que es justo lo que
+queremos. La aplicación no se ve afectada: se conecta por Postgres directo con
+el rol dueño de las tablas, y el dueño no pasa por RLS.
+
+Para comprobarlo, con la clave anónima de *Settings → API*:
+
+```bash
+curl "https://TU_PROYECTO.supabase.co/rest/v1/user_stats?select=*" \
+  -H "apikey: TU_ANON_KEY"
+```
+
+Debe devolver `[]` o un error de permisos. Si devuelve filas con datos, RLS no
+está activo y tus datos son públicos.
+
+---
+
+### Alternativa: Neon o Vercel Postgres
+
+Más directa, sin la parte del pooler ni la de RLS.
+
+**Desde Vercel:** *Storage → Create Database → Postgres*. Crea la base y define
+`DATABASE_URL` por ti.
+
+**Neon:** crea un proyecto en [neon.tech](https://neon.tech) y copia la cadena,
+que ya viene lista para serverless:
 
 ```
 postgres://usuario:contraseña@ep-algo-123.us-east-2.aws.neon.tech/neondb?sslmode=require
 ```
 
-### Aplicar el esquema
-
-Una sola vez, antes del primer despliegue:
-
-```bash
-DATABASE_URL='postgres://…' npm run db:migrate
-```
-
-Debe listar las cuatro tablas: `lesson_progress`, `user_achievements`,
-`user_stats`, `users`.
+En ambos casos, aplica el esquema igual: `DATABASE_URL='…' npm run db:migrate`.
 
 ---
 
@@ -80,8 +165,12 @@ En Vercel: *Settings → Environment Variables*. Ambas en **Production** y
 
 | Variable | Valor | Por qué |
 |---|---|---|
-| `DATABASE_URL` | La cadena de tu Postgres | Sin ella el servidor no arranca |
+| `DATABASE_URL` | Con Supabase, la del **pooler (6543)** | Sin ella el servidor no arranca |
 | `SESSION_SECRET` | `openssl rand -base64 32` | Firma la cookie de sesión |
+
+Con Supabase, asegúrate de pegar la del **puerto 6543**. La de 5432 funciona en
+tu portátil y falla en Vercel, que es la forma más molesta de descubrir un
+error.
 
 Sobre `SESSION_SECRET`: la cookie de identidad va firmada con HMAC. Sin firma,
 editarla en devtools sería suplantar a cualquier usuario cuyo id se conozca. En
@@ -116,9 +205,18 @@ curl -sI https://TU-APP.vercel.app/ | head -3            # 307 → /es
 curl -s https://TU-APP.vercel.app/api/progress | head -c 120
 ```
 
-Lo segundo debe devolver un JSON con un `userId` que empiece por `anon_`. Si
-devuelve un error 500, mira los logs: casi siempre es `DATABASE_URL` sin definir
-o el esquema sin aplicar.
+Lo segundo debe devolver un JSON con un `userId` que empiece por `anon_`.
+
+Si da error 500, mira los logs de Vercel (*Deployments → tu despliegue →
+Runtime Logs*) y busca el mensaje:
+
+| Mensaje | Causa |
+|---|---|
+| `DATABASE_URL es obligatoria en producción` | Falta la variable, o no está en el entorno *Production* |
+| `SESSION_SECRET es obligatorio en producción` | Ídem |
+| `ETIMEDOUT` / `ENETUNREACH` | Con Supabase: estás usando el puerto 5432 (IPv6). Cambia al 6543 |
+| `prepared statement … already exists` | El cliente perdió `prepare: false` |
+| `relation "users" does not exist` | Falta ejecutar `npm run db:migrate` |
 
 Luego, en el navegador: abre una lección, escribe algo, espera tres segundos
 (autosave) y recarga. El código debe seguir ahí.
