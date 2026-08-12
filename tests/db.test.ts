@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createTestDb, type Database } from '@/lib/db/client';
+import { createTestDb, DDL, type Database } from '@/lib/db/client';
 import {
   buildPlayerStats,
   completeLesson,
@@ -213,4 +213,40 @@ test('⭐ la cookie de sesión detecta manipulación', () => {
   assert.equal(parseSession('sin-punto'), null);
   assert.equal(parseSession(undefined), null);
   assert.equal(parseSession('anon_abc.firmafalsa'), null);
+});
+
+/* ── Esquema idempotente ─────────────────────────────────────────── */
+
+test('⭐ aplicar el esquema dos veces no falla', async () => {
+  // La aplicación lo ejecuta sola al conectar, y en serverless eso ocurre en
+  // cada arranque en frío y desde varias instancias a la vez. Si no fuera
+  // idempotente, el segundo arranque tumbaría el servidor.
+  const { PGlite } = await import('@electric-sql/pglite');
+  const pg = new PGlite();
+
+  await pg.exec(DDL);
+  await pg.exec(DDL);
+  await pg.exec(DDL);
+
+  const tables = await pg.query<{ table_name: string }>(
+    `SELECT table_name FROM information_schema.tables
+     WHERE table_schema = 'public' ORDER BY table_name`,
+  );
+
+  assert.deepEqual(
+    tables.rows.map((row) => row.table_name),
+    ['lesson_progress', 'user_achievements', 'user_stats', 'users'],
+  );
+});
+
+test('los datos sobreviven a reaplicar el esquema', async () => {
+  const { PGlite } = await import('@electric-sql/pglite');
+  const pg = new PGlite();
+  await pg.exec(DDL);
+
+  await pg.exec(`INSERT INTO users (id) VALUES ('anon_persistente')`);
+  await pg.exec(DDL);
+
+  const rows = await pg.query<{ id: string }>(`SELECT id FROM users`);
+  assert.deepEqual(rows.rows.map((r) => r.id), ['anon_persistente']);
 });

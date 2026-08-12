@@ -109,6 +109,34 @@ async function create(): Promise<Database> {
      * statements tampoco sobreviven a un pooler en modo transacción.
      */
     const sql = postgres(url, { max: 1, prepare: false, idle_timeout: 20 });
+
+    /*
+     * El esquema se aplica solo, la primera vez que el proceso se conecta.
+     *
+     * La alternativa —migrar a mano desde el portátil— resulta imposible con
+     * las integraciones del Marketplace de Vercel: marcan sus variables como
+     * «Sensitive» y `vercel env pull` devuelve el literal `[SENSITIVE]` en
+     * lugar de la cadena. La credencial solo existe dentro del servidor, así
+     * que es el servidor quien tiene que crear las tablas.
+     *
+     * Es seguro porque el DDL es idempotente (`CREATE TABLE IF NOT EXISTS`) y
+     * cuesta milisegundos cuando ya están creadas. El `catch` cubre la carrera
+     * de dos instancias arrancando a la vez: si otra se adelantó, las tablas
+     * ya existen y seguir es lo correcto.
+     *
+     * ⚠️ Esto vale para un esquema inicial. En cuanto haya migraciones que
+     * modifiquen datos existentes, hará falta historia de versiones y un paso
+     * explícito — no un DDL que se ejecuta solo en cada arranque en frío.
+     */
+    try {
+      await sql.unsafe(DDL);
+    } catch (cause) {
+      console.warn(
+        '[db] no se pudo aplicar el esquema automáticamente:',
+        cause instanceof Error ? cause.message : cause,
+      );
+    }
+
     return drizzlePostgres(sql, { schema }) as unknown as Database;
   }
 

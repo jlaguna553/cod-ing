@@ -70,46 +70,27 @@ que copiar ni pegar nada.
 
 ---
 
-## Paso 3 — Crear las tablas
+## Paso 3 — (ya no hace falta hacer nada)
 
-La base existe pero está vacía. Desde tu máquina, una sola vez:
+**Las tablas se crean solas.** La aplicación aplica el esquema la primera vez
+que se conecta a la base de datos.
 
-**Copia la cadena de conexión del panel** y pásala al migrador:
+No es por comodidad: con las integraciones del Marketplace **es la única forma
+posible**. Vercel marca sus variables como *Sensitive* y `vercel env pull`
+devuelve el literal `[SENSITIVE]` en lugar de la cadena de conexión — la
+credencial solo existe dentro del servidor, así que es el servidor quien tiene
+que crear las tablas.
 
-1. En Vercel: *Storage → tu base de datos → **Connect*** (o abre el panel de
-   Neon desde ahí).
-2. Copia la cadena que empieza por `postgresql://`.
-3. Ejecútalo con esa cadena:
+Es seguro porque el DDL es idempotente (`CREATE TABLE IF NOT EXISTS`): aplicarlo
+de nuevo no borra ni modifica nada, y cuesta milisegundos cuando las tablas ya
+existen. Hay tests que lo comprueban.
 
-```bash
-cd /home/jlaguna/projects/cod-ing
-
-DATABASE_URL='postgresql://…pega-aquí-la-cadena…' npm run db:migrate
-```
-
-> **Por qué a mano y no con `vercel env pull`.** Las variables que crean las
-> integraciones del Marketplace quedan marcadas como *Sensitive*, y Vercel **no
-> descarga su valor**: escribe el literal `[SENSITIVE]` en `.env.local`. El pull
-> parece funcionar —el archivo se actualiza— pero lo que llega no sirve. Es una
-> medida de seguridad suya, no un fallo.
+> Si prefieres hacerlo a mano —o usas un Postgres cuya cadena sí puedes leer—
+> el comando sigue disponible:
 >
-> Si aun así quieres usar `vercel env pull`, recuerda añadir
-> `--environment=production`: sin esa bandera baja las de *development*, donde
-> `DATABASE_URL` ni siquiera existe.
-
-Debe terminar así:
-
-```
-Conectando a ep-algo-123.us-east-2.aws.neon.tech…
-✔ Esquema aplicado. Tablas:
-    lesson_progress
-    user_achievements
-    user_stats
-    users
-```
-
-> `.env.local` queda en tu máquina con credenciales reales. `.gitignore` ya lo
-> excluye, pero no lo compartas.
+> ```bash
+> DATABASE_URL='postgresql://…' npm run db:migrate
+> ```
 
 ---
 
