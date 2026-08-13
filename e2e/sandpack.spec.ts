@@ -20,32 +20,42 @@ async function mirrorText(page: Page): Promise<string> {
   });
 }
 
-/*
- * PENDIENTE, a propósito.
- *
- * Con la plantilla y el espejo arreglados, el sandbox ya compila y monta —el
- * DOM que llega tiene `<div id="root">` con la app dentro— pero el render sale
- * incompleto y aparece la superposición de error de CodeSandbox. Falta una
- * pieza que no está diagnosticada.
- *
- * Se deja escrito y marcado `fixme` en lugar de borrarlo: describe el
- * comportamiento que debe haber, falla por el motivo correcto y no deja la
- * suite en rojo mientras tanto. Borrarlo sería perder el único sitio donde
- * consta que esto no funciona.
- */
-test.fixme('⭐ una lección de React compila y su regla dom-assert se evalúa', async ({ page }) => {
+const SOLUCION = `function WelcomeCard() {
+  return <p>Bienvenida a la partida</p>;
+}
+
+function ScoreBadge() {
+  return <span>0 puntos</span>;
+}
+
+export default function App() {
+  return (
+    <div>
+      <WelcomeCard />
+      <ScoreBadge />
+    </div>
+  );
+}
+`;
+
+test('⭐ una lección de React compila y su regla dom-assert se evalúa', async ({ page }) => {
   test.setTimeout(150_000);
   await page.goto('/es/play/frontend/react-01-components');
   await page.waitForSelector('.monaco-editor', { timeout: 30_000 });
 
-  // El código de partida no renderiza nada a propósito: hay que resolverlo.
+  /*
+   * Se pega desde el portapapeles, no con `insertText`.
+   *
+   * `insertText` dispara el autocierre de Monaco y dejaba una llave suelta al
+   * final: el sandbox recibía un `SyntaxError` real y no renderizaba. Costó un
+   * diagnóstico entero — parecía un fallo del bundler y era del test.
+   */
   await page.locator('.monaco-editor .view-lines').click();
   await page.keyboard.press('ControlOrMeta+a');
-  await page.keyboard.insertText(
-    'function WelcomeCard() {\n  return <p>Bienvenida a la partida</p>;\n}\n\n' +
-      'function ScoreBadge() {\n  return <span>0 puntos</span>;\n}\n\n' +
-      'export default function App() {\n  return (\n    <div>\n      <WelcomeCard />\n      <ScoreBadge />\n    </div>\n  );\n}\n',
-  );
+  await page.keyboard.press('Delete');
+  await page.evaluate(async (code) => navigator.clipboard.writeText(code), SOLUCION);
+  await page.keyboard.press('ControlOrMeta+v');
+  await expect(page.locator('.view-lines')).toContainText('ScoreBadge');
 
   await page.getByRole('button', { name: /ejecutar/i }).click();
 

@@ -533,19 +533,19 @@ bundler — el espejo recibía su documento, con browserfs y babel dentro. Y la 
 un template literal, así que un backtick en un comentario cierra la cadena y rompe el
 módulo.
 
-**3. Abierto: el render de framework sigue incompleto.** El sandbox ya compila y monta
-—llega un DOM con la app dentro— pero el resultado sale a medias y aparece la
-superposición de error de CodeSandbox. En Vue es más grave y está acotado: el bundler
-compila el `<script>` del SFC y **no la plantilla**, así que Vue avisa por consola
-(«Component is missing template or render function») y renderiza un comentario vacío. Se
-probaron las seis plantillas del bundler contra un SFC mínimo de Vue 3 y ninguna renderiza;
-`2.19.8` es la última versión publicada del cliente, así que no hay salida por actualizar.
+**3. React quedó arreglado con lo anterior; Vue no.** Con la plantilla y el espejo en su
+sitio, React compila, monta y sus reglas `dom-assert` se evalúan — está cubierto por
+`e2e/sandpack.spec.ts`.
 
-Queda documentado en `e2e/sandpack.spec.ts`, marcado `fixme`: describe el comportamiento
-que debe haber y falla por el motivo correcto. La salida probable es compilar los SFC en
-nuestra aplicación con `@vue/compiler-sfc` antes de entregárselos al bundler — es
-~1 MB más de dependencia, cargada solo en lecciones de framework, y es una decisión de
-producto además de técnica.
+Conviene dejar constancia de un diagnóstico equivocado por el camino: se dio por roto el
+render de React durante un rato, y lo que fallaba era el **test**. Sustituía el buffer con
+`insertText`, que dispara el autocierre de Monaco y dejaba una llave suelta al final; el
+sandbox recibía un `SyntaxError` legítimo y no pintaba nada. Se pega desde el portapapeles
+y desaparece. La lección: antes de acusar al runtime, comprobar que lo que se le está
+dando es lo que se cree.
+
+Vue sí estaba roto de verdad —el bundler compila el `<script>` del SFC y **no la
+plantilla**— y se resolvió saliendo de Sandpack (ADR-13).
 
 ---
 
