@@ -417,6 +417,36 @@ test('⭐ el flujo completo de js-01 termina con las comprobaciones en verde', a
   await expect(page.getByText(/todas las pruebas superadas/i)).toBeVisible({ timeout: 20_000 });
 });
 
+test('⭐ la salida evaluada solo contiene la ejecución actual', async ({ page }) => {
+  await page.goto('/es/play/frontend/js-02-functions');
+  await waitForEditor(page);
+
+  await typeInEditor(
+    page,
+    "const greet = (name) => 'Hola, ${name}';\n\nconsole.log(greet('Ada'));",
+  );
+  await page.getByRole('button', { name: /ejecutar/i }).click();
+  await page.getByRole('button', { name: /consola/i }).click();
+  await expect(page.getByRole('log', { name: /consola/i })).toContainText('Hola, ${name}', {
+    timeout: 15_000,
+  });
+
+  await typeInEditor(
+    page,
+    "const greet = (name) => `Hola, ${name}`;\n\nconsole.log(greet('Ada'));",
+  );
+  await page.getByRole('button', { name: /ejecutar/i }).click();
+  await page.getByRole('button', { name: /ejecutar/i }).click();
+  await page.getByRole('button', { name: /ejecutar/i }).click();
+
+  await page.getByRole('button', { name: /validar paso/i }).click();
+  const outputCheck = page.getByText('La salida esperada es exactamente', { exact: false });
+  const row = outputCheck.locator('xpath=ancestor::div[contains(@class,"rounded-md")][1]');
+  await expect(row.locator('svg.lucide-x')).toHaveCount(0, { timeout: 15_000 });
+  await expect(row).not.toContainText('${name}');
+  await expect(row).not.toContainText('Hola, Ada Hola, Ada');
+});
+
 test('⭐ al terminar la lección hay salida: XP y enlace a la siguiente', async ({ page }) => {
   await page.goto('/es/play/frontend/js-01-variables');
   await waitForEditor(page);
@@ -456,4 +486,24 @@ test('⭐ un paso sin comprobaciones no se queda bloqueado', async ({ page }) =>
 
   // El paso 2 de js-01 es de solo lectura: debe darse por superado igualmente.
   await expect(page.getByText(/paso superado/i)).toBeVisible({ timeout: 10_000 });
+});
+
+test('⭐ ejecutar varias veces no acumula la salida en la evaluación', async ({ page }) => {
+  await page.goto('/es/play/frontend/js-02-functions');
+  await waitForEditor(page);
+
+  // Primer intento MAL: comillas simples, así que imprime `Hola, ${name}`.
+  await typeInEditor(page, "const greet = (name) => 'Hola, ${name}';\nconsole.log(greet('Ada'));");
+  await page.getByRole('button', { name: /ejecutar/i }).click();
+  await page.waitForTimeout(2500);
+
+  // Ahora BIEN, con plantilla.
+  await typeInEditor(page, 'const greet = (name) => `Hola, ${name}`;\nconsole.log(greet("Ada"));');
+  await page.getByRole('button', { name: /ejecutar/i }).click();
+  await page.waitForTimeout(2500);
+  await page.getByRole('button', { name: /validar paso/i }).click();
+
+  // Sin acotar la salida a la última ejecución, el stdout traía las dos
+  // pegadas y la comprobación fallaba con la solución correcta delante.
+  await expect(page.getByText(/todas las pruebas superadas/i)).toBeVisible({ timeout: 20_000 });
 });

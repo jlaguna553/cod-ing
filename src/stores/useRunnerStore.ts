@@ -36,6 +36,16 @@ interface RunnerState {
   lastResult: RunResult | null;
   error: string | null;
 
+  /**
+   * Punto del historial donde empezó la última ejecución.
+   *
+   * La evaluación necesita la salida de ESA ejecución, no la suma de todas.
+   * Sin este corte, ejecutar cuatro veces daba un stdout con las cuatro
+   * salidas pegadas y la comprobación fallaba con la solución correcta
+   * delante. Se marca un corte en vez de vaciar el historial porque en la
+   * terminal el histórico de comandos sí hay que conservarlo.
+   */
+  runStartIndex: number;
   /** true si la lección activa tiene consola. */
   hasTerminal: boolean;
   /** Archivos generados por comandos, para que el árbol los muestre. */
@@ -58,6 +68,7 @@ export const useRunnerStore = create<RunnerState>()((set, get) => ({
   logs: [],
   lastResult: null,
   error: null,
+  runStartIndex: 0,
   hasTerminal: false,
   generatedFiles: {},
 
@@ -69,7 +80,7 @@ export const useRunnerStore = create<RunnerState>()((set, get) => ({
     }
 
     get().teardown();
-    set({ status: 'booting', kind, logs: [], error: null, lastResult: null });
+    set({ status: 'booting', kind, logs: [], error: null, lastResult: null, runStartIndex: 0 });
 
     try {
       const runner = await createRunner(kind, mount);
@@ -153,7 +164,8 @@ export const useRunnerStore = create<RunnerState>()((set, get) => ({
   execute: async (command) => {
     if (!activeRunner || get().status === 'booting') return null;
 
-    set({ status: 'running' });
+    // Se marca dónde empieza esta ejecución; el historial se conserva.
+    set({ status: 'running', runStartIndex: get().logs.length });
     try {
       const result = await activeRunner.run(command);
       set({ status: 'ready', lastResult: result });
@@ -178,6 +190,7 @@ export const useRunnerStore = create<RunnerState>()((set, get) => ({
       logs: [],
       lastResult: null,
       error: null,
+      runStartIndex: 0,
       hasTerminal: false,
       generatedFiles: {},
     });

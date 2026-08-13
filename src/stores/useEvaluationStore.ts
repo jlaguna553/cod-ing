@@ -48,8 +48,12 @@ function buildContext() {
    * Los logs son la fuente completa; `lastResult` solo aporta el código de
    * salida y el hecho de que se haya llegado a ejecutar.
    */
+  // Solo la ÚLTIMA ejecución: `runStartIndex` marca dónde empezó. Sumar todas
+  // hacía fallar la comprobación con la solución correcta delante, porque el
+  // stdout traía pegadas las salidas de los intentos anteriores.
+  const currentRun = runner.logs.slice(runner.runStartIndex);
   const fromLogs = (stream: 'stdout' | 'stderr') =>
-    runner.logs
+    currentRun
       .filter((log) => log.stream === stream)
       .map((log) => log.text)
       .join('');

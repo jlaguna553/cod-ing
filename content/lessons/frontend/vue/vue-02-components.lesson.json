@@ -1,0 +1,252 @@
+{
+  "$schema": "../../../schema/lesson.schema.json",
+  "schemaVersion": 1,
+
+  "id": "vue-02-components",
+  "track": "frontend",
+  "module": "vue",
+  "order": 2,
+
+  "kind": "challenge",
+  "difficulty": "apprentice",
+  "estimatedMinutes": 24,
+
+  "title": {
+    "es": "Componentes: props bajan, eventos suben",
+    "en": "Components: props down, events up"
+  },
+  "summary": {
+    "es": "Parte la interfaz en piezas reutilizables y aprende la regla que ordena toda aplicación de Vue: los datos bajan por props y los avisos suben por eventos.",
+    "en": "Split the UI into reusable pieces and learn the rule that keeps every Vue app in order: data flows down through props, notifications flow up through events."
+  },
+  "concepts": ["vue", "components", "props", "emits", "unidirectional-data-flow"],
+  "prerequisites": ["vue-01-template-syntax"],
+
+  "runtime": {
+    "kind": "sandpack",
+    "dependencies": { "vue": "^3.5.0" },
+    "timeoutMs": 15000
+  },
+
+  "workspace": {
+    "entry": "src/App.vue",
+    "allowCreate": true,
+    "allowDelete": false,
+    "protectedPaths": ["src/main.js"],
+    "files": [
+      {
+        "path": "src/App.vue",
+        "content": "<script setup>\nimport { ref } from 'vue';\n\nconst quests = ref([\n  { id: 1, title: 'Aprender directivas', xp: 40, done: true },\n  { id: 2, title: 'Dominar los componentes', xp: 60, done: false },\n  { id: 3, title: 'Vencer al boss', xp: 120, done: false },\n]);\n\nfunction toggle(id) {\n  const quest = quests.value.find((item) => item.id === id);\n  if (quest) quest.done = !quest.done;\n}\n</script>\n\n<template>\n  <main>\n    <h1>Misiones</h1>\n\n    <!--\n      TODO: sustituye este bloque por un componente <QuestCard>.\n      Cada tarjeta recibe su misión por props y avisa al pulsar el botón.\n    -->\n    <ul class=\"quests\">\n      <li v-for=\"quest in quests\" :key=\"quest.id\" class=\"quest\">\n        <span>{{ quest.title }}</span>\n        <span>{{ quest.xp }} XP</span>\n        <button @click=\"toggle(quest.id)\">\n          {{ quest.done ? 'Hecha' : 'Pendiente' }}\n        </button>\n      </li>\n    </ul>\n  </main>\n</template>\n",
+        "active": true
+      },
+      {
+        "path": "src/QuestCard.vue",
+        "content": "<!-- TODO: construye aquí el componente de una misión. -->\n<script setup>\n</script>\n\n<template>\n</template>\n"
+      },
+      {
+        "path": "src/main.js",
+        "content": "import { createApp } from 'vue';\nimport App from './App.vue';\n\ncreateApp(App).mount('#app');\n",
+        "readOnly": true
+      }
+    ]
+  },
+
+  "rules": [
+    {
+      "id": "declares-props",
+      "kind": "regex-must",
+      "file": "src/QuestCard.vue",
+      "pattern": "defineProps\\s*\\(",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "`QuestCard` no declara qué recibe. Un componente reutilizable necesita props, igual que una función necesita parámetros.",
+        "en": "`QuestCard` doesn't declare what it receives. A reusable component needs props, just as a function needs parameters."
+      },
+      "successMessage": {
+        "es": "El componente declara lo que necesita: leer su firma basta para saber cómo usarlo.",
+        "en": "The component declares what it needs: reading its signature is enough to know how to use it."
+      },
+      "points": 25
+    },
+    {
+      "id": "declares-emits",
+      "kind": "regex-must",
+      "file": "src/QuestCard.vue",
+      "pattern": "defineEmits\\s*\\(",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "La tarjeta tiene que avisar al padre cuando se pulsa el botón, y para eso declara sus eventos con `defineEmits`.",
+        "en": "The card has to notify the parent when the button is pressed, and for that it declares its events with `defineEmits`."
+      },
+      "points": 25
+    },
+    {
+      "id": "no-prop-mutation",
+      "kind": "regex-forbid",
+      "file": "src/QuestCard.vue",
+      "pattern": "props\\.\\w+\\.\\w+\\s*=[^=]|(?<!\\w)quest\\.done\\s*=[^=]",
+      "phase": "type",
+      "severity": "damage",
+      "message": {
+        "es": "¡Daño! Las props son de solo lectura. El dueño de la misión es el padre: el hijo avisa, no modifica.",
+        "en": "Damage! Props are read-only. The parent owns the quest: the child notifies, it doesn't modify."
+      },
+      "points": 0
+    },
+    {
+      "id": "uses-component",
+      "kind": "regex-must",
+      "file": "src/App.vue",
+      "pattern": "<QuestCard[\\s>]",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "`App` sigue pintando la tarjeta a mano. Usa el componente `<QuestCard>` dentro del `v-for`.",
+        "en": "`App` still renders the card by hand. Use the `<QuestCard>` component inside the `v-for`."
+      },
+      "points": 25
+    },
+    {
+      "id": "imports-component",
+      "kind": "regex-must",
+      "file": "src/App.vue",
+      "pattern": "import\\s+QuestCard\\s+from",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Falta importar `QuestCard`. Con `<script setup>`, importarlo ya lo deja disponible en la plantilla.",
+        "en": "`QuestCard` isn't imported. With `<script setup>`, importing it is all it takes to use it in the template."
+      },
+      "points": 15
+    },
+    {
+      "id": "listens-to-event",
+      "kind": "regex-must",
+      "file": "src/App.vue",
+      "pattern": "@toggle\\s*=|v-on:toggle\\s*=",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "El padre no escucha el evento de la tarjeta. Los eventos personalizados se escuchan igual que un `@click`.",
+        "en": "The parent isn't listening to the card's event. Custom events are listened to just like a `@click`."
+      },
+      "points": 25
+    },
+    {
+      "id": "cards-rendered",
+      "kind": "dom-assert",
+      "selector": ".quest",
+      "assert": "countEquals",
+      "count": 3,
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Deben verse las tres tarjetas.",
+        "en": "All three cards should be visible."
+      },
+      "points": 20
+    }
+  ],
+
+  "steps": [
+    {
+      "id": "step-1-extract",
+      "title": {
+        "es": "Sacar una pieza y darle parámetros",
+        "en": "Pull a piece out and give it parameters"
+      },
+      "body": {
+        "es": "Un componente de Vue es un archivo `.vue` con tres bloques opcionales: `<script setup>`, `<template>` y `<style>`. Todo lo que necesita una pieza vive junto, que es la razón de ser del formato.\n\nLo que varía entre una tarjeta y otra se convierte en **props**:\n\n```vue\n<!-- Saludo.vue -->\n<script setup>\ndefineProps({\n  nombre: { type: String, required: true },\n  nivel: { type: Number, default: 1 },\n});\n</script>\n\n<template>\n  <p>{{ nombre }} — nivel {{ nivel }}</p>\n</template>\n```\n\nY se usa como una etiqueta más:\n\n```vue\n<Saludo nombre=\"Ada\" :nivel=\"7\" />\n```\n\nFíjate en la diferencia entre los dos atributos: `nombre=\"Ada\"` pasa el **texto** «Ada», mientras que `:nivel=\"7\"` pasa el **número** 7. Sin los dos puntos, `nivel=\"7\"` pasaría el string `\"7\"` — y el aviso de tipo saltaría en consola.\n\nDeclarar los tipos no es burocracia: la declaración es la documentación del componente, y Vue avisa cuando alguien lo usa mal.",
+        "en": "A Vue component is a `.vue` file with three optional blocks: `<script setup>`, `<template>` and `<style>`. Everything a piece needs lives together, which is the whole point of the format.\n\nWhatever differs between one card and another becomes **props**:\n\n```vue\n<!-- Greeting.vue -->\n<script setup>\ndefineProps({\n  name: { type: String, required: true },\n  level: { type: Number, default: 1 },\n});\n</script>\n\n<template>\n  <p>{{ name }} — level {{ level }}</p>\n</template>\n```\n\nAnd it's used like any other tag:\n\n```vue\n<Greeting name=\"Ada\" :level=\"7\" />\n```\n\nNote the difference between the two attributes: `name=\"Ada\"` passes the **text** \"Ada\", while `:level=\"7\"` passes the **number** 7. Without the colon, `level=\"7\"` would pass the string `\"7\"` — and the type warning would show up in the console.\n\nDeclaring types isn't bureaucracy: the declaration *is* the component's documentation, and Vue warns when someone uses it wrong."
+      },
+      "task": {
+        "es": "Construye `QuestCard.vue` para que reciba la misión por props y muestre su título y su XP.",
+        "en": "Build `QuestCard.vue` so it receives the quest through props and shows its title and XP."
+      },
+      "focusFile": "src/QuestCard.vue",
+      "ruleIds": ["declares-props"],
+      "xp": 40,
+      "hints": [
+        {
+          "id": "h-shape",
+          "tier": 1,
+          "text": {
+            "es": "Puedes recibir la misión entera (`quest: Object`) o sus campos sueltos (`title`, `xp`, `done`). Lo segundo hace más explícito qué usa el componente.",
+            "en": "You can take the whole quest (`quest: Object`) or its fields individually (`title`, `xp`, `done`). The latter makes the component's needs more explicit."
+          },
+          "xpPenalty": 5,
+          "autoOfferAfterSeconds": 90
+        }
+      ]
+    },
+    {
+      "id": "step-2-emit",
+      "title": {
+        "es": "El hijo avisa, el padre decide",
+        "en": "The child notifies, the parent decides"
+      },
+      "body": {
+        "es": "Aquí está la regla que ordena cualquier aplicación de Vue: **los datos bajan por props, los avisos suben por eventos.**\n\nUn componente hijo **no modifica** lo que recibe. Si `quest` llega por props, cambiar `quest.done` desde dentro rompe el flujo: el padre es el dueño del dato y no se entera.\n\nLo que hace el hijo es **emitir**:\n\n```vue\n<script setup>\nconst props = defineProps({ id: Number });\nconst emit = defineEmits(['toggle']);\n</script>\n\n<template>\n  <button @click=\"emit('toggle', props.id)\">Cambiar</button>\n</template>\n```\n\nY el padre escucha, exactamente igual que un `@click` normal:\n\n```vue\n<Tarjeta :id=\"1\" @toggle=\"cambiar\" />\n```\n\nEsa restricción es lo que hace depurable una aplicación: ante un dato incorrecto, subes por el árbol hasta encontrar quién lo posee, y no hay más caminos posibles.\n\nDeclarar los eventos con `defineEmits` cumple el mismo papel que declarar las props: quien lea el componente sabe qué emite sin recorrer la plantilla entera.",
+        "en": "Here's the rule that keeps any Vue app in order: **data flows down through props, notifications flow up through events.**\n\nA child component **does not modify** what it receives. If `quest` arrives as a prop, changing `quest.done` from inside breaks the flow: the parent owns the data and never finds out.\n\nWhat the child does is **emit**:\n\n```vue\n<script setup>\nconst props = defineProps({ id: Number });\nconst emit = defineEmits(['toggle']);\n</script>\n\n<template>\n  <button @click=\"emit('toggle', props.id)\">Toggle</button>\n</template>\n```\n\nAnd the parent listens, exactly like a normal `@click`:\n\n```vue\n<Card :id=\"1\" @toggle=\"change\" />\n```\n\nThat restriction is what makes an app debuggable: given wrong data, you walk up the tree until you find who owns it, and there are no other possible paths.\n\nDeclaring events with `defineEmits` serves the same purpose as declaring props: whoever reads the component knows what it emits without scanning the whole template."
+      },
+      "task": {
+        "es": "Añade un evento `toggle` a `QuestCard` y haz que `App` lo escuche para marcar la misión.",
+        "en": "Add a `toggle` event to `QuestCard` and make `App` listen to it to mark the quest."
+      },
+      "focusFile": "src/QuestCard.vue",
+      "ruleIds": ["declares-emits", "no-prop-mutation"],
+      "xp": 45,
+      "bestPractice": {
+        "es": "**Flujo unidireccional:** es la misma idea que en React y en Svelte. El dato baja, el evento sube, y cuando dos componentes necesitan compartir algo se «eleva el estado» al ancestro común más cercano en vez de duplicarlo.",
+        "en": "**Unidirectional data flow:** the same idea as in React and Svelte. Data down, events up, and when two components need to share something you \"lift state up\" to the nearest common ancestor instead of duplicating it."
+      }
+    },
+    {
+      "id": "step-3-compose",
+      "title": {
+        "es": "Montar la lista con el componente",
+        "en": "Build the list out of the component"
+      },
+      "body": {
+        "es": "Con `<script setup>`, importar un componente basta para poder usarlo: no hay que registrarlo en ningún sitio.\n\n```vue\n<script setup>\nimport QuestCard from './QuestCard.vue';\n</script>\n\n<template>\n  <QuestCard v-for=\"q in quests\" :key=\"q.id\" :quest=\"q\" @toggle=\"toggle\" />\n</template>\n```\n\nTres cosas que conviene mirar en esa línea:\n\n- La `:key` va en el componente, no dentro de él.\n- `:quest=\"q\"` pasa el objeto; sin los dos puntos pasaría el texto «q».\n- `@toggle=\"toggle\"` pasa la **función**, no su resultado.\n\nY el nombre importa: `<QuestCard>` en PascalCase. Vue distingue los componentes de las etiquetas HTML por la mayúscula inicial, igual que React.",
+        "en": "With `<script setup>`, importing a component is all it takes to use it: there's nothing to register anywhere.\n\n```vue\n<script setup>\nimport QuestCard from './QuestCard.vue';\n</script>\n\n<template>\n  <QuestCard v-for=\"q in quests\" :key=\"q.id\" :quest=\"q\" @toggle=\"toggle\" />\n</template>\n```\n\nThree things worth looking at in that line:\n\n- The `:key` goes on the component, not inside it.\n- `:quest=\"q\"` passes the object; without the colon it would pass the text \"q\".\n- `@toggle=\"toggle\"` passes the **function**, not its result.\n\nAnd the name matters: `<QuestCard>` in PascalCase. Vue tells components apart from HTML tags by that initial capital, just like React."
+      },
+      "task": {
+        "es": "Sustituye el `<li>` escrito a mano por `<QuestCard>` dentro del `v-for`.",
+        "en": "Replace the hand-written `<li>` with `<QuestCard>` inside the `v-for`."
+      },
+      "focusFile": "src/App.vue",
+      "ruleIds": ["uses-component", "imports-component", "listens-to-event", "cards-rendered"],
+      "xp": 45
+    }
+  ],
+
+  "drills": [],
+
+  "reward": {
+    "baseXp": 160,
+    "flawlessBonus": 60,
+    "noHintBonus": 35,
+    "comboMultiplierCap": 3,
+    "achievements": ["component-composer"]
+  },
+
+  "solution": {
+    "files": [
+      {
+        "path": "src/QuestCard.vue",
+        "content": "<script setup>\nconst props = defineProps({\n  quest: { type: Object, required: true },\n});\n\nconst emit = defineEmits(['toggle']);\n</script>\n\n<template>\n  <li class=\"quest\">\n    <span>{{ props.quest.title }}</span>\n    <span>{{ props.quest.xp }} XP</span>\n    <button @click=\"emit('toggle', props.quest.id)\">\n      {{ props.quest.done ? 'Hecha' : 'Pendiente' }}\n    </button>\n  </li>\n</template>\n"
+      },
+      {
+        "path": "src/App.vue",
+        "content": "<script setup>\nimport { ref } from 'vue';\nimport QuestCard from './QuestCard.vue';\n\nconst quests = ref([\n  { id: 1, title: 'Aprender directivas', xp: 40, done: true },\n  { id: 2, title: 'Dominar los componentes', xp: 60, done: false },\n  { id: 3, title: 'Vencer al boss', xp: 120, done: false },\n]);\n\nfunction toggle(id) {\n  const quest = quests.value.find((item) => item.id === id);\n  if (quest) quest.done = !quest.done;\n}\n</script>\n\n<template>\n  <main>\n    <h1>Misiones</h1>\n\n    <ul class=\"quests\">\n      <QuestCard\n        v-for=\"quest in quests\"\n        :key=\"quest.id\"\n        :quest=\"quest\"\n        @toggle=\"toggle\"\n      />\n    </ul>\n  </main>\n</template>\n"
+      }
+    ],
+    "explanation": {
+      "es": "`QuestCard` no toca la misión que recibe: emite `toggle` con el id y `App`, que es el dueño del array, decide qué hacer. Por eso el estado sigue viviendo en un solo sitio y basta mirar `App` para saber por qué una misión está marcada.",
+      "en": "`QuestCard` never touches the quest it receives: it emits `toggle` with the id, and `App`, which owns the array, decides what to do. That's why the state still lives in one place and looking at `App` is enough to know why a quest is marked."
+    }
+  }
+}

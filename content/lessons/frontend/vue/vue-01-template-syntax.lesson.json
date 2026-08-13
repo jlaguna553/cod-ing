@@ -1,0 +1,258 @@
+{
+  "$schema": "../../../schema/lesson.schema.json",
+  "schemaVersion": 1,
+
+  "id": "vue-01-template-syntax",
+  "track": "frontend",
+  "module": "vue",
+  "order": 1,
+
+  "kind": "concept",
+  "difficulty": "novice",
+  "estimatedMinutes": 18,
+
+  "title": {
+    "es": "La plantilla de Vue: HTML con superpoderes",
+    "en": "Vue templates: HTML with superpowers"
+  },
+  "summary": {
+    "es": "Interpolación, atributos dinámicos, condicionales y listas. Vue no te pide abandonar el HTML: le añade directivas para que reaccione a tus datos.",
+    "en": "Interpolation, dynamic attributes, conditionals and lists. Vue doesn't ask you to leave HTML behind: it adds directives so it reacts to your data."
+  },
+  "concepts": ["vue", "templates", "directives", "v-for", "v-if", "v-bind"],
+  "prerequisites": ["js-03-array-map"],
+
+  "runtime": {
+    "kind": "sandpack",
+    "dependencies": { "vue": "^3.5.0" },
+    "timeoutMs": 15000
+  },
+
+  "workspace": {
+    "entry": "src/App.vue",
+    "allowCreate": false,
+    "allowDelete": false,
+    "protectedPaths": ["src/main.js"],
+    "files": [
+      {
+        "path": "src/App.vue",
+        "content": "<script setup>\nconst player = { name: 'Ada', level: 7, avatar: 'https://placehold.co/64', online: true };\nconst quests = [\n  { id: 1, title: 'Aprender directivas', done: true },\n  { id: 2, title: 'Dominar v-for', done: false },\n  { id: 3, title: 'Vencer al boss', done: false },\n];\n</script>\n\n<template>\n  <section class=\"profile\">\n    <!-- TODO 1: muestra el nombre del jugador, no el texto literal -->\n    <h1>NOMBRE</h1>\n\n    <!-- TODO 2: el src debe salir de player.avatar -->\n    <img src=\"avatar\" alt=\"Avatar\" width=\"64\" />\n\n    <!-- TODO 3: muestra \"En línea\" solo si player.online -->\n    <p class=\"status\">En línea</p>\n\n    <!-- TODO 4: pinta un <li> por cada misión -->\n    <ul class=\"quests\"></ul>\n  </section>\n</template>\n",
+        "active": true
+      },
+      {
+        "path": "src/main.js",
+        "content": "import { createApp } from 'vue';\nimport App from './App.vue';\n\ncreateApp(App).mount('#app');\n",
+        "readOnly": true
+      }
+    ]
+  },
+
+  "rules": [
+    {
+      "id": "interpolates-name",
+      "kind": "regex-must",
+      "file": "src/App.vue",
+      "pattern": "\\{\\{\\s*player\\.name\\s*\\}\\}",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "El `<h1>` debe mostrar `player.name`, no el texto literal. La interpolación usa dobles llaves.",
+        "en": "The `<h1>` should show `player.name`, not the literal text. Interpolation uses double curly braces."
+      },
+      "successMessage": {
+        "es": "El nombre sale de los datos, no está escrito a mano.",
+        "en": "The name comes from the data, not from hardcoded text."
+      },
+      "points": 20
+    },
+    {
+      "id": "binds-attribute",
+      "kind": "regex-must",
+      "file": "src/App.vue",
+      "pattern": "(:src|v-bind:src)\\s*=",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "El atributo `src` es estático: escribe `avatar` tal cual. Para que salga de los datos hay que enlazarlo.",
+        "en": "The `src` attribute is static: it literally says `avatar`. To make it come from the data it must be bound."
+      },
+      "points": 25
+    },
+    {
+      "id": "no-interpolation-in-attribute",
+      "kind": "regex-forbid",
+      "file": "src/App.vue",
+      "pattern": "src\\s*=\\s*\"\\{\\{",
+      "phase": "type",
+      "severity": "damage",
+      "message": {
+        "es": "¡Daño! Las llaves dobles solo funcionan en el contenido de texto. En un atributo hay que enlazarlo con dos puntos.",
+        "en": "Damage! Double braces only work in text content. In an attribute you have to bind it with a colon."
+      },
+      "points": 0
+    },
+    {
+      "id": "conditional-status",
+      "kind": "regex-must",
+      "file": "src/App.vue",
+      "pattern": "v-if\\s*=\\s*\"[^\"]*player\\.online",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "«En línea» se muestra siempre. Debe aparecer solo cuando `player.online` sea cierto.",
+        "en": "\"Online\" always shows. It should appear only when `player.online` is true."
+      },
+      "points": 25
+    },
+    {
+      "id": "renders-list",
+      "kind": "regex-must",
+      "file": "src/App.vue",
+      "pattern": "v-for\\s*=\\s*\"[^\"]*\\bin\\b[^\"]*quests",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Falta recorrer `quests` con `v-for` para pintar un elemento por misión.",
+        "en": "You still need to loop over `quests` with `v-for` to render one item per quest."
+      },
+      "points": 30
+    },
+    {
+      "id": "list-has-key",
+      "kind": "regex-must",
+      "file": "src/App.vue",
+      "pattern": "(:key|v-bind:key)\\s*=\\s*\"[^\"]*\\.id",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Cada elemento de un `v-for` necesita `:key`, y aquí hay un `id` estable para usarlo.",
+        "en": "Every `v-for` item needs a `:key`, and there's a stable `id` right there to use."
+      },
+      "points": 20
+    },
+    {
+      "id": "three-quests-rendered",
+      "kind": "dom-assert",
+      "selector": ".quests li",
+      "assert": "countEquals",
+      "count": 3,
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Deben aparecer tres `<li>`, uno por misión.",
+        "en": "Three `<li>` elements should appear, one per quest."
+      },
+      "points": 25
+    }
+  ],
+
+  "steps": [
+    {
+      "id": "step-1-interpolation",
+      "title": {
+        "es": "Datos dentro del HTML",
+        "en": "Data inside the HTML"
+      },
+      "body": {
+        "es": "La plantilla de Vue **es HTML válido**. No hay que aprender una sintaxis nueva para escribir estructura: se añaden marcas donde hacen falta datos.\n\nPara **contenido de texto**, dobles llaves:\n\n```vue\n<h1>{{ usuario.nombre }}</h1>\n<p>Te quedan {{ vidas - 1 }} intentos</p>\n```\n\nDentro de las llaves cabe cualquier expresión de JavaScript, no solo una variable.\n\nPara **atributos** las llaves no valen, y esta es la primera piedra con la que tropieza todo el mundo:\n\n```vue\n<img src=\"{{ url }}\" />   <!-- ❌ no funciona -->\n<img :src=\"url\" />         <!-- ✅ enlazado -->\n```\n\nLos dos puntos son la forma corta de `v-bind:`. Lo que va entre comillas deja de ser texto y pasa a ser una **expresión**: `:src=\"url\"` usa la variable, mientras que `src=\"url\"` pone la palabra «url».",
+        "en": "A Vue template **is valid HTML**. You don't learn a new syntax to write structure: you add markers where data is needed.\n\nFor **text content**, double braces:\n\n```vue\n<h1>{{ user.name }}</h1>\n<p>{{ lives - 1 }} attempts left</p>\n```\n\nAny JavaScript expression fits inside the braces, not just a variable.\n\nFor **attributes** braces don't work, and this is the first thing everyone trips on:\n\n```vue\n<img src=\"{{ url }}\" />   <!-- ❌ doesn't work -->\n<img :src=\"url\" />         <!-- ✅ bound -->\n```\n\nThe colon is shorthand for `v-bind:`. What sits between the quotes stops being text and becomes an **expression**: `:src=\"url\"` uses the variable, while `src=\"url\"` prints the word \"url\"."
+      },
+      "task": {
+        "es": "Muestra el nombre del jugador con interpolación y enlaza el `src` de la imagen a `player.avatar`.",
+        "en": "Show the player's name with interpolation and bind the image `src` to `player.avatar`."
+      },
+      "focusFile": "src/App.vue",
+      "focusLines": [11, 16],
+      "ruleIds": ["interpolates-name", "binds-attribute", "no-interpolation-in-attribute"],
+      "xp": 35,
+      "hints": [
+        {
+          "id": "h-bind",
+          "tier": 1,
+          "text": {
+            "es": "Añade dos puntos delante del nombre del atributo y quita las comillas del valor literal: el contenido pasa a leerse como código.",
+            "en": "Put a colon before the attribute name and drop the literal value: the contents start being read as code."
+          },
+          "xpPenalty": 5,
+          "autoOfferAfterSeconds": 60
+        }
+      ]
+    },
+    {
+      "id": "step-2-conditional",
+      "title": {
+        "es": "Mostrar solo cuando toca",
+        "en": "Show it only when it applies"
+      },
+      "body": {
+        "es": "`v-if` decide si un elemento **existe**. Cuando la condición es falsa, Vue no lo esconde: no lo crea.\n\n```vue\n<p v-if=\"conectado\">En línea</p>\n<p v-else>Desconectado</p>\n```\n\nHay una alternativa, `v-show`, que sí lo crea siempre y solo cambia su `display`. La diferencia importa:\n\n- **`v-if`** es más barato cuando la condición rara vez cambia, porque no monta nada mientras sea falsa.\n- **`v-show`** es más barato cuando se alterna a menudo, porque no monta y desmonta en cada cambio.\n\nRegla práctica: empieza con `v-if`, y cambia a `v-show` solo si notas que algo parpadea al alternarlo rápido.",
+        "en": "`v-if` decides whether an element **exists**. When the condition is false Vue doesn't hide it: it doesn't create it.\n\n```vue\n<p v-if=\"online\">Online</p>\n<p v-else>Offline</p>\n```\n\nThere's an alternative, `v-show`, which always creates it and only flips its `display`. The difference matters:\n\n- **`v-if`** is cheaper when the condition rarely changes, since nothing is mounted while it's false.\n- **`v-show`** is cheaper when it toggles often, since it doesn't mount and unmount on every change.\n\nRule of thumb: start with `v-if`, and switch to `v-show` only if you notice flicker when toggling fast."
+      },
+      "task": {
+        "es": "Haz que «En línea» aparezca solo cuando `player.online` sea cierto.",
+        "en": "Make \"Online\" appear only when `player.online` is true."
+      },
+      "focusFile": "src/App.vue",
+      "focusLines": [17, 19],
+      "ruleIds": ["conditional-status"],
+      "xp": 30
+    },
+    {
+      "id": "step-3-list",
+      "title": {
+        "es": "Una lista sin escribir un bucle",
+        "en": "A list without writing a loop"
+      },
+      "body": {
+        "es": "`v-for` repite un elemento por cada entrada de un array. Se escribe **en el elemento que se repite**, no en el contenedor:\n\n```vue\n<ul>\n  <li v-for=\"tarea in tareas\" :key=\"tarea.id\">\n    {{ tarea.titulo }}\n  </li>\n</ul>\n```\n\nSi necesitas la posición: `v-for=\"(tarea, indice) in tareas\"`.\n\nY la `:key`, que no es opcional. Vue no repinta la lista entera cuando cambia: compara la anterior con la nueva y mueve, crea o borra lo justo. La `key` le dice **qué elemento es cuál** entre un render y el siguiente.\n\nSin ella, Vue se guía por la posición, y ahí llega el bug clásico: borras el primer elemento, todos suben un puesto, y el estado interno —el texto de un `input`, una casilla marcada— se queda pegado a la fila equivocada.\n\nPor eso **el índice es una mala `key`** en listas que se reordenan o filtran: es exactamente la posición que ya usaba. Usa un identificador del dato.",
+        "en": "`v-for` repeats an element once per array entry. You write it **on the element that repeats**, not on the container:\n\n```vue\n<ul>\n  <li v-for=\"task in tasks\" :key=\"task.id\">\n    {{ task.title }}\n  </li>\n</ul>\n```\n\nIf you need the position: `v-for=\"(task, index) in tasks\"`.\n\nAnd the `:key`, which isn't optional. Vue doesn't repaint the whole list when it changes: it diffs old against new and moves, creates or deletes only what's needed. The `key` tells it **which element is which** between renders.\n\nWithout it Vue falls back to position, and there's the classic bug: delete the first item, everything shifts up, and internal state — an `input`'s text, a ticked checkbox — stays glued to the wrong row.\n\nThat's why **the index is a bad `key`** in lists that reorder or filter: it's exactly the position Vue was already using. Use an identifier from the data."
+      },
+      "task": {
+        "es": "Pinta un `<li>` por cada misión de `quests`, con su `:key`, mostrando el título.",
+        "en": "Render one `<li>` per quest in `quests`, each with its `:key`, showing the title."
+      },
+      "focusFile": "src/App.vue",
+      "focusLines": [20, 22],
+      "ruleIds": ["renders-list", "list-has-key", "three-quests-rendered"],
+      "xp": 40,
+      "hints": [
+        {
+          "id": "h-for",
+          "tier": 2,
+          "text": {
+            "es": "El `v-for` va en el `<li>`, no en el `<ul>`: se repite el elemento marcado, no su contenedor.",
+            "en": "The `v-for` goes on the `<li>`, not the `<ul>`: the marked element repeats, not its container."
+          },
+          "xpPenalty": 10
+        }
+      ],
+      "bestPractice": {
+        "es": "**Estándar de la industria:** la `key` estable es la misma idea en Vue, React y Svelte. Los tres comparan listas de la misma forma, y los tres producen el mismo bug si usas el índice. Aprender por qué aquí te ahorra depurarlo en los otros dos.",
+        "en": "**Industry standard:** the stable `key` is the same idea in Vue, React and Svelte. All three diff lists the same way, and all three produce the same bug if you use the index. Learning why here saves you debugging it in the other two."
+      }
+    }
+  ],
+
+  "drills": [],
+
+  "reward": {
+    "baseXp": 110,
+    "flawlessBonus": 45,
+    "noHintBonus": 25,
+    "comboMultiplierCap": 3,
+    "achievements": ["template-weaver"]
+  },
+
+  "solution": {
+    "files": [
+      {
+        "path": "src/App.vue",
+        "content": "<script setup>\nconst player = { name: 'Ada', level: 7, avatar: 'https://placehold.co/64', online: true };\nconst quests = [\n  { id: 1, title: 'Aprender directivas', done: true },\n  { id: 2, title: 'Dominar v-for', done: false },\n  { id: 3, title: 'Vencer al boss', done: false },\n];\n</script>\n\n<template>\n  <section class=\"profile\">\n    <h1>{{ player.name }}</h1>\n\n    <img :src=\"player.avatar\" alt=\"Avatar\" width=\"64\" />\n\n    <p v-if=\"player.online\" class=\"status\">En línea</p>\n\n    <ul class=\"quests\">\n      <li v-for=\"quest in quests\" :key=\"quest.id\">\n        {{ quest.title }}\n      </li>\n    </ul>\n  </section>\n</template>\n"
+      }
+    ],
+    "explanation": {
+      "es": "Cuatro directivas y ni una línea de JavaScript nueva. Fíjate en el patrón: las llaves dobles para texto, los dos puntos para atributos, y `v-if`/`v-for` como atributos especiales del elemento al que afectan.",
+      "en": "Four directives and not one new line of JavaScript. Notice the pattern: double braces for text, a colon for attributes, and `v-if`/`v-for` as special attributes on the element they affect."
+    }
+  }
+}

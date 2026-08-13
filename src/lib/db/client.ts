@@ -93,7 +93,19 @@ CREATE TABLE IF NOT EXISTS user_achievements (
  * base creada y conectada, y que la aplicación no la vea.
  */
 export function databaseUrl(): string | undefined {
-  return process.env.DATABASE_URL ?? process.env.POSTGRES_URL;
+  for (const candidate of [process.env.DATABASE_URL, process.env.POSTGRES_URL]) {
+    /*
+     * Se descarta lo que no sea una cadena de Postgres.
+     *
+     * `vercel env pull` escribe el literal `[SENSITIVE]` para las variables de
+     * sus integraciones, y ese archivo acaba en el `.env.local` de cualquiera
+     * que haya intentado descargarlas. Sin este filtro, el servidor de
+     * desarrollo intenta conectar a `[SENSITIVE]` y revienta con un
+     * `TypeError: Invalid URL` que no dice nada de dónde viene.
+     */
+    if (candidate && /^postgres(ql)?:\/\//.test(candidate)) return candidate;
+  }
+  return undefined;
 }
 
 async function create(): Promise<Database> {
