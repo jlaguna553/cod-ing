@@ -1,0 +1,240 @@
+{
+  "$schema": "../../../schema/lesson.schema.json",
+  "schemaVersion": 1,
+
+  "id": "html-01-first-page",
+  "track": "frontend",
+  "module": "html",
+  "order": 1,
+
+  "kind": "concept",
+  "difficulty": "novice",
+  "estimatedMinutes": 14,
+
+  "title": {
+    "es": "Tu primera página: el esqueleto de todo documento",
+    "en": "Your first page: the skeleton every document has"
+  },
+  "summary": {
+    "es": "Las cuatro piezas que lleva cualquier página del mundo, qué hace cada una y por qué el navegador te perdona si las olvidas — que es justo el problema.",
+    "en": "The four pieces every page in the world carries, what each does, and why the browser forgives you when you forget them — which is exactly the problem."
+  },
+  "concepts": ["html", "doctype", "head", "body", "metadata"],
+  "prerequisites": [],
+
+  "runtime": {
+    "kind": "dom",
+    "dependencies": {},
+    "timeoutMs": 5000
+  },
+
+  "workspace": {
+    "entry": "index.html",
+    "allowCreate": false,
+    "allowDelete": false,
+    "protectedPaths": [],
+    "files": [
+      {
+        "path": "index.html",
+        "content": "<html>\n  <body>\n    <h1>Mi primera página</h1>\n    <p>Funciona… pero le faltan piezas.</p>\n  </body>\n</html>\n",
+        "active": true
+      }
+    ]
+  },
+
+  "rules": [
+    {
+      "id": "has-doctype",
+      "kind": "regex-must",
+      "file": "index.html",
+      "pattern": "^\\s*<!doctype html>",
+      "flags": "im",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Falta `<!doctype html>` en la primera línea. Sin él el navegador entra en «modo compatibilidad» y aplica reglas de los años noventa.",
+        "en": "`<!doctype html>` is missing from the first line. Without it the browser drops into \"quirks mode\" and applies nineties rules."
+      },
+      "successMessage": {
+        "es": "El navegador ya sabe que esto es HTML moderno.",
+        "en": "The browser now knows this is modern HTML."
+      },
+      "points": 25
+    },
+    {
+      "id": "has-lang",
+      "kind": "regex-must",
+      "file": "index.html",
+      "pattern": "<html[^>]+lang\\s*=",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "El `<html>` no declara idioma. Un lector de pantalla necesita `lang` para pronunciar el texto correctamente.",
+        "en": "The `<html>` element declares no language. A screen reader needs `lang` to pronounce the text correctly."
+      },
+      "points": 20
+    },
+    {
+      "id": "has-head",
+      "kind": "regex-must",
+      "file": "index.html",
+      "pattern": "<head[\\s>]",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Falta el `<head>`: es donde vive todo lo que la página necesita pero no se ve.",
+        "en": "The `<head>` is missing: it's where everything the page needs but doesn't show lives."
+      },
+      "points": 15
+    },
+    {
+      "id": "has-charset",
+      "kind": "regex-must",
+      "file": "index.html",
+      "pattern": "<meta[^>]+charset",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Sin `<meta charset=\"utf-8\">`, las tildes y las eñes pueden salir como símbolos raros.",
+        "en": "Without `<meta charset=\"utf-8\">`, accented characters can come out as garbled symbols."
+      },
+      "points": 20
+    },
+    {
+      "id": "has-viewport",
+      "kind": "regex-must",
+      "file": "index.html",
+      "pattern": "<meta[^>]+name\\s*=\\s*[\"']viewport",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Falta la etiqueta `viewport`. Sin ella, un móvil finge tener una pantalla de escritorio y encoge la página hasta hacerla ilegible.",
+        "en": "The `viewport` tag is missing. Without it a phone pretends to have a desktop screen and shrinks the page until it's unreadable."
+      },
+      "points": 25
+    },
+    {
+      "id": "has-title",
+      "kind": "regex-must",
+      "file": "index.html",
+      "pattern": "<title>\\s*\\S",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Falta el `<title>`. Es el nombre de la pestaña, el del marcador y lo que aparece en los resultados de búsqueda.",
+        "en": "The `<title>` is missing. It's the tab's name, the bookmark's name, and what shows in search results."
+      },
+      "points": 20
+    },
+    {
+      "id": "heading-renders",
+      "kind": "dom-assert",
+      "selector": "h1",
+      "assert": "textContains",
+      "expected": "primera página",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "El encabezado debe seguir viéndose después de reorganizar el documento.",
+        "en": "The heading must still be visible after reorganizing the document."
+      },
+      "points": 15
+    }
+  ],
+
+  "steps": [
+    {
+      "id": "step-1-why",
+      "title": {
+        "es": "Funciona… y ese es el problema",
+        "en": "It works… and that's the problem"
+      },
+      "body": {
+        "es": "Abre la vista previa: la página **se ve**. El navegador ha rellenado por su cuenta todo lo que falta, porque HTML fue diseñado para no romperse nunca. Una etiqueta mal cerrada, un `<head>` ausente, un atributo inventado — el navegador lo arregla y sigue.\n\nEsa tolerancia es lo que ha mantenido la web viva treinta años. Y es también la razón por la que un documento incompleto pasa desapercibido hasta que aparecen los problemas:\n\n- Las tildes salen como `Ã©` en algunos servidores.\n- En el móvil la página aparece diminuta, como si fuera una web de escritorio.\n- La pestaña del navegador muestra la URL en vez de un nombre.\n- Un lector de pantalla lee el español con acento inglés.\n\nNinguno de esos fallos se ve en tu portátil el día que escribes el código. Todos aparecen después, en el dispositivo de otra persona.",
+        "en": "Open the preview: the page **shows up**. The browser has filled in everything that's missing on its own, because HTML was designed never to break. A badly closed tag, an absent `<head>`, an invented attribute — the browser patches it and moves on.\n\nThat tolerance is what has kept the web alive for thirty years. It's also why an incomplete document goes unnoticed until the problems arrive:\n\n- Accented characters come out as `Ã©` on some servers.\n- On a phone the page appears tiny, as if it were a desktop site.\n- The browser tab shows the URL instead of a name.\n- A screen reader reads Spanish with an English accent.\n\nNone of those show up on your laptop the day you write the code. All of them show up later, on someone else's device."
+      },
+      "task": {
+        "es": "Ejecuta la página y fíjate en que se ve bien pese a estar incompleta. Mira el nombre de la pestaña.",
+        "en": "Run the page and notice it looks fine despite being incomplete. Look at the tab's name."
+      },
+      "focusFile": "index.html",
+      "ruleIds": [],
+      "xp": 20
+    },
+    {
+      "id": "step-2-skeleton",
+      "title": {
+        "es": "Las cuatro piezas",
+        "en": "The four pieces"
+      },
+      "body": {
+        "es": "Todo documento HTML del mundo tiene esta forma:\n\n```html\n<!doctype html>\n<html lang=\"es\">\n  <head>\n    <meta charset=\"utf-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />\n    <title>Nombre de la página</title>\n  </head>\n  <body>\n    <!-- lo que se ve -->\n  </body>\n</html>\n```\n\nQué hace cada pieza:\n\n- **`<!doctype html>`** no es una etiqueta, es una instrucción al navegador: «interpreta esto con las reglas modernas». Sin ella entra en *quirks mode* y emula el comportamiento de Internet Explorer 5 — con un modelo de caja distinto que descuadra cualquier diseño.\n- **`lang`** le dice al lector de pantalla en qué idioma pronunciar, y al navegador qué diccionario usar para el corrector.\n- **`<head>`** es todo lo que la página necesita pero no se muestra: metadatos, estilos, scripts, iconos.\n- **`<body>`** es lo que se ve.\n\nY las dos `<meta>` que nunca deben faltar: `charset` para que los acentos se lean bien, y `viewport` para que el móvil use su ancho real en lugar de fingir 980 píxeles.",
+        "en": "Every HTML document in the world has this shape:\n\n```html\n<!doctype html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"utf-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />\n    <title>Page name</title>\n  </head>\n  <body>\n    <!-- what you see -->\n  </body>\n</html>\n```\n\nWhat each piece does:\n\n- **`<!doctype html>`** isn't a tag, it's an instruction: \"interpret this with modern rules\". Without it the browser enters *quirks mode* and emulates Internet Explorer 5 — with a different box model that throws off any layout.\n- **`lang`** tells the screen reader which language to pronounce, and the browser which dictionary to spell-check with.\n- **`<head>`** is everything the page needs but doesn't display: metadata, styles, scripts, icons.\n- **`<body>`** is what you see.\n\nAnd the two `<meta>` tags that must never be missing: `charset` so accents render correctly, and `viewport` so a phone uses its real width instead of pretending to be 980 pixels wide."
+      },
+      "task": {
+        "es": "Completa `index.html` con las cuatro piezas: doctype, idioma, `<head>` con charset, viewport y título.",
+        "en": "Complete `index.html` with the four pieces: doctype, language, and a `<head>` with charset, viewport and title."
+      },
+      "focusFile": "index.html",
+      "focusLines": [1, 2],
+      "ruleIds": [
+        "has-doctype",
+        "has-lang",
+        "has-head",
+        "has-charset",
+        "has-viewport",
+        "has-title",
+        "heading-renders"
+      ],
+      "xp": 55,
+      "hints": [
+        {
+          "id": "h-order",
+          "tier": 1,
+          "text": {
+            "es": "El orden importa: el doctype va antes que `<html>`, y el `<head>` antes que el `<body>`. El contenido que ya tienes se queda dentro del `<body>`.",
+            "en": "Order matters: the doctype comes before `<html>`, and the `<head>` before the `<body>`. The content you already have stays inside the `<body>`."
+          },
+          "xpPenalty": 5,
+          "autoOfferAfterSeconds": 75
+        },
+        {
+          "id": "h-viewport",
+          "tier": 2,
+          "text": {
+            "es": "La etiqueta del viewport tiene un contenido concreto que se escribe siempre igual: `width=device-width, initial-scale=1`.",
+            "en": "The viewport tag has a specific content string that's always written the same way: `width=device-width, initial-scale=1`."
+          },
+          "xpPenalty": 10
+        }
+      ],
+      "bestPractice": {
+        "es": "**Estándar de la industria:** este esqueleto es lo que genera cualquier herramienta moderna —`create-vite`, `create-next-app`— cuando arranca un proyecto. No lo escribirás a mano muy a menudo, pero sí lo vas a leer y a modificar constantemente: saber qué hace cada línea es la diferencia entre tocarlo con criterio y copiar y pegar.",
+        "en": "**Industry standard:** this skeleton is what any modern tool — `create-vite`, `create-next-app` — generates when starting a project. You won't type it by hand often, but you will read and modify it constantly: knowing what each line does is the difference between editing with judgement and copy-pasting."
+      }
+    }
+  ],
+
+  "drills": [],
+
+  "reward": {
+    "baseXp": 95,
+    "flawlessBonus": 40,
+    "noHintBonus": 20,
+    "comboMultiplierCap": 3,
+    "achievements": ["first-steps"]
+  },
+
+  "solution": {
+    "files": [
+      {
+        "path": "index.html",
+        "content": "<!doctype html>\n<html lang=\"es\">\n  <head>\n    <meta charset=\"utf-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />\n    <title>Mi primera página</title>\n  </head>\n  <body>\n    <h1>Mi primera página</h1>\n    <p>Funciona… pero le faltan piezas.</p>\n  </body>\n</html>\n"
+      }
+    ],
+    "explanation": {
+      "es": "Se ve exactamente igual que antes, y esa es la lección: lo que has añadido no cambia el aspecto en tu pantalla, cambia cómo se comporta en las demás. La pestaña ya tiene nombre, los acentos están garantizados y el móvil usará su ancho real.",
+      "en": "It looks exactly the same as before, and that's the lesson: what you added doesn't change the appearance on your screen, it changes how it behaves on everyone else's. The tab has a name now, accents are guaranteed, and a phone will use its real width."
+    }
+  }
+}

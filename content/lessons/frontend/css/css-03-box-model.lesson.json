@@ -1,0 +1,252 @@
+{
+  "$schema": "../../../schema/lesson.schema.json",
+  "schemaVersion": 1,
+
+  "id": "css-03-box-model",
+  "track": "frontend",
+  "module": "css",
+  "order": 3,
+
+  "kind": "concept",
+  "difficulty": "novice",
+  "estimatedMinutes": 18,
+
+  "title": {
+    "es": "El modelo de caja: por qué 300px no miden 300px",
+    "en": "The box model: why 300px isn't 300 pixels"
+  },
+  "summary": {
+    "es": "Pones `width: 300px` y el navegador dibuja 356. No es un bug: es el modelo de caja por defecto, y hay una línea de CSS que lo arregla para siempre.",
+    "en": "You write `width: 300px` and the browser draws 356. It isn't a bug: it's the default box model, and one line of CSS fixes it forever."
+  },
+  "concepts": ["css", "box-model", "box-sizing", "padding", "border"],
+  "prerequisites": ["html-01-first-page"],
+
+  "runtime": {
+    "kind": "dom",
+    "dependencies": {},
+    "timeoutMs": 5000
+  },
+
+  "workspace": {
+    "entry": "index.html",
+    "allowCreate": false,
+    "allowDelete": false,
+    "protectedPaths": ["index.html"],
+    "files": [
+      {
+        "path": "index.html",
+        "readOnly": true,
+        "content": "<!doctype html>\n<html lang=\"es\">\n  <head>\n    <meta charset=\"utf-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />\n    <title>Modelo de caja</title>\n    <link rel=\"stylesheet\" href=\"styles.css\" />\n  </head>\n  <body>\n    <article class=\"card\">\n      <span class=\"badge\">Nuevo</span>\n      <h2>Tarjeta</h2>\n      <p>Debería medir exactamente 300px de ancho.</p>\n    </article>\n\n    <script>\n      // La página se mide a sí misma: esto es lo que el navegador dibuja\n      // de verdad, no lo que dice la hoja de estilos.\n      const measure = (sel) => Math.round(document.querySelector(sel).getBoundingClientRect().width);\n      console.log(`La tarjeta ocupa ${measure('.card')}px de ancho real.`);\n      console.log(`La insignia ocupa ${measure('.badge')}px de ancho real.`);\n    </script>\n  </body>\n</html>\n"
+      },
+      {
+        "path": "styles.css",
+        "active": true,
+        "content": "body {\n  margin: 0;\n  font-family: system-ui, sans-serif;\n}\n\n.card {\n  width: 300px;\n  padding: 24px;\n  border: 4px solid #7c3aed;\n  border-radius: 12px;\n}\n\n.badge {\n  display: inline-block;\n  width: 120px;\n  padding: 6px 10px;\n  border: 2px solid #22d3ee;\n  border-radius: 999px;\n  text-align: center;\n}\n"
+      }
+    ]
+  },
+
+  "rules": [
+    {
+      "id": "card-is-300",
+      "kind": "stdout-match",
+      "matches": "La tarjeta ocupa 300px",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "La tarjeta sigue sin ocupar 300px reales. El navegador está sumando el padding y el borde a la anchura que declaraste.",
+        "en": "The card still doesn't occupy a real 300px. The browser is adding the padding and border on top of the width you declared."
+      },
+      "successMessage": {
+        "es": "300 declarados, 300 dibujados.",
+        "en": "300 declared, 300 drawn."
+      },
+      "points": 40
+    },
+    {
+      "id": "badge-is-120",
+      "kind": "stdout-match",
+      "matches": "La insignia ocupa 120px",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "La insignia sigue midiendo de más. Arreglar solo `.card` deja el mismo problema en todos los demás elementos de la página.",
+        "en": "The badge is still oversized. Fixing only `.card` leaves the very same problem in every other element on the page."
+      },
+      "points": 30
+    },
+    {
+      "id": "card-border-box",
+      "kind": "dom-assert",
+      "selector": ".card",
+      "assert": "styleEquals",
+      "attribute": "box-sizing",
+      "expected": "border-box",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "`.card` todavía usa `content-box`, el modelo por defecto.",
+        "en": "`.card` still uses `content-box`, the default model."
+      },
+      "points": 20
+    },
+    {
+      "id": "universal-reset",
+      "kind": "regex-must",
+      "file": "styles.css",
+      "pattern": "\\*[^{]*\\{[^}]*box-sizing:\\s*border-box",
+      "flags": "s",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Aplícalo con el selector universal `*` (más los pseudoelementos), no clase por clase. Es la única forma de que un elemento nuevo nazca ya arreglado.",
+        "en": "Apply it with the universal selector `*` (plus the pseudo-elements), not class by class. It's the only way a new element is born already fixed."
+      },
+      "points": 30
+    },
+    {
+      "id": "no-manual-subtraction",
+      "kind": "regex-forbid",
+      "file": "styles.css",
+      "pattern": "width:\\s*(244|248|252|92|96)px",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Restar el padding y el borde a mano funciona hasta que alguien cambia el padding. Deja las medidas que querías y cambia el modelo de caja.",
+        "en": "Subtracting padding and border by hand works until someone changes the padding. Keep the measurements you wanted and change the box model instead."
+      },
+      "points": 20
+    },
+    {
+      "id": "keeps-padding",
+      "kind": "regex-must",
+      "file": "styles.css",
+      "pattern": "padding:\\s*24px",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "El padding de 24px debe seguir ahí: el objetivo es que la caja mida 300px *con* su espaciado, no quitarlo.",
+        "en": "The 24px padding must stay: the goal is a box that measures 300px *including* its spacing, not removing it."
+      },
+      "points": 10
+    }
+  ],
+
+  "steps": [
+    {
+      "id": "step-1-measure",
+      "title": {
+        "es": "300 declarados, 356 dibujados",
+        "en": "300 declared, 356 drawn"
+      },
+      "body": {
+        "es": "Ejecuta la página y lee la consola. La hoja de estilos dice `width: 300px`; el navegador dibuja **356**.\n\nLa cuenta es exacta:\n\n```\n  300   width\n+  24   padding izquierdo\n+  24   padding derecho\n+   4   borde izquierdo\n+   4   borde derecho\n─────\n  356   lo que ocupa en pantalla\n```\n\nEn el modelo por defecto —`content-box`— la propiedad `width` **no describe la caja**: describe solo el hueco interior donde cabe el contenido. El padding y el borde crecen hacia fuera, encima de esa cifra.\n\nEs contraintuitivo, y es contraintuitivo por accidente histórico: cuando se estandarizó, Internet Explorer ya hacía lo contrario —lo que la gente esperaba— pero el estándar se escribió al revés y ahí se quedó.\n\nEl síntoma clásico: tres columnas de `width: 33%` con un poco de padding y, de pronto, la tercera cae a la línea siguiente.",
+        "en": "Run the page and read the console. The stylesheet says `width: 300px`; the browser draws **356**.\n\nThe arithmetic is exact:\n\n```\n  300   width\n+  24   left padding\n+  24   right padding\n+   4   left border\n+   4   right border\n─────\n  356   what it occupies on screen\n```\n\nIn the default model — `content-box` — the `width` property **does not describe the box**: it describes only the inner slot the content fits into. Padding and border grow outward, on top of that number.\n\nIt's counter-intuitive, and it's counter-intuitive by historical accident: when this was standardized Internet Explorer already did the opposite — what people expected — but the standard was written the other way round and there it stayed.\n\nThe classic symptom: three columns at `width: 33%` with a little padding and, suddenly, the third one drops to the next line."
+      },
+      "task": {
+        "es": "Ejecuta la página y comprueba en la consola los dos anchos reales: 356 y 144.",
+        "en": "Run the page and check the two real widths in the console: 356 and 144."
+      },
+      "focusFile": "styles.css",
+      "ruleIds": [],
+      "xp": 20
+    },
+    {
+      "id": "step-2-border-box",
+      "title": {
+        "es": "Una línea, toda la hoja",
+        "en": "One line, the whole stylesheet"
+      },
+      "body": {
+        "es": "`box-sizing: border-box` cambia el significado de `width`: pasa a describir la **caja entera**, borde incluido. El padding ya no empuja hacia fuera; se come espacio por dentro.\n\n```css\n.card {\n  box-sizing: border-box;\n  width: 300px;  /* ahora sí: 300px en pantalla */\n  padding: 24px;\n}\n```\n\nPero ponerlo clase por clase es perder la batalla poco a poco: cada elemento nuevo que escribas nacerá con el modelo viejo. Lo que se hace en cualquier proyecto real es declararlo una vez, arriba del todo:\n\n```css\n*,\n*::before,\n*::after {\n  box-sizing: border-box;\n}\n```\n\nLos dos pseudoelementos van explícitos porque `*` no los alcanza — son cajas que tú creas desde CSS y también merecen el modelo bueno.\n\n**Lo que no debes hacer:** restar a mano y escribir `width: 244px`. Funciona exactamente hasta que alguien cambia el padding, y entonces el fallo aparece en otro sitio y nadie sabe por qué.",
+        "en": "`box-sizing: border-box` changes what `width` means: it now describes the **whole box**, border included. Padding no longer pushes outward; it eats space from the inside.\n\n```css\n.card {\n  box-sizing: border-box;\n  width: 300px;  /* now really: 300px on screen */\n  padding: 24px;\n}\n```\n\nBut applying it class by class is losing the battle slowly: every new element you write is born with the old model. What real projects do is declare it once, at the top:\n\n```css\n*,\n*::before,\n*::after {\n  box-sizing: border-box;\n}\n```\n\nThe two pseudo-elements are listed explicitly because `*` doesn't reach them — they're boxes you create from CSS and they deserve the good model too.\n\n**What not to do:** subtract by hand and write `width: 244px`. It works exactly until someone changes the padding, and then the bug shows up somewhere else and nobody knows why."
+      },
+      "task": {
+        "es": "Añade el reset universal al principio de `styles.css`. No toques las anchuras ni el padding: la tarjeta debe medir 300px y la insignia 120px, con su espaciado intacto.",
+        "en": "Add the universal reset at the top of `styles.css`. Don't touch the widths or the padding: the card must measure 300px and the badge 120px, with their spacing intact."
+      },
+      "focusFile": "styles.css",
+      "focusLines": [1, 1],
+      "ruleIds": [
+        "card-is-300",
+        "badge-is-120",
+        "card-border-box",
+        "universal-reset",
+        "no-manual-subtraction",
+        "keeps-padding"
+      ],
+      "xp": 60,
+      "hints": [
+        {
+          "id": "h-where",
+          "tier": 1,
+          "text": {
+            "es": "El bloque va el primero del archivo, antes de `body`. Necesita tres selectores separados por comas: `*`, `*::before` y `*::after`.",
+            "en": "The block goes first in the file, before `body`. It needs three comma-separated selectors: `*`, `*::before` and `*::after`."
+          },
+          "xpPenalty": 5,
+          "autoOfferAfterSeconds": 90
+        },
+        {
+          "id": "h-run",
+          "tier": 2,
+          "text": {
+            "es": "Después de escribirlo, pulsa Ejecutar: las dos comprobaciones de anchura leen lo que la página imprime en la consola, así que necesitan una ejecución nueva.",
+            "en": "After writing it, hit Run: both width checks read what the page prints to the console, so they need a fresh execution."
+          },
+          "xpPenalty": 8
+        }
+      ],
+      "bestPractice": {
+        "es": "**Estándar de la industria:** el reset de `border-box` está en la primera regla de Bootstrap, Tailwind (`preflight`), y de prácticamente cualquier hoja de estilos profesional desde 2012. Si abres un proyecto y no lo encuentras, casi siempre es un descuido, no una decisión.",
+        "en": "**Industry standard:** the `border-box` reset is the first rule in Bootstrap, in Tailwind (`preflight`), and in practically every professional stylesheet since 2012. If you open a project and can't find it, it's almost always an oversight, not a decision."
+      }
+    },
+    {
+      "id": "step-3-margin",
+      "title": {
+        "es": "El margen nunca entra en la cuenta",
+        "en": "Margin never enters the count"
+      },
+      "body": {
+        "es": "Queda un matiz que confunde a mucha gente en la primera entrevista técnica: **`border-box` no incluye el margen**. Ninguno de los dos modelos lo hace.\n\n```\n┌─────────────────────────────────────┐\n│  margin  (espacio EXTERIOR, nunca   │\n│  ┌───────────────────────────────┐  │  cuenta en width)\n│  │ border ─── borde              │  │\n│  │  ┌─────────────────────────┐  │  │\n│  │  │ padding                 │  │  │  ← border-box mide\n│  │  │   ┌─────────────────┐   │  │  │     hasta aquí\n│  │  │   │  contenido      │   │  │  │  ← content-box mide\n│  │  │   └─────────────────┘   │  │  │     solo esto\n│  │  └─────────────────────────┘  │  │\n│  └───────────────────────────────┘  │\n└─────────────────────────────────────┘\n```\n\nLa distinción tiene lógica: padding y borde son **parte del elemento** —se pintan con su fondo, reciben sus clics—, mientras que el margen es **separación respecto a los vecinos**, y por eso pertenece al espacio entre cajas, no a la caja.\n\nDe ahí sale un comportamiento que solo tiene el margen: dos márgenes verticales adyacentes **se colapsan** en uno solo, y gana el mayor. Dos cajas con `margin: 20px` no quedan a 40px de distancia, quedan a 20. El padding jamás hace eso.",
+        "en": "One nuance is left that trips up a lot of people in their first technical interview: **`border-box` does not include the margin**. Neither model does.\n\n```\n┌─────────────────────────────────────┐\n│  margin  (OUTER space, never        │\n│  ┌───────────────────────────────┐  │  counts toward width)\n│  │ border ─── the border         │  │\n│  │  ┌─────────────────────────┐  │  │\n│  │  │ padding                 │  │  │  ← border-box measures\n│  │  │   ┌─────────────────┐   │  │  │     up to here\n│  │  │   │  content        │   │  │  │  ← content-box measures\n│  │  │   └─────────────────┘   │  │  │     only this\n│  │  └─────────────────────────┘  │  │\n│  └───────────────────────────────┘  │\n└─────────────────────────────────────┘\n```\n\nThe distinction is logical: padding and border are **part of the element** — they're painted with its background, they receive its clicks — while margin is **separation from the neighbours**, so it belongs to the space between boxes, not to the box.\n\nFrom that comes a behaviour only margin has: two adjacent vertical margins **collapse** into one, and the larger wins. Two boxes with `margin: 20px` don't end up 40px apart, they end up 20 apart. Padding never does that."
+      },
+      "task": {
+        "es": "Lee el diagrama y quédate con la frase: el margen es espacio *entre* cajas, no parte de la caja.",
+        "en": "Read the diagram and keep the sentence: margin is space *between* boxes, not part of the box."
+      },
+      "focusFile": "styles.css",
+      "ruleIds": [],
+      "xp": 25,
+      "bestPractice": {
+        "es": "**Pregunta de entrevista frecuente:** «¿qué mide `width` con `box-sizing: border-box`?» La respuesta completa son tres partes: contenido + padding + borde, y **no** el margen. Añadir la última —y el colapso de márgenes— es lo que distingue una respuesta memorizada de una entendida.",
+        "en": "**Common interview question:** \"what does `width` measure under `box-sizing: border-box`?\" The full answer has three parts: content + padding + border, and **not** margin. Adding that last part — and margin collapsing — is what separates a memorized answer from an understood one."
+      }
+    }
+  ],
+
+  "drills": [],
+
+  "reward": {
+    "baseXp": 105,
+    "flawlessBonus": 45,
+    "noHintBonus": 25,
+    "comboMultiplierCap": 3,
+    "achievements": []
+  },
+
+  "solution": {
+    "files": [
+      {
+        "path": "styles.css",
+        "content": "*,\n*::before,\n*::after {\n  box-sizing: border-box;\n}\n\nbody {\n  margin: 0;\n  font-family: system-ui, sans-serif;\n}\n\n.card {\n  width: 300px;\n  padding: 24px;\n  border: 4px solid #7c3aed;\n  border-radius: 12px;\n}\n\n.badge {\n  display: inline-block;\n  width: 120px;\n  padding: 6px 10px;\n  border: 2px solid #22d3ee;\n  border-radius: 999px;\n  text-align: center;\n}\n"
+      }
+    ],
+    "explanation": {
+      "es": "Cuatro líneas al principio del archivo y las dos cajas miden lo que declaran, sin haber tocado ni una anchura ni un padding. Ese es el criterio para distinguir un arreglo de un parche: el arreglo cambia la regla, el parche cambia los números.",
+      "en": "Four lines at the top of the file and both boxes measure what they declare, without a single width or padding being touched. That's the test that separates a fix from a patch: the fix changes the rule, the patch changes the numbers."
+    }
+  }
+}

@@ -30,6 +30,20 @@ async function typeInEditor(page: Page, text: string) {
   await page.keyboard.type(text, { delay: 8 });
 }
 
+/**
+ * Sustituye el contenido insertando el texto de golpe.
+ *
+ * Necesario para CSS y HTML: al teclear carácter a carácter, Monaco cierra
+ * solo las llaves y las etiquetas, y el `}` o el `</html>` que escribe el test
+ * acaba duplicado. `insertText` no dispara el autocierre, que solo actúa sobre
+ * pulsaciones sueltas.
+ */
+async function insertInEditor(page: Page, text: string) {
+  await page.locator('.monaco-editor .view-lines').click();
+  await page.keyboard.press('ControlOrMeta+a');
+  await page.keyboard.insertText(text);
+}
+
 test('la lección carga con el editor y el enunciado del paso', async ({ page }) => {
   await page.goto(LESSON);
   await waitForPristineEditor(page);
@@ -486,6 +500,62 @@ test('⭐ un paso sin comprobaciones no se queda bloqueado', async ({ page }) =>
 
   // El paso 2 de js-01 es de solo lectura: debe darse por superado igualmente.
   await expect(page.getByText(/paso superado/i)).toBeVisible({ timeout: 10_000 });
+});
+
+test('⭐ css-03: el reset de border-box cambia lo que el navegador dibuja', async ({ page }) => {
+  await page.goto('/es/play/frontend/css-03-box-model');
+  await waitForEditor(page);
+
+  // Paso 1: la página se mide a sí misma y delata el modelo por defecto.
+  await page.getByRole('button', { name: /ejecutar/i }).click();
+  await page.getByRole('button', { name: /consola/i }).click();
+  const console_ = page.getByRole('log', { name: /consola/i });
+  await expect(console_).toContainText('ocupa 356px', { timeout: 20_000 });
+
+  await page.getByRole('button', { name: /siguiente/i }).click();
+
+  // Paso 2: el reset universal, sin tocar una sola anchura ni el padding.
+  await insertInEditor(
+    page,
+    '*,\n*::before,\n*::after {\n  box-sizing: border-box;\n}\n\n' +
+      'body {\n  margin: 0;\n}\n\n' +
+      '.card {\n  width: 300px;\n  padding: 24px;\n  border: 4px solid #7c3aed;\n}\n\n' +
+      '.badge {\n  display: inline-block;\n  width: 120px;\n  padding: 6px 10px;\n  border: 2px solid #22d3ee;\n}\n',
+  );
+
+  await page.getByRole('button', { name: /ejecutar/i }).click();
+  // Se espera la ÚLTIMA línea de la ejecución, no la primera: los dos
+  // `console.log` llegan en mensajes distintos y validar entre uno y otro
+  // deja la comprobación de la insignia sin salida que leer.
+  await expect(console_).toContainText('ocupa 120px', { timeout: 20_000 });
+
+  await page.getByRole('button', { name: /validar paso/i }).click();
+  await expect(page.getByText(/todas las pruebas superadas/i)).toBeVisible({ timeout: 20_000 });
+});
+
+test('⭐ html-01: el esqueleto completo se valida sin cambiar lo que se ve', async ({ page }) => {
+  await page.goto('/es/play/frontend/html-01-first-page');
+  await waitForEditor(page);
+
+  await page.getByRole('button', { name: /siguiente/i }).click();
+  await insertInEditor(
+    page,
+    '<!doctype html>\n<html lang="es">\n<head>\n' +
+      '<meta charset="utf-8" />\n' +
+      '<meta name="viewport" content="width=device-width, initial-scale=1" />\n' +
+      '<title>Mi primera página</title>\n' +
+      '</head>\n<body>\n<h1>Mi primera página</h1>\n</body>\n</html>\n',
+  );
+
+  await page.getByRole('button', { name: /ejecutar/i }).click();
+  // La lección no imprime nada —ese es justo su tema—, así que la señal de que
+  // el documento nuevo ya está montado es el `<title>` que antes no existía.
+  await expect(page.locator('iframe[title="preview"]')).toHaveAttribute('srcdoc', /<title>/, {
+    timeout: 20_000,
+  });
+
+  await page.getByRole('button', { name: /validar paso/i }).click();
+  await expect(page.getByText(/todas las pruebas superadas/i)).toBeVisible({ timeout: 20_000 });
 });
 
 test('⭐ ejecutar varias veces no acumula la salida en la evaluación', async ({ page }) => {

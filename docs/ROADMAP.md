@@ -609,7 +609,7 @@ demostrarlo con el Profiler y el INP.
 `workspace.allowCreate`) y ejercita el ADR-07: el usuario teclea `npm create vite@latest`,
 ve el árbol llenarse y solo entonces escribe React.
 
-### Backlog del currículo — 6 lecciones referenciadas que faltan
+### Backlog del currículo — 2 lecciones referenciadas que faltan
 
 `validate-content.ts` construye el grafo de prerequisitos y lista lo que no existe.
 No bloquea el build —durante la construcción del temario es normal referenciar lo que
@@ -618,16 +618,15 @@ Los **ciclos sí son error**: un track sin punto de entrada no se puede empezar.
 
 | Falta | Bloquea a |
 |---|---|
-| `html-01-first-page` | `html-02-semantic-structure` |
-| `css-03-box-model` | `css-05-flexbox-centering` |
-| `vue-01-template-syntax`, `vue-02-components` | `vue-03-reactivity` |
 | `docker-03-dockerfile-basics`, `docker-05-images-layers` | `docker-07-layer-cache` |
 
-**Además, sin empezar:** TypeScript y Next.js (módulos completos). Vue es el módulo
-más cerca de cerrarse: le faltan solo sus dos lecciones de entrada.
+**Además, sin empezar:** TypeScript y Next.js (módulos completos), y **el track Backend
+entero**, que hoy se ve vacío en producción. Antes de escribir su contenido hay una
+decisión de motor pendiente: ningún runner actual ejecuta Node ni Python. La vía más
+barata es empezar por **SQL sobre PGlite**, que ya es una dependencia del proyecto.
 
-**Módulos cerrados: 2 de 7** (JavaScript y React). Ambos con cadena completa desde la
-primera lección; React además con boss de entrevista.
+**Módulos cerrados: 5 de 7** (JavaScript, React, Vue, HTML y CSS). Todos con cadena
+completa desde su primera lección; React además con boss de entrevista.
 
 ---
 

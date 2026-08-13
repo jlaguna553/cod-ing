@@ -13,11 +13,23 @@ import { OutputEmitter } from './types';
  * código del usuario no puede tocar `localStorage`, cookies ni el DOM de la
  * aplicación — aunque el código sea suyo, un `while(true)` o un `alert` en
  * bucle no deben poder secuestrar la plataforma entera.
+ *
+ * Ese aislamiento tiene un precio que costó caro descubrir: con un origen
+ * opaco, `iframe.contentDocument` es `null` desde la ventana anfitriona. Las
+ * reglas `dom-assert` quedaban PENDIENTES para siempre —nunca en rojo, así que
+ * nada chillaba— y ningún test de Node lo detectó porque en jsdom el sandbox
+ * no se aplica. De ahí el **espejo**: el marco de vista previa devuelve su DOM
+ * ya ejecutado y se vuelca en un iframe oculto con `sandbox="allow-same-origin"`
+ * y sin `allow-scripts`. Legible desde el padre, inerte por construcción, y con
+ * layout de verdad — que es lo que `getComputedStyle` necesita para responder
+ * `border-box` o `flex` en lugar de un valor por defecto.
  */
 export class DomRunner implements Runner {
   readonly kind = 'dom' as const;
 
   private iframe: HTMLIFrameElement | null = null;
+  /** Copia inerte y legible del DOM ya ejecutado. Ver la nota de la clase. */
+  private mirror: HTMLIFrameElement | null = null;
   private files: FileMap = {};
   private spec: LocalizedRuntimeSpec | null = null;
   private emitter = new OutputEmitter();
@@ -57,6 +69,12 @@ export class DomRunner implements Runner {
     const startedAt = performance.now();
     this.buffer = { stdout: [], stderr: [] };
     this.token += 1;
+
+    // El espejo del intento anterior se retira YA. Si esta ejecución no llega
+    // a devolver DOM (bucle infinito, error temprano), es preferible que las
+    // reglas queden pendientes a que aprueben mirando el intento de antes.
+    this.mirror?.remove();
+    this.mirror = null;
 
     const document = this.buildDocument(this.token);
 
@@ -99,6 +117,8 @@ export class DomRunner implements Runner {
   async reset(): Promise<void> {
     this.iframe?.remove();
     this.iframe = null;
+    this.mirror?.remove();
+    this.mirror = null;
     this.buffer = { stdout: [], stderr: [] };
   }
 
@@ -107,12 +127,21 @@ export class DomRunner implements Runner {
     this.messageHandler = null;
     this.iframe?.remove();
     this.iframe = null;
+    this.mirror?.remove();
+    this.mirror = null;
     this.emitter.clear();
   }
 
-  /** El documento vivo, para que el motor evalúe las reglas `dom-assert`. */
+  /**
+   * El documento que evalúan las reglas `dom-assert`.
+   *
+   * Es el del espejo, no el de la vista previa: el segundo tiene origen opaco
+   * y `contentDocument` siempre vale `null` desde aquí. Se deja el acceso
+   * directo como respaldo para jsdom, donde el sandbox no se aplica y no hace
+   * falta espejo alguno.
+   */
   getDocument(): Document | null {
-    return this.iframe?.contentDocument ?? null;
+    return this.mirror?.contentDocument ?? this.iframe?.contentDocument ?? null;
   }
 
   /* ── interno ─────────────────────────────────────────────────── */
@@ -132,18 +161,20 @@ export class DomRunner implements Runner {
         this.emitter.emit(stream, `${data.text}\n`);
       }
 
-      if (data.type === 'done') this.settle(0);
+      // El DOM viaja con el aviso de fin: es el único momento en que el marco
+      // opaco puede enseñarlo, y ya lleva aplicadas las mutaciones del script.
+      if (data.type === 'done') this.settle(0, undefined, data.html);
       if (data.type === 'error') {
         this.buffer.stderr.push(data.text);
         this.emitter.emit('stderr', `${data.text}\n`);
-        this.settle(1);
+        this.settle(1, undefined, data.html);
       }
     };
 
     window.addEventListener('message', this.messageHandler);
   }
 
-  private settle(exitCode: number, note?: string) {
+  private settle(exitCode: number, note?: string, html?: string) {
     const pending = this.pending;
     if (!pending) return;
     this.pending = null;
@@ -152,12 +183,63 @@ export class DomRunner implements Runner {
       this.emitter.emit('stderr', 'La ejecución superó el tiempo límite.\n');
     }
 
-    pending.resolve({
-      exitCode: note === 'timeout' ? 124 : exitCode,
-      stdout: this.buffer.stdout.join('\n'),
-      stderr: this.buffer.stderr.join('\n'),
-      durationMs: Math.round(performance.now() - pending.startedAt),
-      artifacts: { document: () => this.getDocument() },
+    const resolve = () =>
+      pending.resolve({
+        exitCode: note === 'timeout' ? 124 : exitCode,
+        stdout: this.buffer.stdout.join('\n'),
+        stderr: this.buffer.stderr.join('\n'),
+        durationMs: Math.round(performance.now() - pending.startedAt),
+        artifacts: { document: () => this.getDocument() },
+      });
+
+    /*
+     * La promesa no se resuelve hasta que el espejo está montado: quien la
+     * espera es el evaluador, y encontrarse el DOM a medio cargar es
+     * exactamente el fallo que el espejo viene a arreglar.
+     */
+    if (html) this.renderMirror(html).then(resolve, resolve);
+    else resolve();
+  }
+
+  /**
+   * Vuelca el DOM devuelto en un iframe legible desde el padre.
+   *
+   * `sandbox="allow-same-origin"` SIN `allow-scripts`: es la combinación
+   * inversa a la del marco de vista previa y la única de las dos que se puede
+   * leer. Como no se conceden scripts, los `<script>` que vengan en la copia
+   * son texto muerto — no hay nada que ejecutar, ni siquiera el puente.
+   *
+   * Se oculta con `visibility`, no con `display:none`: hace falta que el
+   * navegador calcule el layout para que `getComputedStyle` devuelva anchuras
+   * y modelos de caja reales en vez de valores por defecto.
+   */
+  private renderMirror(html: string): Promise<void> {
+    return new Promise((resolve) => {
+      const frame = window.document.createElement('iframe');
+      frame.setAttribute('sandbox', 'allow-same-origin');
+      frame.setAttribute('aria-hidden', 'true');
+      frame.setAttribute('tabindex', '-1');
+      frame.style.cssText =
+        'position:absolute;inset:0;width:100%;height:100%;border:0;visibility:hidden;pointer-events:none';
+
+      const previous = this.mirror;
+      this.mirror = frame;
+
+      let done = false;
+      const finish = () => {
+        if (done) return;
+        done = true;
+        previous?.remove();
+        resolve();
+      };
+
+      frame.addEventListener('load', finish, { once: true });
+      // Sin red de seguridad, un `load` que no llegue dejaría colgada la
+      // promesa de la ejecución entera.
+      window.setTimeout(finish, 1500);
+
+      this.mount.appendChild(frame);
+      frame.srcdoc = html;
     });
   }
 
@@ -236,14 +318,21 @@ function consoleBridge(token: number): string {
       original.apply(null, arguments);
     };
   });
+  // El DOM ya ejecutado, para que el anfitrión pueda evaluarlo: con origen
+  // opaco no hay otra forma de que lo vea. Se serializa en el último momento,
+  // así que incluye lo que el script del usuario haya creado o modificado.
+  function snapshot() {
+    try { return '<!doctype html>' + document.documentElement.outerHTML; }
+    catch (e) { return ''; }
+  }
   window.addEventListener('error', function (event) {
-    send({ type: 'error', text: event.message });
+    send({ type: 'error', text: event.message, html: snapshot() });
   });
   window.addEventListener('unhandledrejection', function (event) {
-    send({ type: 'error', text: 'Promesa rechazada: ' + event.reason });
+    send({ type: 'error', text: 'Promesa rechazada: ' + event.reason, html: snapshot() });
   });
   window.addEventListener('load', function () {
-    setTimeout(function () { send({ type: 'done' }); }, 0);
+    setTimeout(function () { send({ type: 'done', html: snapshot() }); }, 0);
   });
 })();
 </script>`;

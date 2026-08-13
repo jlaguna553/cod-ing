@@ -365,6 +365,53 @@ el primer `npm install` congela la pestaña.
 
 El combo cuenta keystrokes *productivos*: se ignoran teclas de navegación, y un pegado (`paste`) de más de 40 caracteres rompe el combo en vez de dispararlo. Sin esto, mantener la tecla `a` pulsada da "Coding Spree!" y la mecánica pierde todo su significado.
 
+### ADR-10 · El DOM se evalúa en un espejo inerte, no en el marco de vista previa
+
+**Contexto.** El runner `dom` ejecuta el código del usuario en un iframe con
+`sandbox="allow-scripts"` y sin `allow-same-origin` (ADR-02). Esa combinación le da un
+**origen opaco**, que es justo lo que se quería: el código de la lección no puede tocar
+`localStorage`, ni las cookies, ni el DOM de la aplicación.
+
+**El problema.** Un origen opaco tampoco se deja leer *desde fuera*:
+`iframe.contentDocument` vale `null` desde la ventana anfitriona. El validador
+`dom-assert` recibía `document: null` y devolvía `null`, que el motor interpreta —
+correctamente — como **pendiente**. Resultado: todas las reglas `dom-assert` de la
+plataforma llevaban desde la Fase 2 sin evaluarse nunca en un navegador. Nunca se
+pusieron en rojo, así que nada chilló, y los 153 tests de Node no lo veían porque en
+jsdom el atributo `sandbox` no se aplica.
+
+**Decisión.** Separar *ejecutar* de *inspeccionar*, con dos iframes:
+
+| | Vista previa | Espejo |
+|---|---|---|
+| `sandbox` | `allow-scripts` | `allow-same-origin` |
+| Ejecuta código | sí | **no** (no se concede) |
+| Legible desde el padre | no | sí |
+| Visible | sí | `visibility:hidden` |
+
+Al terminar, el puente de consola serializa `document.documentElement.outerHTML` y lo
+manda con el aviso `done` — el único momento en que el marco opaco puede enseñar su DOM,
+y ya con las mutaciones del script aplicadas. El anfitrión lo vuelca en el espejo y
+resuelve la promesa de ejecución solo cuando este ha cargado.
+
+**Por qué `visibility` y no `display:none`.** `getComputedStyle` sobre un árbol sin
+layout devuelve valores por defecto: `box-sizing` daría `content-box` y `width` daría
+`auto` pase lo que pase. El espejo tiene que ocupar sitio de verdad para poder responder
+lo que `css-03` y `css-05` preguntan.
+
+**Por qué las dos concesiones nunca van juntas.** `allow-scripts` + `allow-same-origin`
+en el mismo iframe permite que el contenido se quite su propio atributo `sandbox` y
+escape. Aquí cada marco recibe exactamente una de las dos, y ninguno puede hacer las dos
+cosas.
+
+**Coste.** Un iframe más por ejecución y el `<!doctype html>` reañadido a mano en la
+serialización — sin él el espejo renderiza en *quirks mode*, donde `width` ya se comporta
+como `border-box` y la lección del modelo de caja se aprobaría sola.
+
+**Guardia.** El E2E de `css-03` recorre la lección entera y comprueba una regla
+`dom-assert` de estilo computado a través del sandbox real. Un test de Node no sirve:
+en jsdom este fallo no existe.
+
 ---
 
 ## 5. Modelo de datos de progreso (servidor)
