@@ -648,6 +648,26 @@ ese es exactamente el sitio donde se cuela una tilde de más o una fila olvidada
 transacciones/aislamiento — el `ROLLBACK` que el runner ya usa por dentro da un buen
 punto de partida para explicarlo.
 
+### C# — módulo cerrado con evaluador simulado (ADR-14)
+
+| Lección | Origen | Lo que enseña de verdad |
+|---|---|---|
+| `csharp-01-leap-year` | **Leap** (Exercism) | Una regla con excepciones anidadas falla un año de cada cien |
+| `csharp-02-fizzbuzz` | **FizzBuzz** | Que un encadenamiento se lee de arriba abajo: lo específico va delante |
+| `csharp-03-triangle` | **Triangle** (Exercism) | Seis condiciones para lo que casi todos resuelven con tres, y el `>` que decide el caso degenerado |
+
+Las tres viven dentro del subconjunto que el simulador declara —métodos que devuelven una
+expresión— y las tres eligen ejercicios donde ese estilo **es** el idiomático en C#
+moderno, no una limitación disfrazada.
+
+Cada paso promete un avance concreto del marcador de pruebas, y eso se comprueba en el
+navegador ejecutando las soluciones reales del JSON: si dejan de producir ese avance, el
+enunciado del paso pasa a ser mentira y el E2E lo dice.
+
+**Pendiente del módulo:** todo lo que necesite bucles, estado o E/S. Ahí el simulador se
+planta y lo dice — estirarlo para fingir que ejecuta C# sería justo lo que el ADR-14
+prohíbe.
+
 ### Ejercicios canónicos adaptados al formato (Vue)
 
 Las lecciones nuevas no se inventan: se adaptan de los compendios donde ya están probadas

@@ -1,0 +1,250 @@
+{
+  "$schema": "../../../schema/lesson.schema.json",
+  "schemaVersion": 1,
+
+  "id": "csharp-02-fizzbuzz",
+  "track": "backend",
+  "module": "csharp",
+  "order": 2,
+
+  "kind": "challenge",
+  "difficulty": "apprentice",
+  "estimatedMinutes": 22,
+
+  "title": {
+    "es": "FizzBuzz: el orden de las preguntas es la respuesta",
+    "en": "FizzBuzz: the order of the questions is the answer"
+  },
+  "summary": {
+    "es": "El ejercicio más famoso de las entrevistas, y el que más gente resuelve mal por un motivo que no es la lógica sino la secuencia.",
+    "en": "The most famous interview exercise, and the one most people get wrong for a reason that isn't logic but sequence."
+  },
+  "concepts": ["csharp", "condicionales", "ternario", "orden", "modulo"],
+  "prerequisites": ["csharp-01-leap-year"],
+
+  "runtime": {
+    "kind": "cli-sim",
+    "cliScenario": "dotnet/xunit",
+    "command": "dotnet test",
+    "dependencies": {},
+    "timeoutMs": 15000,
+    "terminal": {
+      "enabled": true,
+      "allowedCommands": ["dotnet", "ls", "cat", "cd", "pwd", "clear"]
+    }
+  },
+
+  "workspace": {
+    "entry": "FizzBuzz.cs",
+    "allowCreate": false,
+    "allowDelete": false,
+    "protectedPaths": ["FizzBuzzTests.cs"],
+    "files": [
+      {
+        "path": "FizzBuzz.cs",
+        "active": true,
+        "content": "namespace Juego;\n\npublic static class FizzBuzz\n{\n    // TODO: devuelve \"Fizz\", \"Buzz\", \"FizzBuzz\" o el número.\n    // Ahora mismo devuelve siempre el número.\n    public static string Convertir(int n) => n + \"\";\n}\n"
+      },
+      {
+        "path": "FizzBuzzTests.cs",
+        "readOnly": true,
+        "content": "using Xunit;\n\nnamespace Juego.Tests;\n\npublic class FizzBuzzTests\n{\n    [InlineData(1, \"1\")]\n    [InlineData(3, \"Fizz\")]\n    [InlineData(5, \"Buzz\")]\n    [InlineData(9, \"Fizz\")]\n    [InlineData(10, \"Buzz\")]\n    [InlineData(15, \"FizzBuzz\")]\n    [InlineData(30, \"FizzBuzz\")]\n    [InlineData(7, \"7\")]\n    [Theory]\n    public void Convertir(int n, string expected) =>\n        Assert.Equal(expected, FizzBuzz.Convertir(n));\n}\n"
+      }
+    ]
+  },
+
+  "rules": [
+    {
+      "id": "ran-tests",
+      "kind": "cli-transcript",
+      "expectedCommands": ["dotnet test"],
+      "allowExtra": true,
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Ejecuta `dotnet test` para ver qué casos pasan y cuáles no.",
+        "en": "Run `dotnet test` to see which cases pass and which don't."
+      },
+      "points": 15
+    },
+    {
+      "id": "handles-fizz",
+      "kind": "regex-must",
+      "file": "FizzBuzz.cs",
+      "pattern": "n\\s*%\\s*3\\s*==\\s*0",
+      "flags": "m",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Empieza por la regla de `Fizz`: los múltiplos de 3.",
+        "en": "Start with the `Fizz` rule: multiples of 3."
+      },
+      "points": 20
+    },
+    {
+      "id": "fizz-cases-pass",
+      "kind": "stdout-match",
+      "matches": "Superados: [3-9]",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Con la regla de `Fizz` puesta deben pasar ya varios casos más que al empezar. Ejecuta `dotnet test` después de escribirla.",
+        "en": "With the `Fizz` rule in place several more cases should pass than at the start. Run `dotnet test` after writing it."
+      },
+      "successMessage": {
+        "es": "Ya pasan más casos, y siguen fallando los de `Buzz`.",
+        "en": "More cases pass now, and the `Buzz` ones still fail."
+      },
+      "points": 25
+    },
+    {
+      "id": "all-green",
+      "kind": "stdout-match",
+      "matches": "Con error: 0",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Sigue fallando algún caso. Mira el número que aparece en la salida: si es 15 o 30, el problema es el orden de tus preguntas.",
+        "en": "Some case still fails. Look at the number in the output: if it's 15 or 30, your problem is the order of your questions."
+      },
+      "successMessage": {
+        "es": "Los ocho casos, incluidos 15 y 30.",
+        "en": "All eight cases, 15 and 30 included."
+      },
+      "points": 45
+    },
+    {
+      "id": "no-magic-fifteen",
+      "kind": "regex-forbid",
+      "file": "FizzBuzz.cs",
+      "pattern": "%\\s*15",
+      "flags": "m",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "El 15 no aparece en el enunciado: es un producto que has calculado tú. Exprésalo como lo que significa — múltiplo de 3 **y** de 5.",
+        "en": "15 isn't in the statement: it's a product you worked out. Express it as what it means — a multiple of 3 **and** of 5."
+      },
+      "points": 30
+    }
+  ],
+
+  "steps": [
+    {
+      "id": "step-1-fizz",
+      "title": {
+        "es": "Una regla cada vez",
+        "en": "One rule at a time"
+      },
+      "body": {
+        "es": "FizzBuzz se enuncia en tres frases: para los múltiplos de 3, `Fizz`; para los de 5, `Buzz`; para los de ambos, `FizzBuzz`; y si no, el número.\n\nSe usa en entrevistas desde 2007 no porque sea difícil, sino porque **filtra**: separa a quien traduce un enunciado a código de quien no. Y tiene una trampa que se lleva por delante a mucha más gente de la que uno esperaría — la verás en el paso siguiente.\n\nEmpieza por la primera regla y solo por ella. En C#, un método que devuelve una expresión se escribe con `=>` y el condicional es el operador ternario:\n\n```csharp\ncondicion ? siEsCierto : siNo\n```\n\nSe pueden encadenar, y así se lee como una escalera de casos:\n\n```csharp\nprimera ? \"A\"\n  : segunda ? \"B\"\n  : \"otra cosa\"\n```\n\nPara devolver el número como texto, `n + \"\"` sirve — es lo que ya hay escrito.\n\nEscribe solo la regla de `Fizz`, ejecuta `dotnet test` y fíjate en qué casos pasan a verde y cuáles siguen rojos. Ir viendo el marcador subir es la forma correcta de trabajar contra una suite: nunca escribes todo y ruegas.",
+        "en": "FizzBuzz states itself in three sentences: for multiples of 3, `Fizz`; for multiples of 5, `Buzz`; for multiples of both, `FizzBuzz`; otherwise the number.\n\nIt's been used in interviews since 2007 not because it's hard, but because it **filters**: it separates whoever can turn a statement into code from whoever can't. And it has a trap that catches far more people than you'd expect — you'll meet it in the next step.\n\nStart with the first rule and only that one. In C#, a method returning an expression is written with `=>`, and the conditional is the ternary operator:\n\n```csharp\ncondition ? ifTrue : ifFalse\n```\n\nThey chain, which reads as a ladder of cases:\n\n```csharp\nfirst ? \"A\"\n  : second ? \"B\"\n  : \"something else\"\n```\n\nTo return the number as text, `n + \"\"` works — it's what's already written.\n\nWrite only the `Fizz` rule, run `dotnet test`, and watch which cases turn green and which stay red. Watching the scoreboard climb is the right way to work against a suite: you never write everything and pray."
+      },
+      "task": {
+        "es": "Devuelve `\"Fizz\"` para los múltiplos de 3 y el número para el resto. Ejecuta `dotnet test`.",
+        "en": "Return `\"Fizz\"` for multiples of 3 and the number otherwise. Run `dotnet test`."
+      },
+      "focusFile": "FizzBuzz.cs",
+      "focusLines": [7, 7],
+      "ruleIds": ["handles-fizz", "fizz-cases-pass", "ran-tests"],
+      "xp": 35,
+      "solution": [
+        {
+          "path": "FizzBuzz.cs",
+          "content": "namespace Juego;\n\npublic static class FizzBuzz\n{\n    public static string Convertir(int n) =>\n        n % 3 == 0 ? \"Fizz\" : n + \"\";\n}\n"
+        }
+      ]
+    },
+    {
+      "id": "step-2-order",
+      "title": {
+        "es": "La trampa: 15 no es «múltiplo de 3»",
+        "en": "The trap: 15 isn't \"a multiple of 3\""
+      },
+      "body": {
+        "es": "Ahora añade `Buzz` y `FizzBuzz`. Y aquí está lo que convierte un ejercicio de dos minutos en un filtro de entrevistas.\n\nLa secuencia que sale sola es esta:\n\n```csharp\nn % 3 == 0 ? \"Fizz\"\n  : n % 5 == 0 ? \"Buzz\"\n  : /* ambos */ ? \"FizzBuzz\"\n  : n + \"\"\n```\n\nY está mal. Para `n = 15`, la **primera** condición ya es cierta —15 es múltiplo de 3— así que devuelve `\"Fizz\"` y no llega nunca a la tercera. El caso más específico está detrás del más general, y por eso no se alcanza jamás.\n\nEs exactamente el mismo error que un `catch (Exception)` colocado antes de un `catch` más concreto, o una ruta `/*` declarada antes de `/usuarios` en un router. **Un encadenamiento de condiciones se lee de arriba abajo y la primera que acierta gana**, así que lo específico va siempre delante de lo general.\n\nEl síntoma en la salida del test es inconfundible: fallan 15 y 30, y solo esos. Cuando veas exactamente los múltiplos de ambos en rojo, ya sabes que la lógica es correcta y el orden no.",
+        "en": "Now add `Buzz` and `FizzBuzz`. And here's what turns a two-minute exercise into an interview filter.\n\nThe sequence that comes out naturally is this:\n\n```csharp\nn % 3 == 0 ? \"Fizz\"\n  : n % 5 == 0 ? \"Buzz\"\n  : /* both */ ? \"FizzBuzz\"\n  : n + \"\"\n```\n\nAnd it's wrong. For `n = 15`, the **first** condition is already true — 15 is a multiple of 3 — so it returns `\"Fizz\"` and never reaches the third. The most specific case sits behind the most general one, and so it's never reached.\n\nIt's exactly the same mistake as a `catch (Exception)` placed before a more specific `catch`, or a `/*` route declared before `/users` in a router. **A chain of conditions reads top to bottom and the first match wins**, so the specific always goes ahead of the general.\n\nThe symptom in the test output is unmistakable: 15 and 30 fail, and only those. When you see exactly the multiples of both in red, you know the logic is right and the order isn't."
+      },
+      "task": {
+        "es": "Completa las tres reglas en el orden correcto y deja los ocho casos en verde.",
+        "en": "Complete all three rules in the right order and get all eight cases green."
+      },
+      "focusFile": "FizzBuzz.cs",
+      "ruleIds": ["all-green", "ran-tests"],
+      "xp": 45,
+      "hints": [
+        {
+          "id": "h-order",
+          "tier": 1,
+          "text": {
+            "es": "La condición que cubre menos números va primero. De las tres, la que solo acierta con 15, 30, 45… es la más específica.",
+            "en": "The condition covering the fewest numbers goes first. Of the three, the one that only matches 15, 30, 45… is the most specific."
+          },
+          "xpPenalty": 8,
+          "autoOfferAfterSeconds": 80
+        }
+      ],
+      "solution": [
+        {
+          "path": "FizzBuzz.cs",
+          "content": "namespace Juego;\n\npublic static class FizzBuzz\n{\n    public static string Convertir(int n) =>\n        n % 3 == 0 && n % 5 == 0 ? \"FizzBuzz\"\n        : n % 3 == 0 ? \"Fizz\"\n        : n % 5 == 0 ? \"Buzz\"\n        : n + \"\";\n}\n"
+        }
+      ],
+      "bestPractice": {
+        "es": "**Estándar de la industria:** cuando una cadena de condiciones se equivoca, la primera sospecha no debe ser la lógica de cada rama sino su orden. Es el fallo más barato de arreglar y el más caro de encontrar, porque cada condición aislada es correcta — solo está en el sitio equivocado.",
+        "en": "**Industry standard:** when a chain of conditions misbehaves, your first suspicion shouldn't be the logic of each branch but their order. It's the cheapest bug to fix and the most expensive to find, because each condition in isolation is correct — it's just in the wrong place."
+      }
+    },
+    {
+      "id": "step-3-express",
+      "title": {
+        "es": "El 15 que no estaba en el enunciado",
+        "en": "The 15 that wasn't in the statement"
+      },
+      "body": {
+        "es": "Mucha gente resuelve el orden con `n % 15 == 0`, y funciona. Merece la pena ver por qué se prefiere no escribirlo así.\n\nEl enunciado dice «múltiplo de 3 **y** de 5». El 15 no aparece por ningún lado: es un producto que has calculado tú y has metido en el código. Funciona porque 3 y 5 son coprimos —si fueran 4 y 6, el equivalente no sería 24 sino 12, y ahí ya se falla—, y sobre todo porque **el código deja de parecerse al problema que resuelve**.\n\nEs una forma pequeña de deuda: el día que alguien cambie las reglas a 3 y 7, tiene que darse cuenta de que ese 15 era un producto y no una constante del dominio. Con `n % 3 == 0 && n % 5 == 0` el cambio es evidente y local.\n\nLa regla general: **prefiere expresar la condición como la dice el enunciado, aunque salga un carácter más larga**. El compilador no nota la diferencia; quien lo lea dentro de seis meses, sí.\n\nAl reescribirlo verás además que la primera rama se lee como lo que es: «múltiplo de los dos». Ese es el objetivo — que el código se pueda leer en voz alta y suene al enunciado.",
+        "en": "Plenty of people solve the ordering with `n % 15 == 0`, and it works. It's worth seeing why it's better not to write it that way.\n\nThe statement says \"a multiple of 3 **and** of 5\". 15 appears nowhere: it's a product you worked out and put into the code. It works because 3 and 5 are coprime — were they 4 and 6, the equivalent wouldn't be 24 but 12, and that's where you'd slip — and above all because **the code stops resembling the problem it solves**.\n\nIt's a small form of debt: the day someone changes the rules to 3 and 7, they have to realise that 15 was a product and not a domain constant. With `n % 3 == 0 && n % 5 == 0` the change is obvious and local.\n\nThe general rule: **prefer expressing the condition the way the statement says it, even if it comes out a character longer**. The compiler can't tell the difference; whoever reads it in six months can.\n\nRewriting it, you'll also see the first branch read as what it is: \"a multiple of both\". That's the goal — code you can read aloud and have it sound like the statement."
+      },
+      "task": {
+        "es": "Quita el `% 15` y exprésalo como múltiplo de 3 y de 5. Los ocho casos deben seguir en verde.",
+        "en": "Drop the `% 15` and express it as a multiple of 3 and of 5. All eight cases must stay green."
+      },
+      "focusFile": "FizzBuzz.cs",
+      "ruleIds": ["no-magic-fifteen", "all-green"],
+      "xp": 35,
+      "solution": [
+        {
+          "path": "FizzBuzz.cs",
+          "content": "namespace Juego;\n\npublic static class FizzBuzz\n{\n    public static string Convertir(int n) =>\n        n % 3 == 0 && n % 5 == 0 ? \"FizzBuzz\"\n        : n % 3 == 0 ? \"Fizz\"\n        : n % 5 == 0 ? \"Buzz\"\n        : n + \"\";\n}\n"
+        }
+      ],
+      "bestPractice": {
+        "es": "**Pregunta de entrevista frecuente:** «¿cómo lo extenderías si mañana añaden un tercer número?» La respuesta interesante no es escribir otra rama: es notar que con cuatro reglas el encadenamiento deja de escalar y conviene una lista de pares `(divisor, palabra)` que se recorre y concatena. Eso convierte tres condiciones en un dato — y los datos se cambian sin tocar la lógica.",
+        "en": "**Common interview question:** \"how would you extend it if a third number is added tomorrow?\" The interesting answer isn't writing another branch: it's noticing that with four rules the chain stops scaling, and a list of `(divisor, word)` pairs to walk and concatenate serves better. That turns three conditions into data — and data changes without touching logic."
+      }
+    }
+  ],
+
+  "drills": [],
+
+  "reward": {
+    "baseXp": 115,
+    "flawlessBonus": 45,
+    "noHintBonus": 25,
+    "comboMultiplierCap": 3,
+    "achievements": []
+  },
+
+  "solution": {
+    "files": [
+      {
+        "path": "FizzBuzz.cs",
+        "content": "namespace Juego;\n\npublic static class FizzBuzz\n{\n    public static string Convertir(int n) =>\n        n % 3 == 0 && n % 5 == 0 ? \"FizzBuzz\"\n        : n % 3 == 0 ? \"Fizz\"\n        : n % 5 == 0 ? \"Buzz\"\n        : n + \"\";\n}\n"
+      }
+    ],
+    "explanation": {
+      "es": "Cuatro ramas en el único orden que funciona: lo específico delante de lo general. Y la primera condición dice literalmente lo que dice el enunciado, en vez del 15 que habría que deducir. Lo que hace de FizzBuzz un filtro de entrevistas no es la lógica —cabe en una línea— sino darse cuenta de que un encadenamiento se lee de arriba abajo y la primera condición cierta gana.",
+      "en": "Four branches in the only order that works: specific ahead of general. And the first condition says literally what the statement says, instead of a 15 you'd have to deduce. What makes FizzBuzz an interview filter isn't the logic — it fits on one line — but realising that a chain reads top to bottom and the first true condition wins."
+    }
+  }
+}

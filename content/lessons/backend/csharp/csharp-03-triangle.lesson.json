@@ -1,0 +1,246 @@
+{
+  "$schema": "../../../schema/lesson.schema.json",
+  "schemaVersion": 1,
+
+  "id": "csharp-03-triangle",
+  "track": "backend",
+  "module": "csharp",
+  "order": 3,
+
+  "kind": "challenge",
+  "difficulty": "adept",
+  "estimatedMinutes": 25,
+
+  "title": {
+    "es": "¿Es un triángulo? La validación que casi nadie completa",
+    "en": "Is it a triangle? The validation almost nobody completes"
+  },
+  "summary": {
+    "es": "Tres números no son un triángulo por tener tres lados. Faltan dos condiciones, y una de ellas se escribe mal con un solo carácter.",
+    "en": "Three numbers aren't a triangle just by having three sides. Two conditions are missing, and one of them is a single character away from wrong."
+  },
+  "concepts": ["csharp", "validacion", "desigualdad-triangular", "casos-borde"],
+  "prerequisites": ["csharp-01-leap-year", "csharp-02-fizzbuzz"],
+
+  "runtime": {
+    "kind": "cli-sim",
+    "cliScenario": "dotnet/xunit",
+    "command": "dotnet test",
+    "dependencies": {},
+    "timeoutMs": 15000,
+    "terminal": {
+      "enabled": true,
+      "allowedCommands": ["dotnet", "ls", "cat", "cd", "pwd", "clear"]
+    }
+  },
+
+  "workspace": {
+    "entry": "Triangle.cs",
+    "allowCreate": false,
+    "allowDelete": false,
+    "protectedPaths": ["TriangleTests.cs"],
+    "files": [
+      {
+        "path": "Triangle.cs",
+        "active": true,
+        "content": "namespace Geometria;\n\npublic static class Triangle\n{\n    // TODO: ¿pueden estos tres lados formar un triángulo?\n    // Ahora mismo acepta cualquier cosa.\n    public static bool EsValido(int a, int b, int c) => true;\n}\n"
+      },
+      {
+        "path": "TriangleTests.cs",
+        "readOnly": true,
+        "content": "using Xunit;\n\nnamespace Geometria.Tests;\n\npublic class TriangleTests\n{\n    [InlineData(3, 4, 5, true)]     // clásico\n    [InlineData(10, 10, 10, true)]  // equilátero\n    [InlineData(0, 0, 0, false)]    // no hay lados\n    [InlineData(3, 4, -5, false)]   // lado negativo\n    [InlineData(1, 1, 3, false)]    // dos lados no alcanzan al tercero\n    [InlineData(7, 3, 2, false)]\n    [InlineData(1, 1, 2, false)]    // degenerado: cae en línea recta\n    [InlineData(5, 5, 9, true)]\n    [Theory]\n    public void EsValido(int a, int b, int c, bool expected) =>\n        Assert.Equal(expected, Triangle.EsValido(a, b, c));\n}\n"
+      }
+    ]
+  },
+
+  "rules": [
+    {
+      "id": "ran-tests",
+      "kind": "cli-transcript",
+      "expectedCommands": ["dotnet test"],
+      "allowExtra": true,
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Ejecuta `dotnet test`: los ocho casos están en `TriangleTests.cs` y se leen solos.",
+        "en": "Run `dotnet test`: the eight cases are in `TriangleTests.cs` and read by themselves."
+      },
+      "points": 15
+    },
+    {
+      "id": "rejects-non-positive",
+      "kind": "regex-must",
+      "file": "Triangle.cs",
+      "pattern": "[abc]\\s*>\\s*0",
+      "flags": "m",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Falta descartar los lados que no son positivos. Un lado de 0 o negativo no es un lado.",
+        "en": "Non-positive sides aren't rejected yet. A side of 0 or a negative number isn't a side."
+      },
+      "points": 25
+    },
+    {
+      "id": "positives-pass",
+      "kind": "stdout-match",
+      "matches": "Superados: [4-9]",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Con la comprobación de los lados positivos deben pasar ya al menos cuatro casos. Ejecuta `dotnet test` después de escribirla.",
+        "en": "With the positive-sides check at least four cases should pass. Run `dotnet test` after writing it."
+      },
+      "successMessage": {
+        "es": "Los lados imposibles ya se rechazan; quedan los que sí lo parecen.",
+        "en": "Impossible sides are rejected now; what's left are the ones that look plausible."
+      },
+      "points": 25
+    },
+    {
+      "id": "all-green",
+      "kind": "stdout-match",
+      "matches": "Con error: 0",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Sigue fallando algún caso. Si el que falla es `(1, 1, 2)`, la condición está a un carácter de ser correcta.",
+        "en": "Some case still fails. If it's `(1, 1, 2)`, your condition is one character away from correct."
+      },
+      "successMessage": {
+        "es": "Los ocho, incluido el degenerado.",
+        "en": "All eight, the degenerate one included."
+      },
+      "points": 45
+    },
+    {
+      "id": "strict-inequality",
+      "kind": "regex-forbid",
+      "file": "Triangle.cs",
+      "pattern": "\\+\\s*[abc]\\s*>=",
+      "flags": "m",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "La desigualdad es estricta. Con `>=` aceptas el caso degenerado, donde los tres puntos caen en línea recta y el área es cero.",
+        "en": "The inequality is strict. With `>=` you accept the degenerate case, where the three points fall on a straight line and the area is zero."
+      },
+      "points": 30
+    }
+  ],
+
+  "steps": [
+    {
+      "id": "step-1-positive",
+      "title": {
+        "es": "Lo que ni siquiera es un lado",
+        "en": "What isn't even a side"
+      },
+      "body": {
+        "es": "Este ejercicio aparece en Exercism y en media docena de compendios, y su gracia está en cuántas condiciones hacen falta de verdad frente a cuántas se escriben.\n\nAbre `TriangleTests.cs` y lee la tabla antes que nada. Hay tres familias de casos:\n\n- Triángulos de verdad: `(3,4,5)`, `(10,10,10)`, `(5,5,9)`.\n- Entradas que no son lados: `(0,0,0)` y `(3,4,-5)`.\n- Tres números positivos que **aun así** no forman triángulo: `(1,1,3)`, `(7,3,2)` y `(1,1,2)`.\n\nLa tercera familia es la interesante y la dejamos para el paso siguiente. Empieza por la segunda, que es la que más se olvida por parecer obvia: **una longitud tiene que ser positiva**. Cero no es un lado y un número negativo tampoco.\n\nNo basta con comprobar uno: hay que comprobar los tres, porque `(3, 4, -5)` tiene dos lados perfectamente razonables. Es un caso de validación clásico — el fallo no está donde miras, sino en el parámetro que no revisaste.\n\nEscríbelo, ejecuta `dotnet test` y fíjate en qué queda rojo: van a ser exactamente los tres de la tercera familia.",
+        "en": "This exercise appears on Exercism and half a dozen other collections, and its point is how many conditions are really needed versus how many get written.\n\nOpen `TriangleTests.cs` and read the table first. There are three families of cases:\n\n- Real triangles: `(3,4,5)`, `(10,10,10)`, `(5,5,9)`.\n- Inputs that aren't sides: `(0,0,0)` and `(3,4,-5)`.\n- Three positive numbers that **still** don't form a triangle: `(1,1,3)`, `(7,3,2)`, and `(1,1,2)`.\n\nThe third family is the interesting one and we leave it for the next step. Start with the second, the one most often skipped for looking obvious: **a length has to be positive**. Zero isn't a side and neither is a negative number.\n\nChecking one isn't enough: you have to check all three, because `(3, 4, -5)` has two perfectly reasonable sides. It's a classic validation case — the bug isn't where you're looking, it's in the parameter you didn't check.\n\nWrite it, run `dotnet test`, and see what stays red: it'll be exactly the three from the third family."
+      },
+      "task": {
+        "es": "Rechaza las entradas donde algún lado no sea positivo y ejecuta `dotnet test`.",
+        "en": "Reject inputs where any side isn't positive, and run `dotnet test`."
+      },
+      "focusFile": "Triangle.cs",
+      "focusLines": [7, 7],
+      "ruleIds": ["rejects-non-positive", "positives-pass", "ran-tests"],
+      "xp": 35,
+      "solution": [
+        {
+          "path": "Triangle.cs",
+          "content": "namespace Geometria;\n\npublic static class Triangle\n{\n    public static bool EsValido(int a, int b, int c) =>\n        a > 0 && b > 0 && c > 0;\n}\n"
+        }
+      ]
+    },
+    {
+      "id": "step-2-inequality",
+      "title": {
+        "es": "Dos lados tienen que alcanzar al tercero",
+        "en": "Two sides have to reach the third"
+      },
+      "body": {
+        "es": "Quedan tres casos en rojo y todos tienen los tres lados positivos. `(1, 1, 3)`, por ejemplo: dos palos de 1 cm y uno de 3 cm. Por mucho que los inclines, los cortos no llegan a unirse — se quedan cortos por el camino.\n\nEso es la **desigualdad triangular**, y dice que la suma de dos lados cualesquiera tiene que superar al tercero. Cualesquiera: hay que comprobar las tres combinaciones, porque solo con una no basta. En `(7, 3, 2)`, `3 + 2` no alcanza a `7`, pero `7 + 3` sí supera a `2` — si solo miras esa, das el caso por bueno.\n\nUna nota práctica que en un ejercicio se pasa por alto y en producción cuesta cara: si los lados llegaran como `int` cerca del máximo, `a + b` puede **desbordar** y dar un número negativo, con lo que la comparación miente. La forma robusta compara restando en vez de sumando. Aquí no hace falta, pero conviene saber que la suma dentro de una comparación es un sitio donde el desbordamiento se esconde.\n\nEscribe las tres comprobaciones y ejecuta. Van a pasar siete de los ocho casos — y el que quede es el más interesante de todos.",
+        "en": "Three cases remain red and all of them have three positive sides. `(1, 1, 3)`, for instance: two 1 cm sticks and one 3 cm stick. However you tilt them, the short ones never meet — they fall short along the way.\n\nThat's the **triangle inequality**, and it says the sum of any two sides must exceed the third. Any two: you have to check all three combinations, because one isn't enough. In `(7, 3, 2)`, `3 + 2` doesn't reach `7`, but `7 + 3` does exceed `2` — if you only check that one, you accept the case.\n\nA practical note that exercises skip and production charges for: if the sides arrived as `int` near the maximum, `a + b` can **overflow** and come out negative, so the comparison lies. The robust form compares by subtracting rather than adding. You don't need it here, but it's worth knowing that a sum inside a comparison is where overflow hides.\n\nWrite the three checks and run. Seven of the eight cases will pass — and the one left is the most interesting of them all."
+      },
+      "task": {
+        "es": "Añade la desigualdad triangular en sus tres combinaciones y ejecuta `dotnet test`.",
+        "en": "Add the triangle inequality in all three combinations and run `dotnet test`."
+      },
+      "focusFile": "Triangle.cs",
+      "ruleIds": ["ran-tests", "rejects-non-positive"],
+      "xp": 45,
+      "hints": [
+        {
+          "id": "h-three",
+          "tier": 1,
+          "text": {
+            "es": "Tres comparaciones unidas con `&&`: cada lado tiene que ser superado por la suma de los otros dos. Las tres, no una.",
+            "en": "Three comparisons joined with `&&`: each side must be exceeded by the sum of the other two. All three, not one."
+          },
+          "xpPenalty": 8,
+          "autoOfferAfterSeconds": 90
+        }
+      ],
+      "solution": [
+        {
+          "path": "Triangle.cs",
+          "content": "namespace Geometria;\n\npublic static class Triangle\n{\n    public static bool EsValido(int a, int b, int c) =>\n        a > 0 && b > 0 && c > 0\n        && a + b > c && b + c > a && a + c > b;\n}\n"
+        }
+      ]
+    },
+    {
+      "id": "step-3-degenerate",
+      "title": {
+        "es": "El carácter que decide si `(1,1,2)` es un triángulo",
+        "en": "The character that decides whether (1,1,2) is a triangle"
+      },
+      "body": {
+        "es": "Queda `(1, 1, 2)`, y es el caso que da nombre a este ejercicio en las entrevistas.\n\nAquí `1 + 1` no supera a `2`: lo **iguala**. Geométricamente, los dos palos cortos llegan justo a tocar el extremo del largo, pero solo si los pones completamente estirados — los tres puntos caen en línea recta. Es lo que se llama un **triángulo degenerado**: tiene tres vértices y área cero.\n\n¿Cuenta como triángulo? En la definición estándar, **no**. Y toda la diferencia entre aceptarlo y rechazarlo es un carácter:\n\n```\n>   rechaza el degenerado\n>=  lo acepta\n```\n\nPor eso este ejercicio se usa para hablar de **casos borde**: no hay ningún fallo de razonamiento en escribir `>=`, hay una decisión que nadie te pidió tomar y que has tomado sin darte cuenta. La tabla de pruebas la toma por ti, y por eso leerla antes de programar vale más que cualquier pista.\n\nSi tu condición ya usa `>`, este caso pasa sin tocar nada — y esa es la señal de que llevabas el borde bien desde el paso anterior. Si usaste `>=`, cámbialo y observa cómo cambia solo esa fila.\n\nComo cierre: fíjate en que la validación completa son **seis** condiciones para un problema que la mayoría resuelve con tres. Ninguna sobra, y ninguna es difícil; lo difícil es acordarse de todas.",
+        "en": "`(1, 1, 2)` is left, and it's the case that gives this exercise its name in interviews.\n\nHere `1 + 1` doesn't exceed `2`: it **equals** it. Geometrically, the two short sticks just barely touch the long one's end, but only if you lay them completely flat — the three points fall on a straight line. That's a **degenerate triangle**: three vertices and zero area.\n\nDoes it count as a triangle? Under the standard definition, **no**. And the whole difference between accepting and rejecting it is one character:\n\n```\n>   rejects the degenerate case\n>=  accepts it\n```\n\nThat's why this exercise is used to talk about **edge cases**: there's no reasoning error in writing `>=`, there's a decision nobody asked you to make and that you made without noticing. The test table makes it for you, which is why reading it before coding is worth more than any hint.\n\nIf your condition already uses `>`, this case passes without touching anything — and that's the sign you had the edge right since the previous step. If you used `>=`, change it and watch only that row flip.\n\nAs a closing thought: notice the complete validation is **six** conditions for a problem most people solve with three. None is redundant, and none is hard; the hard part is remembering them all."
+      },
+      "task": {
+        "es": "Deja los ocho casos en verde, con el degenerado `(1,1,2)` rechazado. Ejecuta `dotnet test`.",
+        "en": "Get all eight cases green, with the degenerate `(1,1,2)` rejected. Run `dotnet test`."
+      },
+      "focusFile": "Triangle.cs",
+      "ruleIds": ["all-green", "strict-inequality", "ran-tests"],
+      "xp": 45,
+      "solution": [
+        {
+          "path": "Triangle.cs",
+          "content": "namespace Geometria;\n\npublic static class Triangle\n{\n    public static bool EsValido(int a, int b, int c) =>\n        a > 0 && b > 0 && c > 0\n        && a + b > c && b + c > a && a + c > b;\n}\n"
+        }
+      ],
+      "bestPractice": {
+        "es": "**Pregunta de entrevista frecuente:** «¿qué casos borde probarías?» En este problema la respuesta completa son cuatro: lados no positivos, la desigualdad fallando en cada una de las tres combinaciones, el degenerado con igualdad exacta, y el desbordamiento al sumar dos lados grandes. Nombrar el degenerado sin que te lo apunten es lo que distingue a quien ha pensado el problema de quien ha traducido el enunciado.",
+        "en": "**Common interview question:** \"which edge cases would you test?\" For this problem the full answer is four: non-positive sides, the inequality failing in each of the three combinations, the degenerate case with exact equality, and overflow when adding two large sides. Naming the degenerate case unprompted is what separates whoever thought about the problem from whoever translated the statement."
+      }
+    }
+  ],
+
+  "drills": [],
+
+  "reward": {
+    "baseXp": 130,
+    "flawlessBonus": 50,
+    "noHintBonus": 30,
+    "comboMultiplierCap": 3,
+    "achievements": []
+  },
+
+  "solution": {
+    "files": [
+      {
+        "path": "Triangle.cs",
+        "content": "namespace Geometria;\n\npublic static class Triangle\n{\n    public static bool EsValido(int a, int b, int c) =>\n        a > 0 && b > 0 && c > 0\n        && a + b > c && b + c > a && a + c > b;\n}\n"
+      }
+    ],
+    "explanation": {
+      "es": "Seis condiciones para un problema que casi todo el mundo resuelve con tres. Las tres primeras descartan lo que ni siquiera es un lado; las tres siguientes son la desigualdad triangular en sus tres combinaciones, porque comprobar una sola deja pasar `(7, 3, 2)`. Y el `>` estricto —no `>=`— es lo único que separa un triángulo de tres puntos en línea recta.",
+      "en": "Six conditions for a problem most people solve with three. The first three discard what isn't even a side; the next three are the triangle inequality in all three combinations, because checking only one lets `(7, 3, 2)` through. And the strict `>` — not `>=` — is the only thing separating a triangle from three points on a straight line."
+    }
+  }
+}

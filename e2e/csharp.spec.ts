@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { expect, test, type Page } from '@playwright/test';
 
 /**
@@ -64,3 +65,52 @@ test('⭐ el track de Backend ofrece ya dos tecnologías', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'sql' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'csharp' })).toBeVisible();
 });
+
+/**
+ * Cada paso promete un avance concreto en el marcador de pruebas. Se comprueba
+ * ejecutando las soluciones REALES del JSON: si alguien las cambia y dejan de
+ * producir ese avance, el enunciado del paso pasa a ser mentira y esto lo dice.
+ */
+for (const [lessonId, methodFile] of [
+  ['csharp-02-fizzbuzz', 'FizzBuzz.cs'],
+  ['csharp-03-triangle', 'Triangle.cs'],
+] as const) {
+  test(`⭐ ${lessonId}: cada paso avanza el marcador como promete`, async ({ page }) => {
+    test.setTimeout(180_000);
+
+    const lesson = JSON.parse(
+      readFileSync(`content/lessons/backend/csharp/${lessonId}.lesson.json`, 'utf8'),
+    ) as { steps: Array<{ id: string; solution?: Array<{ path: string; content: string }> }> };
+
+    await page.goto(`/es/play/backend/${lessonId}`);
+    await waitForEditor(page);
+
+    let previous = -1;
+    for (const step of lesson.steps) {
+      const code = step.solution?.find((file) => file.path === methodFile)?.content;
+      expect(code, `${step.id} no trae solución para ${methodFile}`).toBeTruthy();
+
+      await page.locator('.monaco-editor .view-lines').click();
+      await page.keyboard.press('ControlOrMeta+a');
+      await page.keyboard.press('Delete');
+      await page.evaluate(async (text) => navigator.clipboard.writeText(text), code!);
+      await page.keyboard.press('ControlOrMeta+v');
+
+      await runTests(page);
+
+      const passed = await test.step(`marcador tras ${step.id}`, async () => {
+        const rows = page.locator('.xterm-rows');
+        await expect(rows).toContainText(/Superados: \d+/, { timeout: 20_000 });
+        const text = (await rows.innerText()).replace(/\s+/g, ' ');
+        const matches = [...text.matchAll(/Superados: (\d+)/g)];
+        return Number(matches.at(-1)?.[1] ?? -1);
+      });
+
+      // Nunca retrocede, y el último paso lo deja todo en verde.
+      expect(passed, `${step.id} debería superar a lo anterior`).toBeGreaterThanOrEqual(previous);
+      previous = passed;
+    }
+
+    await expect(page.locator('.xterm-rows')).toContainText('Con error: 0');
+  });
+}
