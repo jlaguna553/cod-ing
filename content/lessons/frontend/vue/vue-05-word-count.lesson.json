@@ -1,0 +1,299 @@
+{
+  "$schema": "../../../schema/lesson.schema.json",
+  "schemaVersion": 1,
+
+  "id": "vue-05-word-count",
+  "track": "frontend",
+  "module": "vue",
+  "order": 5,
+
+  "kind": "challenge",
+  "difficulty": "adept",
+  "estimatedMinutes": 28,
+
+  "title": {
+    "es": "Contar palabras: el ejercicio donde el enunciado miente",
+    "en": "Word count: the exercise where the statement lies"
+  },
+  "summary": {
+    "es": "«Cuenta cuántas veces aparece cada palabra» parece una línea de código. Las mayúsculas y la puntuación deciden que no lo sea.",
+    "en": "\"Count how many times each word appears\" looks like one line of code. Case and punctuation decide otherwise."
+  },
+  "concepts": ["vue", "computed", "reduce", "normalizacion", "sort"],
+  "prerequisites": ["vue-03-reactivity", "vue-04-todo-list"],
+
+  "runtime": {
+    "kind": "vue",
+    "dependencies": {},
+    "timeoutMs": 15000
+  },
+
+  "workspace": {
+    "entry": "src/App.vue",
+    "allowCreate": false,
+    "allowDelete": false,
+    "protectedPaths": ["src/main.js"],
+    "files": [
+      {
+        "path": "src/App.vue",
+        "active": true,
+        "content": "<script setup>\nimport { ref } from 'vue';\n\n// Diez palabras, y ninguna cuenta lo que parece.\nconst frase = ref('Un gato, y un perro; y otro perro. Y ya.');\n</script>\n\n<template>\n  <section>\n    <p class=\"frase\">{{ frase }}</p>\n\n    <!-- TODO: una <li class=\"palabra\"> por palabra distinta,\n         con el formato \"palabra: veces\". -->\n    <ul class=\"conteo\"></ul>\n  </section>\n</template>\n"
+      },
+      {
+        "path": "src/main.js",
+        "readOnly": true,
+        "content": "import { createApp } from 'vue';\nimport App from './App.vue';\n\ncreateApp(App).mount('#app');\n"
+      }
+    ]
+  },
+
+  "rules": [
+    {
+      "id": "naive-count",
+      "kind": "dom-assert",
+      "selector": "li.palabra",
+      "assert": "countEquals",
+      "count": 9,
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Partiendo por espacios salen **9** entradas distintas. Si te salen menos, ya estás normalizando; si más, algo se cuela vacío.",
+        "en": "Splitting on whitespace yields **9** distinct entries. Fewer means you're already normalizing; more means something empty slipped in."
+      },
+      "successMessage": {
+        "es": "Nueve entradas para diez palabras. Ahí está el problema.",
+        "en": "Nine entries for ten words. There's the problem."
+      },
+      "points": 30
+    },
+    {
+      "id": "uses-computed",
+      "kind": "regex-must",
+      "file": "src/App.vue",
+      "pattern": "computed\\s*\\(",
+      "flags": "m",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "El conteo debe derivarse de la frase con `computed`: si la frase cambia, el recuento tiene que cambiar solo.",
+        "en": "The count must derive from the phrase with `computed`: if the phrase changes, the count has to follow on its own."
+      },
+      "points": 20
+    },
+    {
+      "id": "normalized-count",
+      "kind": "dom-assert",
+      "selector": "li.palabra",
+      "assert": "countEquals",
+      "count": 6,
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Normalizando bien quedan **6** palabras distintas. Si salen 9, falta bajar a minúsculas o quitar la puntuación; si salen 7, probablemente se cuela una entrada vacía.",
+        "en": "Normalized properly there are **6** distinct words. Nine means case or punctuation is still there; seven usually means an empty entry slipped in."
+      },
+      "successMessage": {
+        "es": "Seis palabras: `Un`, `un`, `perro;` y `perro.` han dejado de ser cuatro cosas distintas.",
+        "en": "Six words: `Un`, `un`, `perro;` and `perro.` have stopped being four different things."
+      },
+      "points": 40
+    },
+    {
+      "id": "top-word",
+      "kind": "dom-assert",
+      "selector": "li.palabra",
+      "assert": "textEquals",
+      "expected": "y: 3",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "La primera entrada debe ser la más frecuente, con el formato exacto `palabra: veces`. Aquí es `y`, que sale 3 veces.",
+        "en": "The first entry must be the most frequent one, in the exact form `word: count`. Here it's `y`, appearing 3 times."
+      },
+      "successMessage": {
+        "es": "Ordenado de mayor a menor: `y: 3` encabeza.",
+        "en": "Sorted highest first: `y: 3` leads."
+      },
+      "points": 40
+    },
+    {
+      "id": "sorts",
+      "kind": "regex-must",
+      "file": "src/App.vue",
+      "pattern": "\\.sort\\s*\\(",
+      "flags": "m",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Falta ordenar. El orden de un objeto o de un `Map` es el de inserción, que aquí no es el de frecuencia.",
+        "en": "Sorting is missing. The order of an object or a `Map` is insertion order, which here isn't frequency order."
+      },
+      "points": 25
+    },
+    {
+      "id": "no-hardcoded-result",
+      "kind": "regex-forbid",
+      "file": "src/App.vue",
+      "pattern": "['\"]y: 3['\"]",
+      "flags": "m",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "El resultado tiene que salir de la frase, no estar escrito a mano. Cambia la frase y el conteo debe cambiar con ella.",
+        "en": "The result has to come from the phrase, not be typed by hand. Change the phrase and the count must change with it."
+      },
+      "points": 15
+    }
+  ],
+
+  "steps": [
+    {
+      "id": "step-1-naive",
+      "title": {
+        "es": "La versión que parece correcta",
+        "en": "The version that looks right"
+      },
+      "body": {
+        "es": "El enunciado de este ejercicio —uno de los más repetidos de Exercism y Codewars— cabe en una frase: *dado un texto, devuelve cuántas veces aparece cada palabra*. Y la primera solución también:\n\n1. partir por espacios,\n2. recorrer y llevar la cuenta.\n\nPara llevar la cuenta hay dos herramientas y conviene saber por qué se elige una:\n\n- Un **objeto** normal hereda propiedades: si el texto contiene la palabra `constructor`, `cuenta['constructor']` ya vale algo antes de empezar. Con `Object.create(null)` se evita.\n- Un **`Map`** no tiene ese problema, admite cualquier clave y conserva el orden de inserción. Es lo que se usa cuando las claves vienen de datos del usuario.\n\nCon `reduce` o con un bucle, da igual: lo que importa es que el resultado se **derive** de la frase con un `computed`, no que se calcule una vez y se quede ahí — eso ya lo viste en la lista de tareas.\n\nPara pintarlo, un `Map` no se puede recorrer directamente con `v-for` de forma cómoda; conviene convertirlo a array de pares con `Object.entries` o con el spread. Cada entrada se muestra como `palabra: veces`.\n\nLa frase tiene **diez** palabras. Cuando lo ejecutes te van a salir **nueve** entradas distintas, y ese número raro es el ejercicio de verdad.",
+        "en": "This exercise's statement — one of the most repeated on Exercism and Codewars — fits in a sentence: *given a text, return how many times each word appears*. And so does the first solution:\n\n1. split on whitespace,\n2. walk it and keep count.\n\nFor keeping count there are two tools, and it's worth knowing why you'd pick one:\n\n- A plain **object** inherits properties: if the text contains the word `constructor`, `count['constructor']` already holds something before you start. `Object.create(null)` avoids that.\n- A **`Map`** has no such problem, accepts any key, and preserves insertion order. It's what you use when the keys come from user data.\n\nWith `reduce` or with a loop, doesn't matter: what matters is that the result **derives** from the phrase with a `computed`, not that it's worked out once and left there — you saw that in the todo list.\n\nTo render it, a `Map` isn't comfortable to walk with `v-for` directly; convert it to an array of pairs with `Object.entries` or the spread. Each entry shows as `word: count`.\n\nThe phrase has **ten** words. When you run it you'll get **nine** distinct entries, and that odd number is the real exercise."
+      },
+      "task": {
+        "es": "Cuenta las palabras partiendo por espacios y pinta un `<li class=\"palabra\">` por cada una, con el formato `palabra: veces`.",
+        "en": "Count the words by splitting on whitespace and render one `<li class=\"palabra\">` each, in the form `word: count`."
+      },
+      "focusFile": "src/App.vue",
+      "ruleIds": ["naive-count", "uses-computed"],
+      "xp": 40,
+      "hints": [
+        {
+          "id": "h-split",
+          "tier": 1,
+          "text": {
+            "es": "`frase.value.split(/\\s+/)` te da las diez palabras. Después, un `reduce` que acumule en un objeto o un `Map`, y `Object.entries(...)` para poder recorrerlo en la plantilla.",
+            "en": "`frase.value.split(/\\s+/)` gives you the ten words. Then a `reduce` accumulating into an object or a `Map`, and `Object.entries(...)` so the template can walk it."
+          },
+          "xpPenalty": 8,
+          "autoOfferAfterSeconds": 100
+        }
+      ],
+      "solution": [
+        {
+          "path": "src/App.vue",
+          "content": "<script setup>\nimport { ref, computed } from 'vue';\n\nconst frase = ref('Un gato, y un perro; y otro perro. Y ya.');\n\nconst conteo = computed(() => {\n  const cuenta = Object.create(null);\n  for (const palabra of frase.value.split(/\\s+/)) {\n    cuenta[palabra] = (cuenta[palabra] ?? 0) + 1;\n  }\n  return Object.entries(cuenta);\n});\n</script>\n\n<template>\n  <section>\n    <p class=\"frase\">{{ frase }}</p>\n\n    <ul class=\"conteo\">\n      <li v-for=\"[palabra, veces] in conteo\" :key=\"palabra\" class=\"palabra\">\n        {{ palabra }}: {{ veces }}\n      </li>\n    </ul>\n  </section>\n</template>\n"
+        }
+      ]
+    },
+    {
+      "id": "step-2-normalize",
+      "title": {
+        "es": "Nueve para diez palabras",
+        "en": "Nine for ten words"
+      },
+      "body": {
+        "es": "Mira el resultado del paso anterior con calma. Aparecen entradas como estas:\n\n```\nUn: 1      un: 1\nperro;: 1  perro.: 1\ny: 2       Y: 1\n```\n\nPara el programa son seis palabras distintas. Para cualquier persona son tres. El ordenador tiene razón —`Un` y `un` son cadenas diferentes— y sin embargo el resultado está mal, porque lo que se pidió fue contar *palabras*, no cadenas.\n\nEsta es la lección entera del ejercicio, y por eso está en todos los compendios: **el enunciado nunca dice cómo normalizar, y sin normalizar la respuesta es incorrecta**. Hay que decidir tres cosas que nadie te dijo:\n\n- **Mayúsculas.** Casi siempre se ignoran. Ojo: `toLowerCase()` no vale para todo idioma —en turco la `I` no baja a `i`— y para eso existe `toLocaleLowerCase()`.\n- **Puntuación.** `perro.` y `perro;` son la misma palabra. Se quita del borde, no del centro: `no-sé` y `O'Brien` son una palabra cada uno, y partirlas sería otro error.\n- **Vacíos.** Al quitar puntuación, un token que era solo `—` se queda en cadena vacía. Si no lo descartas, aparece una entrada fantasma y el recuento vuelve a estar mal.\n\nCon las tres decisiones tomadas, esas diez palabras se convierten en **seis** distintas.\n\nEn una entrevista, decir «normalizaría antes de contar» y **preguntar** qué cuenta como palabra vale más que la implementación: demuestra que has visto que el enunciado está incompleto.",
+        "en": "Look at the previous step's result carefully. Entries like these show up:\n\n```\nUn: 1      un: 1\nperro;: 1  perro.: 1\ny: 2       Y: 1\n```\n\nTo the program that's six distinct words. To any person it's three. The computer is right — `Un` and `un` are different strings — and the result is still wrong, because what was asked was to count *words*, not strings.\n\nThis is the whole lesson of the exercise, and why it's in every collection: **the statement never says how to normalize, and without normalizing the answer is incorrect**. You have to decide three things nobody told you:\n\n- **Case.** Almost always ignored. Careful: `toLowerCase()` isn't right for every language — in Turkish `I` doesn't lower to `i` — which is what `toLocaleLowerCase()` is for.\n- **Punctuation.** `perro.` and `perro;` are the same word. Strip it from the edges, not the middle: `no-sé` and `O'Brien` are one word each, and splitting them would be a different bug.\n- **Empties.** Stripping punctuation turns a token that was just `—` into an empty string. If you don't drop it, a ghost entry appears and the count is wrong again.\n\nWith those three decisions made, those ten words become **six** distinct ones.\n\nIn an interview, saying \"I'd normalize before counting\" and **asking** what counts as a word is worth more than the implementation: it shows you noticed the statement is incomplete."
+      },
+      "task": {
+        "es": "Normaliza antes de contar: mismas palabras en mayúscula y minúscula deben sumar juntas, la puntuación del borde no cuenta, y ninguna entrada vacía. Deben quedar 6.",
+        "en": "Normalize before counting: same word in upper and lower case must add together, edge punctuation doesn't count, and no empty entries. Six should remain."
+      },
+      "focusFile": "src/App.vue",
+      "ruleIds": ["normalized-count", "uses-computed"],
+      "xp": 50,
+      "hints": [
+        {
+          "id": "h-normalize",
+          "tier": 1,
+          "text": {
+            "es": "Tres cosas encadenadas sobre cada token: bajar a minúscula, recortar lo que no sea letra en los extremos, y descartar lo que quede vacío. Una expresión regular con anclas `^` y `$` sirve para lo segundo.",
+            "en": "Three things chained on each token: lowercase it, trim non-letters at both ends, and drop whatever ends up empty. A regular expression anchored with `^` and `$` handles the second."
+          },
+          "xpPenalty": 10,
+          "autoOfferAfterSeconds": 110
+        },
+        {
+          "id": "h-accents",
+          "tier": 3,
+          "text": {
+            "es": "Ojo con el rango `[a-z]`: deja fuera las tildes y la eñe, así que `pájaro` perdería letras. Con `\\p{L}` y la bandera `u` se abarca cualquier letra Unicode: `.replace(/^\\P{L}+|\\P{L}+$/gu, '')`.",
+            "en": "Watch out for the `[a-z]` range: it excludes accents and `ñ`, so `pájaro` would lose letters. `\\p{L}` with the `u` flag covers any Unicode letter: `.replace(/^\\P{L}+|\\P{L}+$/gu, '')`."
+          },
+          "xpPenalty": 22
+        }
+      ],
+      "solution": [
+        {
+          "path": "src/App.vue",
+          "content": "<script setup>\nimport { ref, computed } from 'vue';\n\nconst frase = ref('Un gato, y un perro; y otro perro. Y ya.');\n\nconst conteo = computed(() => {\n  const cuenta = Object.create(null);\n\n  for (const token of frase.value.split(/\\s+/)) {\n    const palabra = token.toLocaleLowerCase().replace(/^\\P{L}+|\\P{L}+$/gu, '');\n    if (palabra === '') continue;\n    cuenta[palabra] = (cuenta[palabra] ?? 0) + 1;\n  }\n\n  return Object.entries(cuenta);\n});\n</script>\n\n<template>\n  <section>\n    <p class=\"frase\">{{ frase }}</p>\n\n    <ul class=\"conteo\">\n      <li v-for=\"[palabra, veces] in conteo\" :key=\"palabra\" class=\"palabra\">\n        {{ palabra }}: {{ veces }}\n      </li>\n    </ul>\n  </section>\n</template>\n"
+        }
+      ],
+      "bestPractice": {
+        "es": "**Estándar de la industria:** este ejercicio es un clásico de entrevista precisamente porque separa a quien implementa el enunciado de quien lo cuestiona. La versión ingenua es correcta respecto a lo que se pidió literalmente y equivocada respecto a lo que se quería — y esa distancia es donde vive la mayoría de los bugs de producto.",
+        "en": "**Industry standard:** this exercise is an interview classic precisely because it separates whoever implements the statement from whoever questions it. The naive version is correct with respect to what was literally asked and wrong with respect to what was wanted — and that gap is where most product bugs live."
+      }
+    },
+    {
+      "id": "step-3-sort",
+      "title": {
+        "es": "El orden que nadie te garantiza",
+        "en": "The order nobody guarantees you"
+      },
+      "body": {
+        "es": "Queda un detalle que en este ejercicio se pasa por alto y en un informe real es lo primero que se mira: **el orden**.\n\nAhora mismo las entradas salen en el orden en que aparecieron las palabras por primera vez, que no es el orden en que a nadie le interesan. Un conteo se lee de más frecuente a menos: eso es lo que responde la pregunta «¿de qué habla este texto?».\n\nY hay una trampa de tipos escondida. Las claves de un objeto en JavaScript **no** conservan siempre el orden de inserción: las que parecen enteros —`\"1\"`, `\"42\"`— se colocan primero y en orden numérico, antes que el resto. Con palabras no se nota, pero si algún día cuentas números, el orden que creías tener desaparece sin avisar. Un `Map` no tiene esa regla.\n\nOrdenar un array de pares es comparar el segundo elemento de cada uno. Recuerda que `sort` **modifica el array** que recibe; sobre un array recién creado por `Object.entries` da igual, pero hacerlo sobre datos que vienen de otro sitio es una fuente de bugs difíciles.\n\nCon el orden bien puesto, la primera entrada debe ser exactamente `y: 3`.",
+        "en": "One detail is left that this exercise glosses over and any real report looks at first: **order**.\n\nRight now the entries come out in the order the words first appeared, which isn't the order anyone cares about. A count is read from most to least frequent: that's what answers \"what is this text about?\".\n\nAnd there's a hidden type trap. A JavaScript object's keys do **not** always preserve insertion order: those that look like integers — `\"1\"`, `\"42\"` — are placed first and in numeric order, ahead of the rest. With words you won't notice, but the day you count numbers, the order you thought you had vanishes without warning. A `Map` has no such rule.\n\nSorting an array of pairs means comparing the second element of each. Remember `sort` **mutates the array** it receives; on an array freshly created by `Object.entries` it doesn't matter, but doing it on data that came from elsewhere is a source of nasty bugs.\n\nWith the order right, the first entry must be exactly `y: 3`."
+      },
+      "task": {
+        "es": "Ordena el conteo de mayor a menor frecuencia. La primera entrada debe ser `y: 3`.",
+        "en": "Sort the count from most to least frequent. The first entry must be `y: 3`."
+      },
+      "focusFile": "src/App.vue",
+      "ruleIds": ["top-word", "sorts", "normalized-count", "no-hardcoded-result"],
+      "xp": 45,
+      "hints": [
+        {
+          "id": "h-sort",
+          "tier": 1,
+          "text": {
+            "es": "Cada entrada es un par `[palabra, veces]`. Para ordenar de mayor a menor se compara restando el segundo elemento del segundo del otro, en ese orden.",
+            "en": "Each entry is a `[word, count]` pair. To sort descending, compare by subtracting one's second element from the other's, in that order."
+          },
+          "xpPenalty": 8,
+          "autoOfferAfterSeconds": 90
+        }
+      ],
+      "solution": [
+        {
+          "path": "src/App.vue",
+          "content": "<script setup>\nimport { ref, computed } from 'vue';\n\nconst frase = ref('Un gato, y un perro; y otro perro. Y ya.');\n\nconst conteo = computed(() => {\n  const cuenta = Object.create(null);\n\n  for (const token of frase.value.split(/\\s+/)) {\n    const palabra = token.toLocaleLowerCase().replace(/^\\P{L}+|\\P{L}+$/gu, '');\n    if (palabra === '') continue;\n    cuenta[palabra] = (cuenta[palabra] ?? 0) + 1;\n  }\n\n  return Object.entries(cuenta).sort((a, b) => b[1] - a[1]);\n});\n</script>\n\n<template>\n  <section>\n    <p class=\"frase\">{{ frase }}</p>\n\n    <ul class=\"conteo\">\n      <li v-for=\"[palabra, veces] in conteo\" :key=\"palabra\" class=\"palabra\">\n        {{ palabra }}: {{ veces }}\n      </li>\n    </ul>\n  </section>\n</template>\n"
+        }
+      ],
+      "bestPractice": {
+        "es": "**Pregunta de entrevista frecuente:** «¿qué orden tienen las claves de un objeto en JavaScript?» La respuesta corta —«el de inserción»— es la que casi todo el mundo da y está incompleta: las claves que son índices enteros van primero y en orden numérico. Saberlo es lo que te hace elegir `Map` cuando las claves vienen de datos ajenos.",
+        "en": "**Common interview question:** \"what order do a JavaScript object's keys have?\" The short answer — \"insertion order\" — is what almost everyone gives and it's incomplete: integer-index keys come first and in numeric order. Knowing that is what makes you reach for `Map` when the keys come from foreign data."
+      }
+    }
+  ],
+
+  "drills": [],
+
+  "reward": {
+    "baseXp": 145,
+    "flawlessBonus": 55,
+    "noHintBonus": 30,
+    "comboMultiplierCap": 3,
+    "achievements": []
+  },
+
+  "solution": {
+    "files": [
+      {
+        "path": "src/App.vue",
+        "content": "<script setup>\nimport { ref, computed } from 'vue';\n\nconst frase = ref('Un gato, y un perro; y otro perro. Y ya.');\n\nconst conteo = computed(() => {\n  const cuenta = Object.create(null);\n\n  for (const token of frase.value.split(/\\s+/)) {\n    const palabra = token.toLocaleLowerCase().replace(/^\\P{L}+|\\P{L}+$/gu, '');\n    if (palabra === '') continue;\n    cuenta[palabra] = (cuenta[palabra] ?? 0) + 1;\n  }\n\n  return Object.entries(cuenta).sort((a, b) => b[1] - a[1]);\n});\n</script>\n\n<template>\n  <section>\n    <p class=\"frase\">{{ frase }}</p>\n\n    <ul class=\"conteo\">\n      <li v-for=\"[palabra, veces] in conteo\" :key=\"palabra\" class=\"palabra\">\n        {{ palabra }}: {{ veces }}\n      </li>\n    </ul>\n  </section>\n</template>\n"
+      }
+    ],
+    "explanation": {
+      "es": "Diez palabras, seis distintas, ordenadas por frecuencia. Lo que hace difícil este ejercicio no es ninguna de sus quince líneas: es que el enunciado no menciona las mayúsculas, ni la puntuación, ni los vacíos, ni el orden — y las cuatro decisiones cambian el resultado. Implementar lo que se pidió literalmente habría dado nueve entradas desordenadas y ningún error.",
+      "en": "Ten words, six distinct, sorted by frequency. What makes this exercise hard isn't any of its fifteen lines: it's that the statement mentions neither case, nor punctuation, nor empties, nor order — and all four decisions change the result. Implementing what was literally asked would have produced nine unsorted entries and no error at all."
+    }
+  }
+}

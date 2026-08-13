@@ -1,0 +1,333 @@
+{
+  "$schema": "../../../schema/lesson.schema.json",
+  "schemaVersion": 1,
+
+  "id": "vue-04-todo-list",
+  "track": "frontend",
+  "module": "vue",
+  "order": 4,
+
+  "kind": "challenge",
+  "difficulty": "apprentice",
+  "estimatedMinutes": 26,
+
+  "title": {
+    "es": "La lista de tareas: el ejercicio que todo framework usa para presentarse",
+    "en": "The todo list: the exercise every framework uses to introduce itself"
+  },
+  "summary": {
+    "es": "TodoMVC, pero mirando lo que de verdad se aprende: por qué el índice es una `key` mentirosa y por qué el contador no debe ser una variable.",
+    "en": "TodoMVC, but looking at what it actually teaches: why the index is a lying `key`, and why the counter shouldn't be a variable."
+  },
+  "concepts": ["vue", "v-for", "key", "computed", "listas"],
+  "prerequisites": ["vue-01-template-syntax", "vue-02-components", "vue-03-reactivity"],
+
+  "runtime": {
+    "kind": "vue",
+    "dependencies": {},
+    "timeoutMs": 15000
+  },
+
+  "workspace": {
+    "entry": "src/App.vue",
+    "allowCreate": false,
+    "allowDelete": false,
+    "protectedPaths": ["src/main.js"],
+    "files": [
+      {
+        "path": "src/App.vue",
+        "active": true,
+        "content": "<script setup>\nimport { ref } from 'vue';\n\nconst tareas = ref([\n  { id: 1, texto: 'Aprender v-for', hecha: true },\n  { id: 2, texto: 'Dominar computed', hecha: false },\n  { id: 3, texto: 'Vencer al boss', hecha: false },\n]);\n\n// El paso 3 lo usará. De momento no lo mira nadie.\nconst filtro = ref('pendientes');\n</script>\n\n<template>\n  <section class=\"lista\">\n    <h1>Mis tareas</h1>\n\n    <!-- TODO 1: pinta un <li class=\"tarea\"> por cada tarea.\n         Las hechas llevan además la clase \"hecha\". -->\n    <ul></ul>\n  </section>\n</template>\n\n<style>\n.hecha { text-decoration: line-through; opacity: 0.6; }\n</style>\n"
+      },
+      {
+        "path": "src/main.js",
+        "readOnly": true,
+        "content": "import { createApp } from 'vue';\nimport App from './App.vue';\n\ncreateApp(App).mount('#app');\n"
+      }
+    ]
+  },
+
+  "rules": [
+    {
+      "id": "renders-three",
+      "kind": "dom-assert",
+      "selector": "li.tarea",
+      "assert": "countEquals",
+      "count": 3,
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Deben pintarse tres `<li class=\"tarea\">`, uno por tarea.",
+        "en": "Three `<li class=\"tarea\">` must render, one per task."
+      },
+      "successMessage": {
+        "es": "Tres tareas, tres elementos.",
+        "en": "Three tasks, three elements."
+      },
+      "points": 30
+    },
+    {
+      "id": "marks-done",
+      "kind": "dom-assert",
+      "selector": "li.hecha",
+      "assert": "countEquals",
+      "count": 1,
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Solo la tarea ya hecha debe llevar la clase `hecha`. Se ata con `:class`, no escribiéndola a mano.",
+        "en": "Only the completed task should carry the `hecha` class. Bind it with `:class`, don't hardcode it."
+      },
+      "points": 25
+    },
+    {
+      "id": "stable-key",
+      "kind": "regex-must",
+      "file": "src/App.vue",
+      "pattern": ":key=\"[a-z]+\\.id\"",
+      "flags": "m",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "La `key` debe salir del `id` de la tarea. El paso 1 explica por qué el índice no sirve.",
+        "en": "The `key` must come from the task's `id`. Step 1 explains why the index doesn't work."
+      },
+      "points": 25
+    },
+    {
+      "id": "no-index-key",
+      "kind": "regex-forbid",
+      "file": "src/App.vue",
+      "pattern": ":key=\"(index|i|idx)\"",
+      "flags": "m",
+      "phase": "type",
+      "severity": "damage",
+      "message": {
+        "es": "¡Daño! El índice cambia cuando la lista cambia: Vue reutilizará el nodo equivocado y el estado saltará de fila.",
+        "en": "Damage! The index changes when the list changes: Vue will reuse the wrong node and state jumps rows."
+      },
+      "points": 10
+    },
+    {
+      "id": "shows-pending",
+      "kind": "dom-assert",
+      "selector": ".pendientes",
+      "assert": "textContains",
+      "expected": "2",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Falta el recuento: un `<p class=\"pendientes\">` que diga cuántas quedan sin hacer. Son 2.",
+        "en": "The count is missing: a `<p class=\"pendientes\">` saying how many are left. There are 2."
+      },
+      "successMessage": {
+        "es": "Quedan 2, y el número lo calcula Vue.",
+        "en": "2 left, and Vue works out the number."
+      },
+      "points": 30
+    },
+    {
+      "id": "uses-computed",
+      "kind": "regex-must",
+      "file": "src/App.vue",
+      "pattern": "computed\\s*\\(",
+      "flags": "m",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "El recuento debe ser un `computed`. Calculado a mano se queda desfasado en cuanto una tarea cambia.",
+        "en": "The count must be a `computed`. Worked out by hand it goes stale the moment a task changes."
+      },
+      "points": 25
+    },
+    {
+      "id": "no-manual-count",
+      "kind": "regex-forbid",
+      "file": "src/App.vue",
+      "pattern": "let\\s+pendientes",
+      "flags": "m",
+      "phase": "type",
+      "severity": "damage",
+      "message": {
+        "es": "¡Daño! Una variable suelta se calcula una vez y se queda ahí. Marcar una tarea no la actualizaría.",
+        "en": "Damage! A plain variable is computed once and stays there. Ticking a task wouldn't update it."
+      },
+      "points": 10
+    },
+    {
+      "id": "filters-list",
+      "kind": "dom-assert",
+      "selector": "li.tarea",
+      "assert": "countEquals",
+      "count": 2,
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Con el filtro en `pendientes` deben quedar 2 tareas a la vista, no 3.",
+        "en": "With the filter on `pendientes` only 2 tasks should be visible, not 3."
+      },
+      "successMessage": {
+        "es": "La lista obedece al filtro sin tocar los datos originales.",
+        "en": "The list obeys the filter without touching the original data."
+      },
+      "points": 35
+    },
+    {
+      "id": "keeps-source",
+      "kind": "regex-forbid",
+      "file": "src/App.vue",
+      "pattern": "tareas\\.value\\s*=|tareas\\.value\\.splice",
+      "flags": "m",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Filtrar no es borrar: `tareas` debe seguir teniendo las tres. Deriva una lista nueva en vez de reescribir la original.",
+        "en": "Filtering isn't deleting: `tareas` must still hold all three. Derive a new list instead of rewriting the original."
+      },
+      "points": 20
+    }
+  ],
+
+  "steps": [
+    {
+      "id": "step-1-render",
+      "title": {
+        "es": "Pinta la lista, y la `key` que no miente",
+        "en": "Render the list, with a key that doesn't lie"
+      },
+      "body": {
+        "es": "El primer trozo de TodoMVC es siempre el mismo: recorrer un array y pintar un elemento por entrada.\n\n```html\n<li v-for=\"cosa in cosas\" :key=\"cosa.id\">{{ cosa.texto }}</li>\n```\n\nLa parte que se copia sin entender es la `key`, y es la que importa. Vue la usa para saber **qué elemento del DOM corresponde a qué dato** entre dos repintados. Con una `key` estable puede mover nodos en lugar de reconstruirlos.\n\nY por eso **el índice es una `key` mentirosa**. Piensa en una lista donde borras el primer elemento: la tarea que estaba en el índice 1 pasa al 0. Vue mira las keys, ve que el 0 sigue existiendo y **reutiliza ese nodo del DOM** para otro dato. Con texto plano no se nota; en cuanto el elemento tiene estado —un input a medio escribir, una casilla marcada, una animación— ese estado se queda en la fila equivocada.\n\nEs el bug clásico de las listas: marcas la tercera casilla, borras la primera, y de pronto está marcada la segunda. Con `:key=\"cosa.id\"` no pasa, porque el id viaja con el dato.\n\nPara las clases condicionales, `:class` acepta un objeto: `{ nombre: condicion }` pone la clase solo si la condición se cumple.",
+        "en": "The first chunk of TodoMVC is always the same: walk an array and render one element per entry.\n\n```html\n<li v-for=\"thing in things\" :key=\"thing.id\">{{ thing.text }}</li>\n```\n\nThe part everyone copies without understanding is the `key`, and it's the one that matters. Vue uses it to know **which DOM element belongs to which piece of data** between renders. With a stable key it can move nodes instead of rebuilding them.\n\nWhich is why **the index is a lying key**. Picture a list where you delete the first item: the task at index 1 becomes index 0. Vue looks at the keys, sees index 0 still exists, and **reuses that DOM node** for different data. With plain text you don't notice; the moment the element holds state — a half-typed input, a ticked checkbox, an animation — that state stays on the wrong row.\n\nIt's the classic list bug: you tick the third checkbox, delete the first, and suddenly the second one is ticked. With `:key=\"thing.id\"` it doesn't happen, because the id travels with the data.\n\nFor conditional classes, `:class` takes an object: `{ name: condition }` applies the class only when the condition holds."
+      },
+      "task": {
+        "es": "Pinta un `<li class=\"tarea\">` por tarea con su texto, con `:key` sacada del `id`, y añade la clase `hecha` a las que ya lo estén.",
+        "en": "Render one `<li class=\"tarea\">` per task with its text, keyed by `id`, and add the `hecha` class to the completed ones."
+      },
+      "focusFile": "src/App.vue",
+      "focusLines": [17, 19],
+      "ruleIds": ["renders-three", "marks-done", "stable-key", "no-index-key"],
+      "xp": 45,
+      "hints": [
+        {
+          "id": "h-class",
+          "tier": 1,
+          "text": {
+            "es": "Dos clases en el mismo elemento: una fija en `class` y otra condicional en `:class`. Vue las junta — no hace falta elegir.",
+            "en": "Two classes on the same element: a fixed one in `class` and a conditional one in `:class`. Vue merges them — you don't have to choose."
+          },
+          "xpPenalty": 6,
+          "autoOfferAfterSeconds": 90
+        }
+      ],
+      "solution": [
+        {
+          "path": "src/App.vue",
+          "content": "<script setup>\nimport { ref } from 'vue';\n\nconst tareas = ref([\n  { id: 1, texto: 'Aprender v-for', hecha: true },\n  { id: 2, texto: 'Dominar computed', hecha: false },\n  { id: 3, texto: 'Vencer al boss', hecha: false },\n]);\n\nconst filtro = ref('pendientes');\n</script>\n\n<template>\n  <section class=\"lista\">\n    <h1>Mis tareas</h1>\n\n    <ul>\n      <li\n        v-for=\"tarea in tareas\"\n        :key=\"tarea.id\"\n        class=\"tarea\"\n        :class=\"{ hecha: tarea.hecha }\"\n      >\n        {{ tarea.texto }}\n      </li>\n    </ul>\n  </section>\n</template>\n\n<style>\n.hecha { text-decoration: line-through; opacity: 0.6; }\n</style>\n"
+        }
+      ],
+      "bestPractice": {
+        "es": "**Estándar de la industria:** la misma regla vale en React, Svelte y Angular — cambia el nombre del atributo, no el motivo. Si tu dato no tiene un identificador estable, el sitio de arreglarlo es el origen de los datos, no la plantilla.",
+        "en": "**Industry standard:** the same rule holds in React, Svelte, and Angular — the attribute's name changes, the reason doesn't. If your data has no stable identifier, the place to fix that is the data source, not the template."
+      }
+    },
+    {
+      "id": "step-2-count",
+      "title": {
+        "es": "El contador que no se queda atrás",
+        "en": "The counter that doesn't fall behind"
+      },
+      "body": {
+        "es": "Toda lista de tareas enseña cuántas quedan. La tentación es calcularlo donde ya tienes los datos:\n\n```js\nlet pendientes = tareas.value.filter((t) => !t.hecha).length;\n```\n\nEsa línea corre **una vez**, cuando se crea el componente, y devuelve un número. Marcar una tarea después no la vuelve a ejecutar: el contador se queda congelado mientras la lista cambia delante.\n\n`computed` existe justo para esto. No guarda un número: guarda **cómo se obtiene** el número, y Vue lo recalcula cuando cambia algo de lo que depende — y solo entonces.\n\n```js\nconst pendientes = computed(() => tareas.value.filter((t) => !t.hecha).length);\n```\n\nDos detalles que se olvidan:\n\n- En el `<script>` hay que escribir `.value` para leerlo; en la plantilla no.\n- Un `computed` **no debe tener efectos**. Si dentro modificas otra cosa reactiva, acabas con recálculos que se disparan entre sí y con un orden que nadie puede seguir. Para eso está `watch`.",
+        "en": "Every todo list shows how many are left. The temptation is to work it out where you already have the data:\n\n```js\nlet pending = tasks.value.filter((t) => !t.done).length;\n```\n\nThat line runs **once**, when the component is created, and yields a number. Ticking a task afterwards doesn't re-run it: the counter freezes while the list changes in front of it.\n\n`computed` exists precisely for this. It doesn't store a number: it stores **how to get** the number, and Vue recomputes it when something it depends on changes — and only then.\n\n```js\nconst pending = computed(() => tasks.value.filter((t) => !t.done).length);\n```\n\nTwo details people forget:\n\n- In the `<script>` you need `.value` to read it; in the template you don't.\n- A `computed` **must not have side effects**. If it mutates something else reactive, you end up with recomputations triggering each other in an order nobody can follow. That's what `watch` is for."
+      },
+      "task": {
+        "es": "Añade un `computed` con las tareas que quedan sin hacer y muéstralo en un `<p class=\"pendientes\">`.",
+        "en": "Add a `computed` with the tasks still to do and show it in a `<p class=\"pendientes\">`."
+      },
+      "focusFile": "src/App.vue",
+      "ruleIds": ["shows-pending", "uses-computed", "no-manual-count"],
+      "xp": 40,
+      "hints": [
+        {
+          "id": "h-import",
+          "tier": 1,
+          "text": {
+            "es": "`computed` se importa desde `vue`, al lado de `ref`. Si no lo importas, el error dice que no está definido.",
+            "en": "`computed` is imported from `vue`, next to `ref`. If you forget, the error says it isn't defined."
+          },
+          "xpPenalty": 5,
+          "autoOfferAfterSeconds": 70
+        }
+      ],
+      "solution": [
+        {
+          "path": "src/App.vue",
+          "content": "<script setup>\nimport { ref, computed } from 'vue';\n\nconst tareas = ref([\n  { id: 1, texto: 'Aprender v-for', hecha: true },\n  { id: 2, texto: 'Dominar computed', hecha: false },\n  { id: 3, texto: 'Vencer al boss', hecha: false },\n]);\n\nconst filtro = ref('pendientes');\n\nconst pendientes = computed(() => tareas.value.filter((tarea) => !tarea.hecha).length);\n</script>\n\n<template>\n  <section class=\"lista\">\n    <h1>Mis tareas</h1>\n\n    <p class=\"pendientes\">Quedan {{ pendientes }}</p>\n\n    <ul>\n      <li\n        v-for=\"tarea in tareas\"\n        :key=\"tarea.id\"\n        class=\"tarea\"\n        :class=\"{ hecha: tarea.hecha }\"\n      >\n        {{ tarea.texto }}\n      </li>\n    </ul>\n  </section>\n</template>\n\n<style>\n.hecha { text-decoration: line-through; opacity: 0.6; }\n</style>\n"
+        }
+      ]
+    },
+    {
+      "id": "step-3-filter",
+      "title": {
+        "es": "Filtrar sin perder nada",
+        "en": "Filtering without losing anything"
+      },
+      "body": {
+        "es": "Los tres botones de TodoMVC —todas, pendientes, hechas— parecen decoración y son el ejercicio de verdad, porque hay dos formas de hacerlos y una es una trampa.\n\nLa trampa es filtrar **el propio array**:\n\n```js\ntareas.value = tareas.value.filter((t) => !t.hecha);   // ❌\n```\n\nFunciona la primera vez y destruye los datos: las tareas hechas ya no existen, así que pulsar «todas» no puede recuperarlas. Has confundido *ver* con *tener*.\n\nLo correcto es **derivar** una lista nueva y dejar la original intacta:\n\n```js\nconst visibles = computed(() => { /* según el filtro */ });\n```\n\nLa plantilla recorre `visibles`; `tareas` sigue siendo la fuente. Ese reparto —un estado que manda y todo lo demás derivado de él— es el mismo principio que hay detrás de una `key` estable y detrás de no mutar props: **una sola verdad, y vistas calculadas encima**.\n\nEl filtro arranca en `pendientes`, así que al ejecutar deben quedar dos tareas a la vista y la lista completa seguir teniendo tres.",
+        "en": "TodoMVC's three buttons — all, active, completed — look like decoration and are the real exercise, because there are two ways to build them and one is a trap.\n\nThe trap is filtering **the array itself**:\n\n```js\ntasks.value = tasks.value.filter((t) => !t.done);   // ❌\n```\n\nIt works the first time and destroys the data: the completed tasks no longer exist, so pressing \"all\" can't bring them back. You've confused *seeing* with *having*.\n\nThe right way is to **derive** a new list and leave the original alone:\n\n```js\nconst visible = computed(() => { /* according to the filter */ });\n```\n\nThe template walks `visible`; `tasks` remains the source. That split — one state that rules and everything else derived from it — is the same principle behind a stable `key` and behind not mutating props: **a single truth, with computed views on top**.\n\nThe filter starts on `pendientes`, so running it should leave two tasks visible while the full list still holds three."
+      },
+      "task": {
+        "es": "Añade un `computed` `visibles` que respete `filtro` (`todas`, `pendientes`, `hechas`) y recorre ese en la plantilla, sin tocar `tareas`.",
+        "en": "Add a `visibles` computed that respects `filtro` (`todas`, `pendientes`, `hechas`) and loop over that in the template, without touching `tareas`."
+      },
+      "focusFile": "src/App.vue",
+      "ruleIds": ["filters-list", "keeps-source"],
+      "xp": 50,
+      "hints": [
+        {
+          "id": "h-derive",
+          "tier": 1,
+          "text": {
+            "es": "El `computed` lee `filtro.value` y devuelve `tareas.value` entero o un `filter` de él. `filter` ya devuelve un array nuevo: no modifica el original.",
+            "en": "The computed reads `filtro.value` and returns either all of `tareas.value` or a `filter` of it. `filter` already returns a new array: it doesn't modify the original."
+          },
+          "xpPenalty": 8,
+          "autoOfferAfterSeconds": 100
+        }
+      ],
+      "solution": [
+        {
+          "path": "src/App.vue",
+          "content": "<script setup>\nimport { ref, computed } from 'vue';\n\nconst tareas = ref([\n  { id: 1, texto: 'Aprender v-for', hecha: true },\n  { id: 2, texto: 'Dominar computed', hecha: false },\n  { id: 3, texto: 'Vencer al boss', hecha: false },\n]);\n\nconst filtro = ref('pendientes');\n\nconst pendientes = computed(() => tareas.value.filter((tarea) => !tarea.hecha).length);\n\nconst visibles = computed(() => {\n  if (filtro.value === 'pendientes') return tareas.value.filter((tarea) => !tarea.hecha);\n  if (filtro.value === 'hechas') return tareas.value.filter((tarea) => tarea.hecha);\n  return tareas.value;\n});\n</script>\n\n<template>\n  <section class=\"lista\">\n    <h1>Mis tareas</h1>\n\n    <p class=\"pendientes\">Quedan {{ pendientes }}</p>\n\n    <ul>\n      <li\n        v-for=\"tarea in visibles\"\n        :key=\"tarea.id\"\n        class=\"tarea\"\n        :class=\"{ hecha: tarea.hecha }\"\n      >\n        {{ tarea.texto }}\n      </li>\n    </ul>\n  </section>\n</template>\n\n<style>\n.hecha { text-decoration: line-through; opacity: 0.6; }\n</style>\n"
+        }
+      ],
+      "bestPractice": {
+        "es": "**Pregunta de entrevista frecuente:** «¿dónde pondrías el filtrado de una lista?» La respuesta que distingue no es «en un computed», es el porqué: **el estado guarda hechos, la vista guarda opiniones**. Filtrar el array de origen convierte una opinión temporal —qué quiero ver ahora— en una pérdida permanente de datos.",
+        "en": "**Common interview question:** \"where would you put a list's filtering?\" The answer that sets you apart isn't \"in a computed\", it's why: **state holds facts, the view holds opinions**. Filtering the source array turns a temporary opinion — what I want to see right now — into permanent data loss."
+      }
+    }
+  ],
+
+  "drills": [],
+
+  "reward": {
+    "baseXp": 135,
+    "flawlessBonus": 50,
+    "noHintBonus": 30,
+    "comboMultiplierCap": 3,
+    "achievements": []
+  },
+
+  "solution": {
+    "files": [
+      {
+        "path": "src/App.vue",
+        "content": "<script setup>\nimport { ref, computed } from 'vue';\n\nconst tareas = ref([\n  { id: 1, texto: 'Aprender v-for', hecha: true },\n  { id: 2, texto: 'Dominar computed', hecha: false },\n  { id: 3, texto: 'Vencer al boss', hecha: false },\n]);\n\nconst filtro = ref('pendientes');\n\nconst pendientes = computed(() => tareas.value.filter((tarea) => !tarea.hecha).length);\n\nconst visibles = computed(() => {\n  if (filtro.value === 'pendientes') return tareas.value.filter((tarea) => !tarea.hecha);\n  if (filtro.value === 'hechas') return tareas.value.filter((tarea) => tarea.hecha);\n  return tareas.value;\n});\n</script>\n\n<template>\n  <section class=\"lista\">\n    <h1>Mis tareas</h1>\n\n    <p class=\"pendientes\">Quedan {{ pendientes }}</p>\n\n    <ul>\n      <li\n        v-for=\"tarea in visibles\"\n        :key=\"tarea.id\"\n        class=\"tarea\"\n        :class=\"{ hecha: tarea.hecha }\"\n      >\n        {{ tarea.texto }}\n      </li>\n    </ul>\n  </section>\n</template>\n\n<style>\n.hecha { text-decoration: line-through; opacity: 0.6; }\n</style>\n"
+      }
+    ],
+    "explanation": {
+      "es": "Un estado que manda —`tareas`— y dos vistas calculadas encima: cuántas quedan y cuáles se ven. Nada de lo que se muestra modifica el origen, así que cambiar de filtro es gratis y reversible. Es la forma que tiene TodoMVC de enseñar, en treinta líneas, la separación que sostiene aplicaciones de treinta mil.",
+      "en": "One state that rules — `tareas` — and two computed views on top: how many are left and which are shown. Nothing displayed modifies the source, so switching filters is free and reversible. That's how TodoMVC teaches, in thirty lines, the separation that holds up applications of thirty thousand."
+    }
+  }
+}

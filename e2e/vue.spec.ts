@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { expect, test, type Page } from '@playwright/test';
 
 /**
@@ -96,4 +97,122 @@ test('⭐ un error de compilación se enseña en vez de dejar la pantalla en bla
   await expect(consola).toContainText('vue/compiler-sfc', { timeout: 30_000 });
   await expect(consola).toContainText('/src/App.vue');
   await expect(consola).toContainText('const roto');
+});
+
+test('⭐ vue-04: los tres pasos de la lista de tareas renderizan lo prometido', async ({ page }) => {
+  test.setTimeout(150_000);
+  await page.goto('/es/play/frontend/vue-04-todo-list');
+  await waitForEditor(page);
+
+  const write = async (code: string) => {
+    await page.locator('.monaco-editor .view-lines').click();
+    await page.keyboard.press('ControlOrMeta+a');
+    await page.keyboard.insertText(code);
+    await page.getByRole('button', { name: /ejecutar/i }).click();
+  };
+
+  const SCRIPT = `<script setup>
+import { ref, computed } from 'vue';
+const tareas = ref([
+  { id: 1, texto: 'Aprender v-for', hecha: true },
+  { id: 2, texto: 'Dominar computed', hecha: false },
+  { id: 3, texto: 'Vencer al boss', hecha: false },
+]);
+const filtro = ref('pendientes');
+const pendientes = computed(() => tareas.value.filter((t) => !t.hecha).length);
+const visibles = computed(() =>
+  filtro.value === 'pendientes' ? tareas.value.filter((t) => !t.hecha) : tareas.value,
+);
+</script>
+`;
+
+  const list = (source: string) => `${SCRIPT}
+<template>
+  <p class="pendientes">Quedan {{ pendientes }}</p>
+  <ul>
+    <li v-for="tarea in ${source}" :key="tarea.id" class="tarea" :class="{ hecha: tarea.hecha }">
+      {{ tarea.texto }}
+    </li>
+  </ul>
+</template>
+`;
+
+  // Paso 1 y 2: las tres tareas, una tachada, y el recuento calculado.
+  await write(list('tareas'));
+  await expect.poll(() => mirrorText(page), { timeout: 60_000 }).toContain('Quedan 2');
+  await expect
+    .poll(() =>
+      page.evaluate(() => {
+        const mirror = Array.from(document.querySelectorAll('iframe')).find(
+          (frame) => frame.getAttribute('sandbox') === 'allow-same-origin',
+        );
+        const doc = mirror?.contentDocument;
+        return `${doc?.querySelectorAll('li.tarea').length}/${doc?.querySelectorAll('li.hecha').length}`;
+      }),
+    )
+    .toBe('3/1');
+
+  // Paso 3: el filtro deja dos a la vista sin tocar el origen.
+  await write(list('visibles'));
+  await expect
+    .poll(() =>
+      page.evaluate(() => {
+        const mirror = Array.from(document.querySelectorAll('iframe')).find(
+          (frame) => frame.getAttribute('sandbox') === 'allow-same-origin',
+        );
+        return mirror?.contentDocument?.querySelectorAll('li.tarea').length ?? -1;
+      }),
+      { timeout: 60_000 },
+    )
+    .toBe(2);
+  // El recuento sigue diciendo 2: la lista original conserva las tres.
+  await expect.poll(() => mirrorText(page)).toContain('Quedan 2');
+});
+
+test('⭐ vue-05: las cuentas que promete la lección son las que salen', async ({ page }) => {
+  test.setTimeout(180_000);
+
+  // Se leen las soluciones REALES del JSON: si alguien las cambia y dejan de
+  // producir 9, 6 y `y: 3`, este test lo dice. Copiarlas aquí no probaría nada.
+  const lesson = JSON.parse(
+    readFileSync('content/lessons/frontend/vue/vue-05-word-count.lesson.json', 'utf8'),
+  ) as {
+    steps: Array<{ id: string; solution?: Array<{ path: string; content: string }> }>;
+  };
+  const solutionOf = (id: string) =>
+    lesson.steps.find((step) => step.id === id)?.solution?.[0]?.content ?? '';
+
+  await page.goto('/es/play/frontend/vue-05-word-count');
+  await waitForEditor(page);
+
+  const countWords = () =>
+    page.evaluate(() => {
+      const mirror = Array.from(document.querySelectorAll('iframe')).find(
+        (frame) => frame.getAttribute('sandbox') === 'allow-same-origin',
+      );
+      const items = mirror?.contentDocument?.querySelectorAll('li.palabra');
+      return {
+        total: items?.length ?? -1,
+        first: items?.[0]?.textContent?.trim() ?? '',
+      };
+    });
+
+  const run = async (code: string) => {
+    await page.locator('.monaco-editor .view-lines').click();
+    await page.keyboard.press('ControlOrMeta+a');
+    await page.keyboard.insertText(code);
+    await page.getByRole('button', { name: /ejecutar/i }).click();
+  };
+
+  // Paso 1: sin normalizar, diez palabras dan nueve entradas.
+  await run(solutionOf('step-1-naive'));
+  await expect.poll(countWords, { timeout: 60_000 }).toMatchObject({ total: 9 });
+
+  // Paso 2: normalizando, seis.
+  await run(solutionOf('step-2-normalize'));
+  await expect.poll(countWords, { timeout: 60_000 }).toMatchObject({ total: 6 });
+
+  // Paso 3: ordenado, la más frecuente encabeza.
+  await run(solutionOf('step-3-sort'));
+  await expect.poll(countWords, { timeout: 60_000 }).toMatchObject({ total: 6, first: 'y: 3' });
 });

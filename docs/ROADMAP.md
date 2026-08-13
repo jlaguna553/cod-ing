@@ -648,6 +648,25 @@ ese es exactamente el sitio donde se cuela una tilde de más o una fila olvidada
 transacciones/aislamiento — el `ROLLBACK` que el runner ya usa por dentro da un buen
 punto de partida para explicarlo.
 
+### Ejercicios canónicos adaptados al formato (Vue)
+
+Las lecciones nuevas no se inventan: se adaptan de los compendios donde ya están probadas
+como ejercicios, y se les añade lo que un compendio no da — el porqué, la trampa y la
+comprobación automática.
+
+| Lección | Origen | Lo que de verdad enseña |
+|---|---|---|
+| `vue-04-todo-list` | **TodoMVC** | Por qué el índice es una `key` mentirosa, y por qué filtrar el array de origen es perder datos |
+| `vue-05-word-count` | **Word Count** (Exercism) | Que el enunciado está incompleto: mayúsculas, puntuación, vacíos y orden no se mencionan y cambian el resultado |
+
+`vue-05` es el patrón a seguir para adaptar un ejercicio de algoritmo: el paso 1 implementa
+**literalmente lo que se pidió** —y sale mal, con nueve entradas para diez palabras—, y los
+dos siguientes son las decisiones que el enunciado se calló. La versión ingenua no da error;
+da una respuesta equivocada, que es exactamente lo que la hace buena pregunta de entrevista.
+
+Las cuentas que promete cada paso (9 → 6 → `y: 3`) se comprueban en el navegador contra las
+soluciones reales del JSON, no contra una copia en el test.
+
 ### Todo paso se practica, y nada se bloquea (ADR-12)
 
 Dos cambios transversales a las 24 lecciones:
