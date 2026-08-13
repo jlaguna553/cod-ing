@@ -1,16 +1,13 @@
 {
   "$schema": "../../../schema/lesson.schema.json",
   "schemaVersion": 1,
-
   "id": "vue-02-components",
   "track": "frontend",
   "module": "vue",
   "order": 2,
-
   "kind": "challenge",
   "difficulty": "apprentice",
   "estimatedMinutes": 24,
-
   "title": {
     "es": "Componentes: props bajan, eventos suben",
     "en": "Components: props down, events up"
@@ -19,20 +16,28 @@
     "es": "Parte la interfaz en piezas reutilizables y aprende la regla que ordena toda aplicación de Vue: los datos bajan por props y los avisos suben por eventos.",
     "en": "Split the UI into reusable pieces and learn the rule that keeps every Vue app in order: data flows down through props, notifications flow up through events."
   },
-  "concepts": ["vue", "components", "props", "emits", "unidirectional-data-flow"],
-  "prerequisites": ["vue-01-template-syntax"],
-
+  "concepts": [
+    "vue",
+    "components",
+    "props",
+    "emits",
+    "unidirectional-data-flow"
+  ],
+  "prerequisites": [
+    "vue-01-template-syntax"
+  ],
   "runtime": {
-    "kind": "sandpack",
-    "dependencies": { "vue": "^3.5.0" },
-    "timeoutMs": 15000
+    "kind": "vue",
+    "timeoutMs": 15000,
+    "dependencies": {}
   },
-
   "workspace": {
     "entry": "src/App.vue",
     "allowCreate": true,
     "allowDelete": false,
-    "protectedPaths": ["src/main.js"],
+    "protectedPaths": [
+      "src/main.js"
+    ],
     "files": [
       {
         "path": "src/App.vue",
@@ -50,7 +55,6 @@
       }
     ]
   },
-
   "rules": [
     {
       "id": "declares-props",
@@ -149,7 +153,6 @@
       "points": 20
     }
   ],
-
   "steps": [
     {
       "id": "step-1-extract",
@@ -166,7 +169,9 @@
         "en": "Build `QuestCard.vue` so it receives the quest through props and shows its title and XP."
       },
       "focusFile": "src/QuestCard.vue",
-      "ruleIds": ["declares-props"],
+      "ruleIds": [
+        "declares-props"
+      ],
       "xp": 40,
       "hints": [
         {
@@ -196,7 +201,10 @@
         "en": "Add a `toggle` event to `QuestCard` and make `App` listen to it to mark the quest."
       },
       "focusFile": "src/QuestCard.vue",
-      "ruleIds": ["declares-emits", "no-prop-mutation"],
+      "ruleIds": [
+        "declares-emits",
+        "no-prop-mutation"
+      ],
       "xp": 45,
       "bestPractice": {
         "es": "**Flujo unidireccional:** es la misma idea que en React y en Svelte. El dato baja, el evento sube, y cuando dos componentes necesitan compartir algo se «eleva el estado» al ancestro común más cercano en vez de duplicarlo.",
@@ -218,21 +226,25 @@
         "en": "Replace the hand-written `<li>` with `<QuestCard>` inside the `v-for`."
       },
       "focusFile": "src/App.vue",
-      "ruleIds": ["uses-component", "imports-component", "listens-to-event", "cards-rendered"],
+      "ruleIds": [
+        "uses-component",
+        "imports-component",
+        "listens-to-event",
+        "cards-rendered"
+      ],
       "xp": 45
     }
   ],
-
   "drills": [],
-
   "reward": {
     "baseXp": 160,
     "flawlessBonus": 60,
     "noHintBonus": 35,
     "comboMultiplierCap": 3,
-    "achievements": ["component-composer"]
+    "achievements": [
+      "component-composer"
+    ]
   },
-
   "solution": {
     "files": [
       {

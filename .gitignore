@@ -21,3 +21,4 @@ playwright-report/
 
 # PGlite se copia desde node_modules en cada build (scripts/copy-pglite.ts)
 /public/pglite/
+/public/vendor/

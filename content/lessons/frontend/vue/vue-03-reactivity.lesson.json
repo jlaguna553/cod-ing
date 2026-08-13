@@ -27,13 +27,11 @@
     "vue-02-components"
   ],
   "runtime": {
-    "kind": "sandpack",
+    "kind": "vue",
     "command": "npm run dev",
     "previewPort": 5173,
-    "dependencies": {
-      "vue": "^3.4.0"
-    },
-    "timeoutMs": 15000
+    "timeoutMs": 15000,
+    "dependencies": {}
   },
   "workspace": {
     "entry": "src/Cart.vue",

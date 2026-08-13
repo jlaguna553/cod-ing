@@ -549,6 +549,55 @@ producto además de técnica.
 
 ---
 
+### ADR-13 · Vue corre sin bundler, sin terceros y sin coste
+
+**Contexto.** Sandpack compila el `<script>` de un SFC de Vue 3 y **no la plantilla**: el
+componente monta sin función de render y Vue pinta un comentario vacío, avisando solo por
+consola. Se probaron las seis plantillas de su bundler contra un SFC mínimo y ninguna
+renderiza; `2.19.8` es la última versión publicada del cliente, así que actualizar no era
+salida. Las tres lecciones de Vue llevaban desde la Fase 3 sin renderizar nada.
+
+**Decisión.** Hacer por dentro lo que hacía el servicio de fuera:
+
+1. **Compilar el SFC en el navegador** con `@vue/compiler-sfc`, el compilador oficial, con
+   `inlineTemplate` — el módulo resultante trae la plantilla ya convertida en render.
+2. **Montar el grafo de módulos sobre `import()` nativo**, sin bundler. Cada import se
+   reescribe a un marcador `@@ruta@@` y dentro del iframe se crean los blobs en orden de
+   dependencia, sustituyendo el marcador por la URL del blob anterior. Eso evita necesitar
+   un import map, que tendría que estar completo antes de evaluar el primer módulo.
+3. **Servir el runtime de Vue desde nuestro origen**: 168 KB copiados de `node_modules` en
+   cada build, como PGlite. Van *inline* en el documento y no como `<script src>` porque el
+   iframe tiene origen opaco y cualquier petición suya a nuestro servidor sería
+   cross-origin.
+
+**Lo que compra.** Cero red en tiempo de ejecución, cero dependencia de un servicio ajeno y
+cero coste — la restricción explícita del proyecto. Si `codesandbox.io` se cae, se bloquea
+en una red corporativa o deja de ser gratis, las lecciones de Vue siguen funcionando.
+
+**Y un error de compilación deja de ser una pantalla en blanco.** El mensaje del compilador
+llega a la consola tal cual, con archivo, línea y el fragmento señalado:
+
+```
+[vue/compiler-sfc] Unexpected token (2:13)
+/src/App.vue
+1  |  <script setup>
+2  |  const roto = ;
+   |               ^
+```
+
+**Dos trampas encontradas.** `@vue/compiler-sfc` expone una condición `node` que apunta a su
+build CJS; el bundler la prefiere y eso arrastra `consolidate` con treinta motores de
+plantillas — 43 módulos sin resolver. Hay que importar la ruta explícita del ESM de
+navegador. Y el módulo que arranca **no** es `workspace.entry`: ese campo dice qué archivo
+se abre en el editor, que en Vue es el componente; importarlo solo lo define, y quien monta
+es `main.js`.
+
+**Guardia.** `tests/vue-sfc.test.ts` prueba la compilación y la resolución de rutas en Node
+—el compilador es el mismo en los dos sitios— y `e2e/vue.spec.ts` comprueba en el navegador
+que la plantilla llega renderizada, que `v-if`/`v-for` funcionan y que el error se enseña.
+
+---
+
 ## 5. Modelo de datos de progreso (servidor)
 
 ```
@@ -571,5 +620,6 @@ user_achievements(user_id, achievement_id, unlocked_at)
 | Coste/abuso del runner remoto (Go, Java) | Medio | Rate limiting por usuario en `/api/run`, cola, timeout 10s. SQL ya no lo necesita: corre en el cliente (ADR-11) |
 | Volumen de autoría de contenido bilingüe | **Alto** | Es el cuello de botella real del proyecto, no la tecnología. `AUTHORING.md` + validación en CI + una lección "plantilla" por arquetipo |
 | Bundle de Monaco (~5MB) | Medio | Carga dinámica, solo los lenguajes del track activo |
+| **Coste de operación** | — | **Restricción del proyecto: cero.** Todo se ejecuta en el navegador del usuario (ADR-02, 11, 13) y lo que hace falta se autoaloja. Ningún runtime de pago, ninguna cuota por ejecución. Donde ejecutar de verdad no sale gratis, se simula de forma determinista (ADR-03) |
 | Peso de PGlite (~18MB) | Medio | Solo lo descargan las lecciones de SQL, una vez por sesión y cacheado; ninguna otra lección lo toca (ADR-11) |
 | FX de partículas en móvil/portátiles modestos | Bajo | Respetar `prefers-reduced-motion` + toggle "Modo rendimiento" |

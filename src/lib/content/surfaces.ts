@@ -39,6 +39,9 @@ export function surfacesFor(lesson: ClientLesson): Surfaces {
    */
   if (kind === 'sql') return { preview: true, console: true, terminal: false };
 
+  // `vue` renderiza una aplicación: siempre hay algo que ver.
+  if (kind === 'vue') return { preview: true, console: true, terminal: false };
+
   /*
    * En `cli-sim` la terminal ES la salida: no hay proceso aparte que imprima
    * por consola, así que ofrecer las dos sería ofrecer la misma cosa dos veces.

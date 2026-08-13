@@ -69,4 +69,23 @@ function main() {
   );
 }
 
+/**
+ * Runtime de Vue, por el mismo motivo y con el mismo trato (ADR-13).
+ *
+ * 168 KB servidos desde nuestro origen en lugar de un CDN: la lección arranca
+ * aunque el dominio de terceros esté caído o bloqueado, y la versión queda
+ * clavada a la del `package.json`.
+ */
+function copyVue() {
+  const from = path.join(
+    path.dirname(require.resolve('vue/package.json')),
+    'dist/vue.esm-browser.prod.js',
+  );
+  const target = path.resolve(import.meta.dirname, '../public/vendor');
+  mkdirSync(target, { recursive: true });
+  copyFileSync(from, path.join(target, 'vue.esm-browser.prod.js'));
+  console.log(`✔ Vue → public/vendor (${(statSync(from).size / 1024).toFixed(0)} KB)`);
+}
+
 main();
+copyVue();

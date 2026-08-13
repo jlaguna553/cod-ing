@@ -16,6 +16,7 @@ import { RunnerBootError } from './types';
  * | `sandpack`     | 8         | ✅ implementado                            |
  * | `cli-sim`      | 3         | ✅ implementado                            |
  * | `sql`          | 3         | ✅ implementado — Postgres en WASM (ADR-11)|
+ * | `vue`          | 3         | ✅ implementado — sin bundler (ADR-13)     |
  * | `webcontainer` | 1         | ⏸️ bloqueado por la licencia (ADR-07)      |
  * | `pyodide`      | 0         | ⏸️ sin contenido que lo use                |
  * | `remote`       | 0         | ⏸️ sin contenido que lo use                |
@@ -43,6 +44,11 @@ export async function createRunner(kind: RuntimeKind, mount: HTMLElement): Promi
     case 'sql': {
       const { SqlRunner } = await import('./sql');
       return new SqlRunner();
+    }
+
+    case 'vue': {
+      const { VueRunner } = await import('./vue');
+      return new VueRunner(mount);
     }
 
     case 'webcontainer':

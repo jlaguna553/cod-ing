@@ -1,16 +1,13 @@
 {
   "$schema": "../../../schema/lesson.schema.json",
   "schemaVersion": 1,
-
   "id": "vue-01-template-syntax",
   "track": "frontend",
   "module": "vue",
   "order": 1,
-
   "kind": "concept",
   "difficulty": "novice",
   "estimatedMinutes": 18,
-
   "title": {
     "es": "La plantilla de Vue: HTML con superpoderes",
     "en": "Vue templates: HTML with superpowers"
@@ -19,20 +16,29 @@
     "es": "Interpolación, atributos dinámicos, condicionales y listas. Vue no te pide abandonar el HTML: le añade directivas para que reaccione a tus datos.",
     "en": "Interpolation, dynamic attributes, conditionals and lists. Vue doesn't ask you to leave HTML behind: it adds directives so it reacts to your data."
   },
-  "concepts": ["vue", "templates", "directives", "v-for", "v-if", "v-bind"],
-  "prerequisites": ["js-03-array-map"],
-
+  "concepts": [
+    "vue",
+    "templates",
+    "directives",
+    "v-for",
+    "v-if",
+    "v-bind"
+  ],
+  "prerequisites": [
+    "js-03-array-map"
+  ],
   "runtime": {
-    "kind": "sandpack",
-    "dependencies": { "vue": "^3.5.0" },
-    "timeoutMs": 15000
+    "kind": "vue",
+    "timeoutMs": 15000,
+    "dependencies": {}
   },
-
   "workspace": {
     "entry": "src/App.vue",
     "allowCreate": false,
     "allowDelete": false,
-    "protectedPaths": ["src/main.js"],
+    "protectedPaths": [
+      "src/main.js"
+    ],
     "files": [
       {
         "path": "src/App.vue",
@@ -46,7 +52,6 @@
       }
     ]
   },
-
   "rules": [
     {
       "id": "interpolates-name",
@@ -145,7 +150,6 @@
       "points": 25
     }
   ],
-
   "steps": [
     {
       "id": "step-1-interpolation",
@@ -162,8 +166,15 @@
         "en": "Show the player's name with interpolation and bind the image `src` to `player.avatar`."
       },
       "focusFile": "src/App.vue",
-      "focusLines": [11, 16],
-      "ruleIds": ["interpolates-name", "binds-attribute", "no-interpolation-in-attribute"],
+      "focusLines": [
+        11,
+        16
+      ],
+      "ruleIds": [
+        "interpolates-name",
+        "binds-attribute",
+        "no-interpolation-in-attribute"
+      ],
       "xp": 35,
       "hints": [
         {
@@ -193,8 +204,13 @@
         "en": "Make \"Online\" appear only when `player.online` is true."
       },
       "focusFile": "src/App.vue",
-      "focusLines": [17, 19],
-      "ruleIds": ["conditional-status"],
+      "focusLines": [
+        17,
+        19
+      ],
+      "ruleIds": [
+        "conditional-status"
+      ],
       "xp": 30
     },
     {
@@ -212,8 +228,15 @@
         "en": "Render one `<li>` per quest in `quests`, each with its `:key`, showing the title."
       },
       "focusFile": "src/App.vue",
-      "focusLines": [20, 22],
-      "ruleIds": ["renders-list", "list-has-key", "three-quests-rendered"],
+      "focusLines": [
+        20,
+        22
+      ],
+      "ruleIds": [
+        "renders-list",
+        "list-has-key",
+        "three-quests-rendered"
+      ],
       "xp": 40,
       "hints": [
         {
@@ -232,17 +255,16 @@
       }
     }
   ],
-
   "drills": [],
-
   "reward": {
     "baseXp": 110,
     "flawlessBonus": 45,
     "noHintBonus": 25,
     "comboMultiplierCap": 3,
-    "achievements": ["template-weaver"]
+    "achievements": [
+      "template-weaver"
+    ]
   },
-
   "solution": {
     "files": [
       {
