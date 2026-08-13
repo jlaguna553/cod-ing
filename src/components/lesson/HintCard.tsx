@@ -25,18 +25,18 @@ export function HintCard() {
 
   const hints = [...(step?.hints ?? [])].sort((a, b) => a.tier - b.tier);
 
-  if (hints.length === 0) {
-    return (
-      <Panel title={t('panels.hints')}>
-        <p className="text-xs text-[var(--color-ink-faint)]">{t('hints.none')}</p>
-      </Panel>
-    );
-  }
+  /*
+   * Un paso sin pistas no enseña un panel que diga que no hay pistas: se
+   * quita. Ese hueco vale más para la guía, y anunciar una herramienta
+   * ausente solo hace pensar que falta algo.
+   */
+  if (hints.length === 0) return null;
 
   const usedCount = hints.filter((h) => revealedHints.includes(h.id)).length;
 
   return (
     <Panel
+      scroll={false}
       title={t('panels.hints')}
       action={
         <span className="font-mono text-[10px] text-[var(--color-ink-faint)]">

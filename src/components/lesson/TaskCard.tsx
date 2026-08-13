@@ -6,15 +6,16 @@ import { useCurrentStep, useLessonStore } from '@/stores/useLessonStore';
 import { useEvaluationStore } from '@/stores/useEvaluationStore';
 
 /**
- * Qué hay que hacer, en su propia sección y arriba del todo.
+ * Qué hay que hacer. Ancla fija del panel: nunca se va con el scroll.
  *
  * Antes la instrucción vivía dentro del cuerpo de la guía, después de varios
  * párrafos de explicación. Funcionaba para quien leía en orden, pero quien
  * volvía a la lección o bajaba al panel de pruebas ya no la encontraba: la
- * pregunta «¿y ahora qué tengo que hacer?» no debería exigir releer.
+ * pregunta «¿y ahora qué tengo que hacer?» no debería exigir releer — ni
+ * siquiera desplazarse.
  *
- * Va antes que la explicación a propósito. El objetivo primero, el porqué
- * después: quien ya lo sabe no tiene que buscarlo.
+ * Lleva también el progreso por pasos, que estaba en la guía y se perdía al
+ * bajar: saber cuánto queda es información de cabecera, no de cuerpo.
  */
 export function TaskCard() {
   const t = useTranslations();
@@ -48,6 +49,23 @@ export function TaskCard() {
         <span className="font-mono text-[10px] text-[var(--color-ink-faint)]">
           {t('steps.counter', { current: stepIndex + 1, total })}
         </span>
+      </div>
+
+      {/* Progreso por pasos: segmentos, no barra continua — se lee de un vistazo. */}
+      <div className="mb-3 flex gap-1">
+        {Array.from({ length: total }, (_, i) => (
+          <span
+            key={i}
+            className={
+              'h-1 flex-1 rounded-full ' +
+              (i < stepIndex
+                ? 'bg-[var(--color-success)]'
+                : i === stepIndex
+                  ? 'bg-[var(--color-neon)]'
+                  : 'bg-[var(--color-border)]')
+            }
+          />
+        ))}
       </div>
 
       {/* Tamaño mayor que el resto del panel: es la frase que más se relee. */}

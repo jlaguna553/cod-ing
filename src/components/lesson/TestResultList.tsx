@@ -1,7 +1,17 @@
 'use client';
 
+import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { AlertTriangle, Check, CircleDashed, FlaskConical, TriangleAlert, X } from 'lucide-react';
+import {
+  AlertTriangle,
+  Check,
+  ChevronDown,
+  ChevronUp,
+  CircleDashed,
+  FlaskConical,
+  TriangleAlert,
+  X,
+} from 'lucide-react';
 import { Panel } from '@/components/layout/GameShell';
 import { useEvaluationStore, useStepChecks } from '@/stores/useEvaluationStore';
 
@@ -13,15 +23,23 @@ import { useEvaluationStore, useStepChecks } from '@/stores/useEvaluationStore';
  * está a medio escribir— se muestra en gris. Pintarla en rojo mientras el
  * usuario aún no ha tenido ocasión de acertar es la forma más rápida de que
  * deje de mirar este panel.
+ *
+ * Ocupa la zona fija inferior del panel, aparte del contenido didáctico: en
+ * qué se está fallando es información que debe estar visible **mientras** se
+ * escribe el código, no algo que haya que ir a buscar con el scroll. Se puede
+ * contraer para recuperar altura, y entonces conserva en el encabezado el
+ * recuento y el primer fallo, que es lo mínimo para no perder el hilo.
  */
 export function TestResultList() {
   const t = useTranslations();
   const checks = useStepChecks();
   const stepPassed = useEvaluationStore((s) => s.stepPassed);
   const syntaxError = useEvaluationStore((s) => s.syntaxError);
+  const [collapsed, setCollapsed] = useState(false);
 
   const passed = checks.filter((check) => check.result?.passed).length;
   const total = checks.length;
+  const firstFailure = checks.find((check) => check.result && !check.result.passed);
 
   if (total === 0) {
     return (
@@ -33,16 +51,43 @@ export function TestResultList() {
 
   return (
     <Panel
+      className="max-h-[32vh]"
       title={<span className="flex items-center gap-2"><FlaskConical size={13} /> {t('panels.tests')}</span>}
       action={
-        <span
-          className="font-mono text-[10px]"
-          style={{ color: stepPassed ? 'var(--color-success)' : 'var(--color-ink-faint)' }}
-        >
-          {passed}/{total}
-        </span>
+        <div className="flex items-center gap-2">
+          <span
+            className="font-mono text-[10px]"
+            style={{ color: stepPassed ? 'var(--color-success)' : 'var(--color-ink-faint)' }}
+          >
+            {passed}/{total}
+          </span>
+          <button
+            type="button"
+            onClick={() => setCollapsed((value) => !value)}
+            aria-expanded={!collapsed}
+            title={collapsed ? t('tests.expand') : t('tests.collapse')}
+            className="text-[var(--color-ink-faint)] transition-colors hover:text-[var(--color-ink)]"
+          >
+            {collapsed ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+          </button>
+        </div>
       }
     >
+      {/*
+        Contraído no significa mudo: el primer fallo sigue a la vista, porque
+        es justo el dato por el que se abre este panel.
+      */}
+      {collapsed ? (
+        <p className="text-[11px] leading-snug text-[var(--color-ink-dim)]">
+          {stepPassed ? (
+            <span className="text-[var(--color-success)]">{t('tests.allPassed')}</span>
+          ) : firstFailure ? (
+            t('tests.firstFailure', { message: firstFailure.rule.message })
+          ) : (
+            t('tests.runFirst')
+          )}
+        </p>
+      ) : (
       <div className="flex flex-col gap-1.5">
         {/*
           Un archivo que no compila deja todas las comprobaciones en gris. Sin
@@ -158,6 +203,7 @@ export function TestResultList() {
           );
         })}
       </div>
+      )}
     </Panel>
   );
 }

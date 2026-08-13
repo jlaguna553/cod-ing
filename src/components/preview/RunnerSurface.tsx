@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { AlertTriangle, Loader2, Monitor, SquareTerminal, TerminalSquare } from 'lucide-react';
-import { usesTerminal } from '@/lib/runners/factory';
+import { defaultSurface, needsTabs, surfacesFor } from '@/lib/content/surfaces';
 import { useLessonStore } from '@/stores/useLessonStore';
 import { useRunnerStore } from '@/stores/useRunnerStore';
 import { XtermPane } from '@/components/terminal/XtermPane';
@@ -25,7 +25,7 @@ type Tab = 'preview' | 'console' | 'terminal';
 export function RunnerSurface() {
   const t = useTranslations();
   const mountRef = useRef<HTMLDivElement>(null);
-  const [tab, setTab] = useState<Tab>('preview');
+  const [tab, setTab] = useState<Tab | null>(null);
 
   const lesson = useLessonStore((s) => s.lesson);
   const files = useLessonStore((s) => s.files);
@@ -35,9 +35,18 @@ export function RunnerSurface() {
   const boot = useRunnerStore((s) => s.boot);
   const teardown = useRunnerStore((s) => s.teardown);
 
-  const kind = lesson?.runtime.kind ?? null;
-  const terminalOnly = kind ? usesTerminal(kind) : false;
+  /*
+   * Qué herramientas ofrece esta lección. Una que no se usa no se enseña: a
+   * `js-01` no le sirve una vista previa —es un rectángulo blanco— y a una de
+   * Docker no le sirve una consola aparte de su propia terminal.
+   */
+  const surfaces = lesson ? surfacesFor(lesson) : { preview: true, console: true, terminal: false };
+  const showTabs = needsTabs(surfaces);
+  const active: Tab = tab ?? defaultSurface(surfaces);
   const logCount = useRunnerStore((s) => s.logs.length);
+
+  // Al cambiar de lección se vuelve a la superficie que esa lección necesita.
+  useEffect(() => setTab(null), [lesson?.id]);
 
   useEffect(() => {
     if (!lesson || !mountRef.current) return;
@@ -46,10 +55,6 @@ export function RunnerSurface() {
     // Rearrancar en cada tecleo sería absurdo: solo al cambiar de lección.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lesson?.id]);
-
-  useEffect(() => {
-    if (terminalOnly) setTab('terminal');
-  }, [terminalOnly]);
 
   if (!lesson) {
     return (
@@ -68,29 +73,30 @@ export function RunnerSurface() {
     );
   }
 
-  // La consola se ofrece siempre que haya vista previa: las lecciones de
-  // JavaScript imprimen con `console.log` y su salida no cabe en un iframe.
-  const showTabs = !terminalOnly;
-  const showTerminal = terminalOnly || (hasTerminal && tab === 'terminal');
-  const showConsole = !terminalOnly && tab === 'console';
+  const showTerminal = surfaces.terminal && active === 'terminal';
+  const showConsole = surfaces.console && active === 'console';
 
   return (
     <div className="flex h-full flex-col gap-2">
       {showTabs && (
         <div className="flex shrink-0 gap-1">
-          <TabButton active={tab === 'preview'} onClick={() => setTab('preview')} icon={<Monitor size={11} />}>
-            {t('panels.preview')}
-          </TabButton>
-          <TabButton active={tab === 'console'} onClick={() => setTab('console')} icon={<SquareTerminal size={11} />}>
-            {t('panels.console')}
-            {logCount > 0 && (
-              <span className="ml-1 rounded-full bg-[var(--color-neon)]/20 px-1.5 font-mono text-[9px] text-[var(--color-neon)]">
-                {logCount}
-              </span>
-            )}
-          </TabButton>
-          {hasTerminal && (
-            <TabButton active={tab === 'terminal'} onClick={() => setTab('terminal')} icon={<TerminalSquare size={11} />}>
+          {surfaces.preview && (
+            <TabButton active={active === 'preview'} onClick={() => setTab('preview')} icon={<Monitor size={11} />}>
+              {t('panels.preview')}
+            </TabButton>
+          )}
+          {surfaces.console && (
+            <TabButton active={active === 'console'} onClick={() => setTab('console')} icon={<SquareTerminal size={11} />}>
+              {t('panels.console')}
+              {logCount > 0 && (
+                <span className="ml-1 rounded-full bg-[var(--color-neon)]/20 px-1.5 font-mono text-[9px] text-[var(--color-neon)]">
+                  {logCount}
+                </span>
+              )}
+            </TabButton>
+          )}
+          {surfaces.terminal && hasTerminal && (
+            <TabButton active={active === 'terminal'} onClick={() => setTab('terminal')} icon={<TerminalSquare size={11} />}>
               {t('panels.terminal')}
             </TabButton>
           )}
@@ -111,9 +117,9 @@ export function RunnerSurface() {
         <div
           ref={mountRef}
           className={
-            terminalOnly || showTerminal || showConsole
-              ? 'pointer-events-none absolute inset-0 opacity-0'
-              : 'h-full w-full'
+            surfaces.preview && active === 'preview'
+              ? 'h-full w-full'
+              : 'pointer-events-none absolute inset-0 opacity-0'
           }
         />
 

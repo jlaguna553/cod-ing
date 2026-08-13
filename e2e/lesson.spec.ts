@@ -44,6 +44,18 @@ async function insertInEditor(page: Page, text: string) {
   await page.keyboard.insertText(text);
 }
 
+/**
+ * Deja la consola a la vista.
+ *
+ * En una lección que solo imprime —`js-01`— la consola ES el panel y no hay
+ * pestañas que pulsar; en una visual sí las hay. El test no debería saber
+ * cuál es cuál: pulsa la pestaña si existe.
+ */
+async function openConsole(page: Page) {
+  const tab = page.getByRole('button', { name: /consola/i });
+  if ((await tab.count()) > 0) await tab.click();
+}
+
 test('la lección carga con el editor y el enunciado del paso', async ({ page }) => {
   await page.goto(LESSON);
   await waitForPristineEditor(page);
@@ -343,6 +355,8 @@ test('⭐ el reto tiene su propia sección, después de la explicación', async 
   await expect(task).toContainText('.map()');
 
   // El reto va DESPUÉS de la explicación: primero se entiende, luego se aplica.
+  // Que ahora esté fijado no cambia ese orden — solo que ya no se pierde al
+  // desplazarse por la guía.
   const taskBox = await task.boundingBox();
   const guideBox = await page.getByText('Un array nuevo, no el mismo').boundingBox();
   expect(taskBox!.y).toBeGreaterThan(guideBox!.y);
@@ -407,7 +421,7 @@ test('⭐ la salida de console.log se puede ver en la consola', async ({ page })
 
   // Sin esta pestaña, una lección que imprime con console.log no tiene dónde
   // mostrar su resultado: la vista previa solo enseña el DOM.
-  await page.getByRole('button', { name: /consola/i }).click();
+  await openConsole(page);
   await expect(page.getByRole('log', { name: /consola/i })).toContainText('Ada 10 cyan', { timeout: 15_000 });
 });
 
@@ -423,7 +437,7 @@ test('⭐ el flujo completo de js-01 termina con las comprobaciones en verde', a
   // Se espera a que la ejecución produzca salida antes de validar, en vez de
   // dormir un tiempo fijo: el arranque del iframe varía con la carga.
   await page.getByRole('button', { name: /ejecutar/i }).click();
-  await page.getByRole('button', { name: /consola/i }).click();
+  await openConsole(page);
   // Se busca DENTRO de la consola: «Ada 10 cyan» también aparece en el texto
   // de la regla, y buscarlo en toda la página daba un positivo inmediato que
   // hacía validar antes de que el código hubiera llegado a ejecutarse.
@@ -442,7 +456,7 @@ test('⭐ la salida evaluada solo contiene la ejecución actual', async ({ page 
     "const greet = (name) => 'Hola, ${name}';\n\nconsole.log(greet('Ada'));",
   );
   await page.getByRole('button', { name: /ejecutar/i }).click();
-  await page.getByRole('button', { name: /consola/i }).click();
+  await openConsole(page);
   await expect(page.getByRole('log', { name: /consola/i })).toContainText('Hola, ${name}', {
     timeout: 15_000,
   });
@@ -472,7 +486,7 @@ test('⭐ al terminar la lección hay salida: XP y enlace a la siguiente', async
     "const playerName = 'Ada';\nlet score = 0;\nscore = score + 10;\nconst team = 'cyan';\nconsole.log(playerName, score, team);",
   );
   await page.getByRole('button', { name: /ejecutar/i }).click();
-  await page.getByRole('button', { name: /consola/i }).click();
+  await openConsole(page);
   await expect(page.getByRole('log', { name: /consola/i })).toContainText('Ada 10 cyan', {
     timeout: 20_000,
   });
@@ -510,7 +524,7 @@ test('⭐ css-03: el reset de border-box cambia lo que el navegador dibuja', asy
 
   // Paso 1: la página se mide a sí misma y delata el modelo por defecto.
   await page.getByRole('button', { name: /ejecutar/i }).click();
-  await page.getByRole('button', { name: /consola/i }).click();
+  await openConsole(page);
   const console_ = page.getByRole('log', { name: /consola/i });
   await expect(console_).toContainText('ocupa 356px', { timeout: 20_000 });
 

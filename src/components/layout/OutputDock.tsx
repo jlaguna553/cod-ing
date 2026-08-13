@@ -1,16 +1,24 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { Eraser, Monitor, TerminalSquare } from 'lucide-react';
+import { Eraser, Monitor, SquareTerminal, TerminalSquare } from 'lucide-react';
 import type { RuntimeKind } from '@/lib/content/types';
-import { usesTerminal } from '@/lib/runners/factory';
+import { defaultSurface, surfacesFor } from '@/lib/content/surfaces';
+import { useLessonStore } from '@/stores/useLessonStore';
 import { useRunnerStore } from '@/stores/useRunnerStore';
 import { Panel } from './GameShell';
 import { RunnerSurface } from '@/components/preview/RunnerSurface';
 
 export function OutputDock({ runtimeKind = 'dom' }: { runtimeKind?: RuntimeKind }) {
   const t = useTranslations();
-  const isTerminal = usesTerminal(runtimeKind);
+  const lesson = useLessonStore((s) => s.lesson);
+
+  /*
+   * El título nombra la herramienta que la lección usa de verdad. Antes decía
+   * siempre «Vista previa» salvo en DevOps, así que una lección de consola
+   * anunciaba una vista previa vacía.
+   */
+  const primary = lesson ? defaultSurface(surfacesFor(lesson)) : 'preview';
   const status = useRunnerStore((s) => s.status);
   const logs = useRunnerStore((s) => s.logs);
   const clearLogs = useRunnerStore((s) => s.clearLogs);
@@ -20,8 +28,14 @@ export function OutputDock({ runtimeKind = 'dom' }: { runtimeKind?: RuntimeKind 
       className="h-full"
       title={
         <span className="flex items-center gap-2">
-          {isTerminal ? <TerminalSquare size={13} /> : <Monitor size={13} />}
-          {isTerminal ? t('panels.terminal') : t('panels.preview')}
+          {primary === 'terminal' ? (
+            <TerminalSquare size={13} />
+          ) : primary === 'console' ? (
+            <SquareTerminal size={13} />
+          ) : (
+            <Monitor size={13} />
+          )}
+          {t(`panels.${primary}`)}
         </span>
       }
       action={

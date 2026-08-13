@@ -92,8 +92,7 @@
   "hints": {
     "reveal": "Reveal hint",
     "cost": "Costs {xp} XP",
-    "revealed": "{used} of {total} used",
-    "none": "No hints for this step"
+    "revealed": "{used} of {total} used"
   },
   "tests": {
     "passed": "Passed",
@@ -106,7 +105,10 @@
     "actual": "got",
     "checking": "Checking…",
     "syntaxError": "The code does not compile (line {line})",
-    "syntaxHint": "While there is a syntax error, the checks cannot be evaluated."
+    "syntaxHint": "While there is a syntax error, the checks cannot be evaluated.",
+    "collapse": "Collapse tests",
+    "expand": "Show tests",
+    "firstFailure": "Failing: {message}"
   },
   "achievements": {
     "unlocked": "Achievement unlocked!",
@@ -124,7 +126,9 @@
     "followUps": "Follow-up questions"
   },
   "files": {
-    "modified": "Modified"
+    "modified": "Modified",
+    "single": "Single file",
+    "count": "{count} files"
   },
   "runner": {
     "booting": "Starting environment…",

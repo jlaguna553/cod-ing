@@ -21,6 +21,7 @@ export function InterviewBrief() {
 
   return (
     <Panel
+      scroll={false}
       title={
         <span className="flex items-center gap-2 text-[var(--color-neon-alt)]">
           <Briefcase size={13} />

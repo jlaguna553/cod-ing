@@ -6,6 +6,17 @@ import type { Locale } from '@/lib/content/types';
 import { useLessonStore } from '@/stores/useLessonStore';
 import { useRunnerStore, type LogLine } from '@/stores/useRunnerStore';
 import { useShallow } from 'zustand/react/shallow';
+/*
+ * Hoja de estilos de xterm. Sin ella la terminal *parece* funcionar —el
+ * renderizador DOM inyecta sus propios estilos para las filas— pero le faltan
+ * dos cosas que sí son suyas: el `.xterm-char-measure-element` queda visible
+ * (una fila de `hhhh…` sobre la salida) y el viewport se queda a 0 de alto, de
+ * modo que no se puede subir a releer lo que ya ha salido.
+ *
+ * Se importa en el componente y no en el CSS global a propósito: es la
+ * dependencia de este componente, y así viaja con él.
+ */
+import '@xterm/xterm/css/xterm.css';
 
 /**
  * Terminal interactiva sobre xterm.js.

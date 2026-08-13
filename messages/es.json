@@ -92,8 +92,7 @@
   "hints": {
     "reveal": "Revelar pista",
     "cost": "Cuesta {xp} XP",
-    "revealed": "{used} de {total} usadas",
-    "none": "Sin pistas para este paso"
+    "revealed": "{used} de {total} usadas"
   },
   "tests": {
     "passed": "Superada",
@@ -106,7 +105,10 @@
     "actual": "obtenido",
     "checking": "Comprobando…",
     "syntaxError": "El código no compila (línea {line})",
-    "syntaxHint": "Mientras haya un error de sintaxis, las comprobaciones no pueden evaluarse."
+    "syntaxHint": "Mientras haya un error de sintaxis, las comprobaciones no pueden evaluarse.",
+    "collapse": "Contraer pruebas",
+    "expand": "Ver pruebas",
+    "firstFailure": "Falla: {message}"
   },
   "achievements": {
     "unlocked": "¡Logro desbloqueado!",
@@ -124,7 +126,9 @@
     "followUps": "Preguntas de seguimiento"
   },
   "files": {
-    "modified": "Modificado"
+    "modified": "Modificado",
+    "single": "Un solo archivo",
+    "count": "{count} archivos"
   },
   "runner": {
     "booting": "Arrancando entorno…",

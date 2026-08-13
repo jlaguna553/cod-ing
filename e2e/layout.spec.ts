@@ -1,0 +1,98 @@
+import { expect, test, type Page } from '@playwright/test';
+
+/**
+ * Invariantes del layout de la pantalla de juego.
+ *
+ * Lo que se comprueba aquí no es estética: es que las dos piezas que se
+ * consultan *mientras* se escribe código —el reto y las pruebas— sigan en
+ * pantalla después de desplazarse por una guía larga, y que una lección no
+ * ofrezca herramientas que no usa.
+ */
+
+async function waitForEditor(page: Page) {
+  await page.waitForSelector('.monaco-editor', { timeout: 30_000 });
+  await expect(page.locator('.view-lines')).not.toBeEmpty({ timeout: 20_000 });
+}
+
+/** La región que scrollea: la guía. */
+function guide(page: Page) {
+  return page.getByRole('heading', { name: /^guía$/i }).locator('xpath=ancestor::section[1]');
+}
+
+test('⭐ el reto y las pruebas sobreviven al scroll de la guía', async ({ page }) => {
+  // docker-05 tiene los pasos más largos del temario: si algo se va, se va aquí.
+  await page.goto('/es/play/devops/docker-05-images-layers');
+  await waitForEditor(page);
+
+  const task = page.getByRole('region', { name: /tu turno/i });
+  const tests = page.getByRole('heading', { name: /^pruebas$/i });
+
+  await expect(task).toBeInViewport();
+  await expect(tests).toBeInViewport();
+
+  const before = await task.boundingBox();
+
+  // Se desplaza el contenido didáctico hasta el fondo.
+  const scroller = guide(page).locator('xpath=ancestor::div[contains(@class,"overflow-y-auto")][1]');
+  await scroller.evaluate((element) => element.scrollTo(0, element.scrollHeight));
+  await expect
+    .poll(async () => scroller.evaluate((element) => element.scrollTop))
+    .toBeGreaterThan(100);
+
+  // El reto no se ha movido ni un píxel, y las pruebas siguen a la vista.
+  await expect(task).toBeInViewport();
+  await expect(tests).toBeInViewport();
+  expect(await task.boundingBox()).toEqual(before);
+});
+
+test('⭐ la página no scrollea: el scroll vive dentro de la guía', async ({ page }) => {
+  await page.goto('/es/play/devops/docker-05-images-layers');
+  await waitForEditor(page);
+
+  const overflow = await page.evaluate(() => ({
+    scroll: document.documentElement.scrollHeight,
+    client: document.documentElement.clientHeight,
+  }));
+  // Un par de píxeles de holgura por redondeo de subpíxel.
+  expect(overflow.scroll).toBeLessThanOrEqual(overflow.client + 2);
+});
+
+test('⭐ una lección de consola no ofrece una vista previa vacía', async ({ page }) => {
+  await page.goto('/es/play/frontend/js-01-variables');
+  await waitForEditor(page);
+
+  // Sin pestañas: la única salida es la consola, y el panel lo dice.
+  await expect(page.getByRole('button', { name: /vista previa/i })).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: /consola/i })).toBeVisible();
+
+  await page.getByRole('button', { name: /ejecutar/i }).click();
+  await expect(page.getByRole('log', { name: /consola/i })).toContainText('Ada', { timeout: 20_000 });
+});
+
+test('⭐ una lección visual sigue abriendo en la vista previa', async ({ page }) => {
+  await page.goto('/es/play/frontend/css-03-box-model');
+  await waitForEditor(page);
+
+  await expect(page.getByRole('button', { name: /vista previa/i })).toBeVisible();
+  await expect(page.getByRole('button', { name: /consola/i })).toBeVisible();
+});
+
+test('⭐ el árbol se pliega cuando la lección tiene un solo archivo', async ({ page }) => {
+  await page.goto('/es/play/frontend/js-01-variables');
+  await waitForEditor(page);
+
+  const toggle = page.getByRole('button', { expanded: false }).filter({ hasText: /archivo/i });
+  await expect(toggle).toBeVisible();
+
+  // Plegado no es inaccesible: sigue abriéndose.
+  await toggle.click();
+  await expect(page.getByRole('button', { name: /index\.js/ })).toBeVisible();
+});
+
+test('⭐ el árbol se muestra desplegado cuando hay varios archivos', async ({ page }) => {
+  await page.goto('/es/play/frontend/css-03-box-model');
+  await waitForEditor(page);
+
+  await expect(page.getByRole('button', { name: /styles\.css/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: /index\.html/ })).toBeVisible();
+});
