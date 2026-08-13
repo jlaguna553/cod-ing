@@ -598,6 +598,71 @@ que la plantilla llega renderizada, que `v-if`/`v-for` funcionan y que el error 
 
 ---
 
+### ADR-13 · Vue se compila y se ejecuta en casa, sin bundler ni terceros
+
+**Contexto.** Sandpack no compila la plantilla de un SFC de Vue 3: se probaron sus seis
+plantillas contra un componente mínimo y ninguna renderiza — el componente monta sin
+función de render y Vue pinta un comentario vacío. Y `2.19.8` es la última versión
+publicada del cliente, así que actualizar no era salida.
+
+**Decisión.** Hacer por dentro lo que hacía el bundler: compilar cada `.vue` con
+`@vue/compiler-sfc` —el compilador oficial, que corre en el navegador— y montar el grafo
+de módulos a mano sobre `import()` nativo. El runtime de Vue son **168 KB** que se sirven
+desde nuestro propio origen, copiados de `node_modules` en cada build.
+
+Los módulos se crean como blobs **dentro del iframe** y en orden de dependencia: cada uno
+sustituye sus marcadores `@@id@@` por la URL del blob que ya existe. Así no hace falta un
+import map, que tendría que estar completo antes de evaluar el primer módulo.
+
+**Por qué no un CDN.** jsDelivr funciona y es una línea menos, pero ata cada lección a que
+un dominio ajeno esté disponible, sin bloquear y sin cambiar de política de precios. Ya
+arrastramos esa condición con Sandpack y el proyecto tiene una restricción explícita de
+coste cero: sirviéndolo nosotros, la versión queda clavada al `package.json` y no hay nada
+más que pueda caerse.
+
+**Guardia.** `tests/vue-sfc.test.ts` comprueba en Node que del SFC sale un módulo **con la
+plantilla dentro** —era exactamente el fallo de Sandpack— y `e2e/vue.spec.ts` recorre las
+lecciones comprobando que lo que prometen es lo que renderizan, leyendo las soluciones del
+propio JSON.
+
+---
+
+### ADR-14 · C# se simula, pero la salida sale del código del usuario
+
+**Contexto.** Ejecutar C# de verdad cuesta decenas de megas de WASM en el cliente o dinero
+en el servidor. La restricción del proyecto es **coste cero**, y con ella la simulación
+está permitida.
+
+**La línea que decide si una simulación vale algo:**
+
+> La salida se calcula a partir del código del usuario. Nunca se imprime lo que la lección
+> espera oír.
+
+Un `dotnet test` que siempre dijera «Superados: 6» sería un decorado, y peor que no tener
+nada: daría por buena una solución equivocada.
+
+**Decisión.** Se simula un subconjunto **acotado y declarado**: el cuerpo de un método que
+devuelve una expresión. Los operadores de ese subconjunto —`%`, `&&`, `||`, `==`, `!=`,
+`<`, `>`, `!`— significan lo mismo en C# y en JavaScript sobre enteros y booleanos, así que
+la expresión se analiza con el `acorn` que ya está en el proyecto y se **interpreta sobre
+su AST**, sin `eval` y aceptando solo lo que está en la lista. `==` se traduce a `===` a
+propósito: `0 == false` sería cierto con el `==` laxo de JavaScript y en C# ni compila.
+
+Los casos de prueba se leen de los `[InlineData]` del fichero de xUnit que el usuario
+**tiene abierto en el editor**: lo que se ejecuta es lo que puede leer, no una lista
+escondida en el simulador.
+
+Lo que queda fuera —bucles, estado, E/S— se informa como error de compilación en lugar de
+inventarse un resultado. Cuando una lección los necesite hará falta un runtime de verdad, y
+este módulo no debe estirarse para fingir que lo es.
+
+**Guardia.** `tests/csharp.test.ts` incluye el test que separa el simulador del decorado:
+con la solución que olvida la excepción del año 400, **debe fallar** y decir que el caso
+roto es el 2000. Si alguien convirtiera esto en un decorado, ese test es el que se pondría
+en rojo.
+
+---
+
 ## 5. Modelo de datos de progreso (servidor)
 
 ```

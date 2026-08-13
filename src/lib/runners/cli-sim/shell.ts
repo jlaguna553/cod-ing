@@ -1,3 +1,4 @@
+import { detectTarget, extractMethod, formatTestOutput, runTests } from './csharp';
 import { dockerBuild } from './docker-build';
 import { isTemplate, scaffoldVite, VITE_TEMPLATES } from './npm-scenario';
 import { VirtualFs } from './vfs';
@@ -69,6 +70,8 @@ export class Shell {
         return this.npm(args, binary);
       case 'docker':
         return this.docker(args);
+      case 'dotnet':
+        return this.dotnet(args);
       case 'ls':
         return this.ls(args);
       case 'cat':
@@ -266,6 +269,53 @@ export class Shell {
     }
 
     return fail(`docker: '${subcommand ?? ''}' no está simulado en esta lección.`);
+  }
+
+  /* ── dotnet ──────────────────────────────────────────────────── */
+
+  /**
+   * `dotnet` simulado (ADR-14).
+   *
+   * Lo que imprime **sale del código del usuario**: `dotnet test` evalúa de
+   * verdad el método contra los casos que declara el fichero de pruebas que el
+   * usuario tiene abierto. Un simulador que escupiera siempre «Superados: 4»
+   * sería un decorado, y la diferencia se nota en cuanto escribes mal la
+   * condición: aquí falla, y dice en qué caso.
+   */
+  private dotnet(args: string[]): ShellResult {
+    const [subcommand] = args;
+
+    const paths = this.fs.paths().filter((path) => path.endsWith('.cs'));
+    const testPath = paths.find((path) => /tests?\.cs$/i.test(path));
+    const sourcePath = paths.find((path) => path !== testPath);
+
+    if (!sourcePath) return fail('MSBUILD : error MSB1003: no se encontró ningún proyecto.');
+
+    const source = this.fs.read(sourcePath) ?? '';
+    const testSource = testPath ? (this.fs.read(testPath) ?? '') : '';
+    const project = sourcePath.split('/').at(-1)?.replace(/\.cs$/, '') ?? 'App';
+
+    if (subcommand === 'build') {
+      const target = detectTarget(testSource);
+      const method = target ? extractMethod(source, target) : null;
+      return method
+        ? ok(`  ${project} -> /app/bin/Debug/net8.0/${project}.dll\n\nCompilación correcta.`)
+        : fail(
+            `error CS0103: no se encontró un método '${detectTarget(testSource) ?? '?'}' ` +
+              'que devuelva una expresión.\n\nError de compilación.',
+          );
+    }
+
+    if (subcommand === 'test') {
+      const target = detectTarget(testSource);
+      if (!target) return fail('error: no hay fichero de pruebas con casos `[InlineData]`.');
+
+      const outcome = runTests(source, testSource, target);
+      const output = formatTestOutput(outcome, project);
+      return outcome.error || outcome.failed > 0 ? fail(output) : ok(output);
+    }
+
+    return fail(`dotnet: '${subcommand ?? ''}' no está simulado en esta lección.`);
   }
 
   /* ── utilidades de archivos ──────────────────────────────────── */

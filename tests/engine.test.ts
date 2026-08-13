@@ -266,11 +266,18 @@ function solvedWorkspace(lesson: Lesson): Record<string, string> {
 
     for (const command of transcriptRule.expectedCommands) {
       const result = shell.execute(command);
-      // Si el comando esperado falla, la lección pide algo imposible.
-      assert.equal(
-        result.exitCode,
-        0,
-        `[${lesson.id}] el comando esperado "${command}" falla: ${result.stderr}`,
+      /*
+       * Se exige que el comando EXISTA y esté permitido, no que tenga éxito.
+       *
+       * 127 es «no such command» y 126 «no disponible en esta lección»: las dos
+       * significan que la lección pide algo imposible. Un código distinto de
+       * cero por otro motivo puede ser justo lo que la lección quiere — en
+       * `csharp-01` el primer `dotnet test` **debe** fallar, porque el método
+       * todavía devuelve `false` y ver ese fallo es el paso 1.
+       */
+      assert.ok(
+        result.exitCode !== 127 && result.exitCode !== 126,
+        `[${lesson.id}] el comando esperado "${command}" no existe o está bloqueado: ${result.stderr}`,
       );
       // Tras crear el proyecto hay que entrar en su carpeta, igual que el usuario.
       if (command.startsWith('npm create')) {

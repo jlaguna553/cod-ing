@@ -59,6 +59,23 @@ interface RunnerState {
   teardown: () => void;
 }
 
+/**
+ * Vuelca al runner lo que el usuario tiene escrito, sin esperar al debounce.
+ *
+ * Se importa de forma perezosa para no crear un ciclo entre los dos stores:
+ * el de lección no sabe nada del runner, y así sigue.
+ */
+async function flushEditorBuffer(): Promise<void> {
+  const { useLessonStore } = await import('./useLessonStore');
+  const files = useLessonStore.getState().files;
+  await Promise.all(
+    Object.entries(files).map(async ([path, content]) => {
+      await activeRunner?.writeFile(path, content);
+      activeShell?.getFs().write(path, content);
+    }),
+  );
+}
+
 /** Techo del buffer: una lección larga no puede acumular megas de logs. */
 const MAX_LOGS = 500;
 
@@ -124,6 +141,16 @@ export const useRunnerStore = create<RunnerState>()((set, get) => ({
    * la terminal sería decorativa.
    */
   runCommand: async (command) => {
+    /*
+     * El buffer del editor se vuelca ANTES de ejecutar.
+     *
+     * El botón «Ejecutar» ya lo hacía; la terminal no, y el debounce de 250 ms
+     * bastaba para que `dotnet test` corriera contra la versión anterior del
+     * archivo. El síntoma engaña mucho: la salida es coherente, pero describe
+     * un código que ya no está en pantalla.
+     */
+    await flushEditorBuffer();
+
     // `cli-sim` es una shell por dentro: su propio `run` ya ejecuta comandos.
     if (!activeShell) return get().execute(command);
 

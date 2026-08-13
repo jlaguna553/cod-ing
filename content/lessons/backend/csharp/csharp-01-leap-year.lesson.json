@@ -1,0 +1,241 @@
+{
+  "$schema": "../../../schema/lesson.schema.json",
+  "schemaVersion": 1,
+
+  "id": "csharp-01-leap-year",
+  "track": "backend",
+  "module": "csharp",
+  "order": 1,
+
+  "kind": "challenge",
+  "difficulty": "apprentice",
+  "estimatedMinutes": 24,
+
+  "title": {
+    "es": "Años bisiestos en C#: tres reglas y una que casi nadie escribe",
+    "en": "Leap years in C#: three rules, and one almost nobody writes"
+  },
+  "summary": {
+    "es": "El ejercicio donde la solución obvia funciona 96 de cada 100 veces. Y qué pasa el año que no.",
+    "en": "The exercise where the obvious solution works 96 times out of 100. And what happens the year it doesn't."
+  },
+  "concepts": ["csharp", "dotnet", "operadores", "xunit", "precedencia"],
+  "prerequisites": [],
+
+  "runtime": {
+    "kind": "cli-sim",
+    "cliScenario": "dotnet/xunit",
+    "command": "dotnet test",
+    "dependencies": {},
+    "timeoutMs": 15000,
+    "terminal": {
+      "enabled": true,
+      "allowedCommands": ["dotnet", "ls", "cat", "cd", "pwd", "clear"]
+    }
+  },
+
+  "workspace": {
+    "entry": "Leap.cs",
+    "allowCreate": false,
+    "allowDelete": false,
+    "protectedPaths": ["LeapTests.cs"],
+    "files": [
+      {
+        "path": "Leap.cs",
+        "active": true,
+        "content": "namespace Calendario;\n\npublic static class Leap\n{\n    // TODO: devuelve si el año es bisiesto.\n    // Ahora mismo dice que ninguno lo es.\n    public static bool EsBisiesto(int year) => false;\n}\n"
+      },
+      {
+        "path": "LeapTests.cs",
+        "readOnly": true,
+        "content": "using Xunit;\n\nnamespace Calendario.Tests;\n\npublic class LeapTests\n{\n    [InlineData(1996, true)]   // divisible entre 4\n    [InlineData(1997, false)]  // no divisible entre 4\n    [InlineData(1900, false)]  // divisible entre 100, pero no entre 400\n    [InlineData(2000, true)]   // divisible entre 400\n    [InlineData(2024, true)]\n    [InlineData(2100, false)]\n    [Theory]\n    public void EsBisiesto(int year, bool expected) =>\n        Assert.Equal(expected, Leap.EsBisiesto(year));\n}\n"
+      }
+    ]
+  },
+
+  "rules": [
+    {
+      "id": "ran-tests",
+      "kind": "cli-transcript",
+      "expectedCommands": ["dotnet test"],
+      "allowExtra": true,
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Ejecuta `dotnet test` en la terminal. Los casos que corre son los que puedes leer en `LeapTests.cs`.",
+        "en": "Run `dotnet test` in the terminal. The cases it runs are the ones you can read in `LeapTests.cs`."
+      },
+      "successMessage": {
+        "es": "Pruebas ejecutadas contra tu código.",
+        "en": "Tests run against your code."
+      },
+      "points": 20
+    },
+    {
+      "id": "all-green",
+      "kind": "stdout-match",
+      "matches": "Con error: 0",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Todavía falla algún caso. La salida dice cuál: mira el año que aparece y pregúntate qué regla se le aplica.",
+        "en": "Some case still fails. The output says which: look at the year shown and ask which rule applies to it."
+      },
+      "successMessage": {
+        "es": "Los seis casos en verde, incluidos 1900 y 2000.",
+        "en": "All six cases green, 1900 and 2000 included."
+      },
+      "points": 50
+    },
+    {
+      "id": "no-hardcoded-years",
+      "kind": "regex-forbid",
+      "file": "Leap.cs",
+      "pattern": "year\\s*==\\s*(1900|2000|1996|2024|2100|1997)",
+      "flags": "m",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Nada de comparar con los años del test: eso pasa las pruebas y no resuelve el problema. La regla tiene que valer para 2400 y para 1800.",
+        "en": "Don't compare against the test's years: that passes the tests without solving the problem. The rule has to hold for 2400 and 1800 too."
+      },
+      "points": 25
+    },
+    {
+      "id": "uses-modulo",
+      "kind": "regex-must",
+      "file": "Leap.cs",
+      "pattern": "year\\s*%\\s*400",
+      "flags": "m",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Falta la regla de los 400. Es la que separa 1900 de 2000, y la que casi nadie escribe a la primera.",
+        "en": "The 400 rule is missing. It's what separates 1900 from 2000, and what almost nobody writes first time."
+      },
+      "points": 25
+    }
+  ],
+
+  "steps": [
+    {
+      "id": "step-1-run",
+      "title": {
+        "es": "Lee las pruebas antes que el enunciado",
+        "en": "Read the tests before the statement"
+      },
+      "body": {
+        "es": "Abre `LeapTests.cs`. Es un fichero de xUnit y, aunque no hayas escrito C# nunca, se lee solo:\n\n```csharp\n[InlineData(1900, false)]\n[Theory]\npublic void EsBisiesto(int year, bool expected) =>\n    Assert.Equal(expected, Leap.EsBisiesto(year));\n```\n\n`[Theory]` marca una prueba que se ejecuta **una vez por cada `[InlineData]`**, con esos valores como parámetros. Seis atributos, seis ejecuciones. Es el equivalente a los casos de tabla de otros lenguajes, y es la forma normal de probar una función pura.\n\nEsos seis casos son el enunciado de verdad. El texto de un ejercicio se puede interpretar mal; una tabla de entradas y salidas esperadas, no. Fíjate especialmente en dos filas que parecen contradecirse:\n\n```\n1900 → false\n2000 → true\n```\n\nLos dos son divisibles entre 4 y entre 100. Uno es bisiesto y el otro no. Ahí está el ejercicio entero.\n\nEjecuta `dotnet test` con el código tal como está. Fallarán cuatro de seis, porque `EsBisiesto` devuelve siempre `false` — y aun así acierta dos, que es un buen recordatorio de que «pasa algunas pruebas» no significa nada.\n\n**Nota sobre este entorno:** aquí no hay un .NET real; se simula la ejecución del método. Lo que sí es real es que la salida **sale de tu código**: si te equivocas, falla, y te dice en qué año.",
+        "en": "Open `LeapTests.cs`. It's an xUnit file and, even if you've never written C#, it reads by itself:\n\n```csharp\n[InlineData(1900, false)]\n[Theory]\npublic void EsBisiesto(int year, bool expected) =>\n    Assert.Equal(expected, Leap.EsBisiesto(year));\n```\n\n`[Theory]` marks a test that runs **once per `[InlineData]`**, with those values as parameters. Six attributes, six runs. It's the equivalent of table-driven cases in other languages, and it's the normal way to test a pure function.\n\nThose six cases are the real statement. An exercise's prose can be misread; a table of inputs and expected outputs cannot. Look especially at two rows that seem to contradict each other:\n\n```\n1900 → false\n2000 → true\n```\n\nBoth are divisible by 4 and by 100. One is a leap year and the other isn't. That's the whole exercise.\n\nRun `dotnet test` with the code as it stands. Four of six will fail, because `EsBisiesto` always returns `false` — and it still gets two right, a good reminder that \"passes some tests\" means nothing.\n\n**About this environment:** there's no real .NET here; the method's execution is simulated. What is real is that the output **comes from your code**: if you get it wrong, it fails, and tells you which year."
+      },
+      "task": {
+        "es": "Ejecuta `dotnet test` en la terminal y lee qué casos fallan.",
+        "en": "Run `dotnet test` in the terminal and read which cases fail."
+      },
+      "focusFile": "LeapTests.cs",
+      "ruleIds": ["ran-tests"],
+      "xp": 25
+    },
+    {
+      "id": "step-2-rules",
+      "title": {
+        "es": "Tres reglas, no una",
+        "en": "Three rules, not one"
+      },
+      "body": {
+        "es": "La regla del calendario gregoriano tiene tres niveles, y cada uno corrige al anterior:\n\n1. Un año es bisiesto si es divisible entre **4**.\n2. **Salvo** que sea divisible entre 100 — entonces no lo es.\n3. **Salvo** que además sea divisible entre 400 — entonces sí.\n\nPor eso 1900 no fue bisiesto y 2000 sí. La corrección existe porque el año solar dura 365,2422 días: sumar un día cada cuatro años se pasa un poco, y las excepciones de 100 y 400 compensan ese exceso.\n\nCasi todo el mundo escribe las dos primeras y se olvida de la tercera. El código funciona **96 años de cada 100** y falla exactamente en los años que terminan en dos ceros — uno por siglo. Es el tipo de bug que no aparece en ninguna prueba manual y explota veinticinco años después.\n\nEn C# el operador de módulo es `%`, igual que en JavaScript, y la comparación es `==`. Con `&&` y `||` se combinan condiciones, y **`&&` tiene más prioridad que `||`** — de modo que `a && b || c` significa `(a && b) || c`. Escribir los paréntesis aunque no hagan falta es lo normal en código de producción: el que lo lea mañana no tiene por qué recordar la tabla de precedencias.\n\nEl método usa un **cuerpo de expresión** (`=>` en vez de llaves). Es la forma idiomática en C# moderno para un método que solo devuelve algo, y evita el `return` y las llaves.",
+        "en": "The Gregorian calendar's rule has three levels, each correcting the previous one:\n\n1. A year is a leap year if it's divisible by **4**.\n2. **Unless** it's divisible by 100 — then it isn't.\n3. **Unless** it's also divisible by 400 — then it is.\n\nThat's why 1900 wasn't a leap year and 2000 was. The correction exists because the solar year lasts 365.2422 days: adding a day every four years overshoots slightly, and the 100 and 400 exceptions compensate.\n\nAlmost everyone writes the first two rules and forgets the third. The code works **96 years out of 100** and fails exactly on years ending in two zeros — one per century. It's the kind of bug no manual test catches and that explodes twenty-five years later.\n\nIn C# the modulo operator is `%`, same as JavaScript, and comparison is `==`. Conditions combine with `&&` and `||`, and **`&&` binds tighter than `||`** — so `a && b || c` means `(a && b) || c`. Writing the parentheses even when unnecessary is standard in production code: whoever reads it tomorrow shouldn't need to recall the precedence table.\n\nThe method uses an **expression body** (`=>` instead of braces). It's the idiomatic form in modern C# for a method that only returns something, and it drops the `return` and the braces."
+      },
+      "task": {
+        "es": "Escribe `EsBisiesto` con las tres reglas y ejecuta `dotnet test` hasta que los seis casos pasen.",
+        "en": "Write `EsBisiesto` with all three rules and run `dotnet test` until all six cases pass."
+      },
+      "focusFile": "Leap.cs",
+      "focusLines": [7, 7],
+      "ruleIds": ["all-green", "uses-modulo", "no-hardcoded-years", "ran-tests"],
+      "xp": 60,
+      "hints": [
+        {
+          "id": "h-shape",
+          "tier": 1,
+          "text": {
+            "es": "Una sola expresión: divisible entre 4 **y** (no divisible entre 100 **o** sí divisible entre 400). Los paréntesis del medio no sobran.",
+            "en": "A single expression: divisible by 4 **and** (not divisible by 100 **or** divisible by 400). The middle parentheses are not optional."
+          },
+          "xpPenalty": 8,
+          "autoOfferAfterSeconds": 100
+        },
+        {
+          "id": "h-modulo",
+          "tier": 2,
+          "text": {
+            "es": "«Divisible entre N» se escribe `year % N == 0`, y «no divisible» es `!= 0`. Con eso ya tienes las tres piezas.",
+            "en": "\"Divisible by N\" is `year % N == 0`, and \"not divisible\" is `!= 0`. That gives you all three pieces."
+          },
+          "xpPenalty": 12
+        }
+      ],
+      "solution": [
+        {
+          "path": "Leap.cs",
+          "content": "namespace Calendario;\n\npublic static class Leap\n{\n    public static bool EsBisiesto(int year) =>\n        year % 4 == 0 && (year % 100 != 0 || year % 400 == 0);\n}\n"
+        }
+      ],
+      "bestPractice": {
+        "es": "**Estándar de la industria:** en código real esto no se escribe a mano. .NET trae `DateTime.IsLeapYear(year)`, y usarlo es lo correcto — la biblioteca estándar ya resolvió el caso raro y lo tiene probado. El ejercicio sigue valiendo por lo que enseña: que una regla con excepciones anidadas es donde se esconden los bugs de baja frecuencia, esos que fallan un año de cada cien.",
+        "en": "**Industry standard:** in real code you don't write this by hand. .NET ships `DateTime.IsLeapYear(year)`, and using it is the right call — the standard library already solved the odd case and has it tested. The exercise still earns its place for what it teaches: a rule with nested exceptions is where low-frequency bugs hide, the ones that fail one year in a hundred."
+      }
+    },
+    {
+      "id": "step-3-boundaries",
+      "title": {
+        "es": "Los casos que el test no trae",
+        "en": "The cases the test doesn't ship"
+      },
+      "body": {
+        "es": "Tus seis casos pasan. Eso no significa que la función sea correcta: significa que es correcta **para esos seis**.\n\nMerece la pena mirar qué no cubre esa tabla:\n\n- **El año 0 y los negativos.** `0 % 400 == 0`, así que la función devuelve `true`. ¿Es correcto? En el calendario proléptico gregoriano, sí. Pero si el dominio no admite años negativos, la respuesta no es «true», es **rechazar la entrada** — y eso es una decisión de diseño que el ejercicio no menciona.\n- **El siguiente siglo bisiesto.** 2400 es `true` y 2300 es `false`. Ninguno está en la tabla, y son los que romperían una solución que solo mirase los dos primeros niveles.\n- **El desbordamiento.** `int` en C# llega a 2.147.483.647. No es un problema para años, pero sí el reflejo que conviene tener: preguntarse siempre por los extremos del tipo.\n\nAñade tú un caso más al razonamiento: **2400**. Si tu expresión es la correcta, ya lo acierta sin tocar nada — y esa es la diferencia entre resolver el problema y satisfacer al test. Una solución que compare con los años concretos de la tabla pasaría las seis pruebas y fallaría en 2400; por eso este ejercicio prohíbe explícitamente escribirlos.\n\nEs, en pequeño, el argumento entero a favor de las pruebas basadas en propiedades frente a las de ejemplos: los ejemplos comprueban lo que se te ocurrió; la propiedad comprueba la regla.",
+        "en": "Your six cases pass. That doesn't mean the function is correct: it means it's correct **for those six**.\n\nIt's worth looking at what that table doesn't cover:\n\n- **Year 0 and negatives.** `0 % 400 == 0`, so the function returns `true`. Is that right? In the proleptic Gregorian calendar, yes. But if the domain doesn't allow negative years, the answer isn't \"true\", it's **rejecting the input** — and that's a design decision the exercise never mentions.\n- **The next leap century.** 2400 is `true` and 2300 is `false`. Neither is in the table, and they're what would break a solution that only handled the first two levels.\n- **Overflow.** `int` in C# reaches 2,147,483,647. Not a problem for years, but it's the reflex worth having: always ask about the type's extremes.\n\nAdd one more case to your reasoning: **2400**. If your expression is right, it already gets it without touching anything — and that's the difference between solving the problem and satisfying the test. A solution comparing against the table's specific years would pass all six and fail on 2400; that's why this exercise explicitly forbids writing them.\n\nIt is, in miniature, the whole argument for property-based testing over example-based: examples check what occurred to you; the property checks the rule."
+      },
+      "task": {
+        "es": "Comprueba que tu expresión acierta 2400 y 2300 sin añadir código, y vuelve a ejecutar `dotnet test`.",
+        "en": "Check that your expression gets 2400 and 2300 right without adding code, and run `dotnet test` again."
+      },
+      "focusFile": "Leap.cs",
+      "ruleIds": ["all-green", "no-hardcoded-years"],
+      "xp": 35,
+      "solution": [
+        {
+          "path": "Leap.cs",
+          "content": "namespace Calendario;\n\npublic static class Leap\n{\n    public static bool EsBisiesto(int year) =>\n        year % 4 == 0 && (year % 100 != 0 || year % 400 == 0);\n}\n"
+        }
+      ],
+      "bestPractice": {
+        "es": "**Pregunta de entrevista frecuente:** «¿cómo probarías esta función?» La respuesta floja enumera ejemplos. La buena nombra las **clases de equivalencia** —divisible entre 4 y no entre 100; entre 100 y no entre 400; entre 400; ninguna— y elige un representante de cada una. Son cuatro casos, no seis, y cubren más.",
+        "en": "**Common interview question:** \"how would you test this function?\" The weak answer lists examples. The good one names the **equivalence classes** — divisible by 4 but not 100; by 100 but not 400; by 400; none — and picks one representative of each. That's four cases, not six, and it covers more."
+      }
+    }
+  ],
+
+  "drills": [],
+
+  "reward": {
+    "baseXp": 120,
+    "flawlessBonus": 45,
+    "noHintBonus": 25,
+    "comboMultiplierCap": 3,
+    "achievements": ["first-steps"]
+  },
+
+  "solution": {
+    "files": [
+      {
+        "path": "Leap.cs",
+        "content": "namespace Calendario;\n\npublic static class Leap\n{\n    public static bool EsBisiesto(int year) =>\n        year % 4 == 0 && (year % 100 != 0 || year % 400 == 0);\n}\n"
+      }
+    ],
+    "explanation": {
+      "es": "Una línea con tres reglas anidadas, y la tercera es la que casi nadie escribe. Los paréntesis del medio no son decorativos: sin ellos, `&&` se evalúa antes que `||` y la expresión pasa a significar otra cosa. Y lo que de verdad se lleva uno del ejercicio no es la fórmula —.NET ya trae `DateTime.IsLeapYear`— sino el hábito de mirar la tabla de casos antes que el enunciado.",
+      "en": "One line with three nested rules, and the third is the one almost nobody writes. The middle parentheses aren't decorative: without them, `&&` evaluates before `||` and the expression means something else. And what you actually take from the exercise isn't the formula — .NET already ships `DateTime.IsLeapYear` — but the habit of reading the table of cases before the prose."
+    }
+  }
+}
