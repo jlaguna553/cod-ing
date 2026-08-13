@@ -52,6 +52,12 @@ export function GameShell({
  * dentro de una zona ya desplazable debe pasar `scroll={false}`: dos barras
  * anidadas hacen que arrastrar la de fuera mueva unos píxeles y se pare,
  * porque el contenido se está desplazando por dentro.
+ *
+ * Y con `scroll={false}` el panel además **no puede encogerse**. Los dos
+ * ajustes van juntos y por el mismo motivo: sin scroll propio nada recorta su
+ * contenido, así que si el contenedor flex lo comprime —cosa que hace por
+ * defecto— el texto se sale por abajo y se dibuja encima del panel siguiente.
+ * Era justo lo que pasaba: la guía se derramaba sobre las pistas.
  */
 export function Panel({
   title,
@@ -68,7 +74,10 @@ export function Panel({
 }) {
   return (
     <section
-      className={`flex min-h-0 flex-col rounded-[var(--radius-panel)] border border-[var(--color-border)] bg-[var(--color-panel)] ${className}`}
+      className={
+        'flex flex-col rounded-[var(--radius-panel)] border border-[var(--color-border)] ' +
+        `bg-[var(--color-panel)] ${scroll ? 'min-h-0' : 'shrink-0'} ${className}`
+      }
     >
       {title && (
         <header className="flex shrink-0 items-center justify-between border-b border-[var(--color-border)] px-3 py-2">

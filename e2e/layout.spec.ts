@@ -134,3 +134,42 @@ test('⭐ el aviso nombra las lecciones, no un número', async ({ page }) => {
     );
   }
 });
+
+test('⭐ los paneles de la guía no se solapan entre sí', async ({ page }) => {
+  // Con `scroll={false}` nada recorta el contenido del panel, así que si el
+  // contenedor flex lo comprime el texto se sale y se dibuja encima del
+  // siguiente. Pasó de verdad: la guía se derramaba sobre las pistas.
+  await page.goto('/es/play/frontend/vue-01-template-syntax');
+  await waitForEditor(page);
+
+  const cajas = await page.evaluate(() => {
+    const paneles = Array.from(document.querySelectorAll('aside section')).filter((seccion) =>
+      /guía|pistas|briefing/i.test(seccion.querySelector('h2')?.textContent ?? ''),
+    );
+    return paneles.map((panel) => {
+      const rect = panel.getBoundingClientRect();
+      return {
+        titulo: panel.querySelector('h2')?.textContent?.trim() ?? '',
+        top: Math.round(rect.top),
+        bottom: Math.round(rect.bottom),
+        // Lo que el panel ocupa de verdad frente a lo que dice medir.
+        overflow: Math.round(panel.scrollHeight - panel.clientHeight),
+      };
+    });
+  });
+
+  expect(cajas.length, 'no se encontró la guía').toBeGreaterThan(0);
+
+  for (const caja of cajas) {
+    expect(caja.overflow, `«${caja.titulo}» desborda su propia caja`).toBeLessThanOrEqual(1);
+  }
+
+  // Y ninguno invade al siguiente.
+  const ordenados = [...cajas].sort((a, b) => a.top - b.top);
+  for (let i = 1; i < ordenados.length; i += 1) {
+    expect(
+      ordenados[i].top,
+      `«${ordenados[i - 1].titulo}» se solapa con «${ordenados[i].titulo}»`,
+    ).toBeGreaterThanOrEqual(ordenados[i - 1].bottom - 1);
+  }
+});
