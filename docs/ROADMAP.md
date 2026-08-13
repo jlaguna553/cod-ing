@@ -648,6 +648,21 @@ ese es exactamente el sitio donde se cuela una tilde de más o una fila olvidada
 transacciones/aislamiento — el `ROLLBACK` que el runner ya usa por dentro da un buen
 punto de partida para explicarlo.
 
+### React — TodoMVC con la trampa propia del framework
+
+`react-05-todo-list` adapta el mismo TodoMVC que `vue-04`, y a propósito: el ejercicio es
+el mismo y **la trampa no**. En Vue el error caro es filtrar el array de origen; en React
+es el `useState` de más.
+
+El paso 2 es el que sostiene la lección: el contador de pendientes **no es estado**, es una
+pregunta que se le hace al array. Guardarlo en `useState` crea dos fuentes para el mismo
+hecho y basta olvidar un `setPendientes` para que la interfaz mienta sin error ni traza. Y
+el parche habitual —un `useEffect` que lo sincroniza— provoca un render de más y deja el
+bug latente: sigue habiendo dos fuentes, ahora con un vigilante.
+
+Comparar las dos lecciones lado a lado es, de hecho, la mejor forma de ver qué es del
+problema y qué es del framework.
+
 ### C# — módulo cerrado con evaluador simulado (ADR-14)
 
 | Lección | Origen | Lo que enseña de verdad |

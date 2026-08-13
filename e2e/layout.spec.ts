@@ -114,8 +114,23 @@ test('⭐ una lección con prerequisitos pendientes se puede abrir igualmente', 
 test('⭐ el aviso nombra las lecciones, no un número', async ({ page }) => {
   await page.goto('/es/tracks/backend');
 
-  // «Requiere 2 lecciones previas» no dice cuáles, y con eso no se decide nada.
-  const notice = page.getByText(/recomendado antes/i).first();
-  await expect(notice).toBeVisible();
-  await expect(notice).toContainText(/SELECT|Agrupar/);
+  /*
+   * Se comprueba la FORMA del aviso, no qué lección lo lleva.
+   *
+   * Antes se afirmaba que el primero era de SQL, y al añadir el módulo de C#
+   * el primero pasó a ser otro y el test se puso rojo sin que nada estuviera
+   * mal. Lo que esta prueba defiende es que el aviso nombre lecciones —
+   * «requiere 2 lecciones previas» no dice cuáles y con eso no se decide nada—,
+   * y eso no depende de en qué orden estén los módulos.
+   */
+  const notices = page.getByText(/recomendado antes/i);
+  await expect(notices.first()).toBeVisible();
+
+  for (const text of await notices.allInnerTexts()) {
+    const nombradas = text.replace(/^.*?recomendado antes:\s*/i, '').trim();
+    expect(nombradas.length, `el aviso no nombra nada: "${text}"`).toBeGreaterThan(10);
+    expect(nombradas, `el aviso cuenta en vez de nombrar: "${text}"`).not.toMatch(
+      /^\d+\s+lecc/i,
+    );
+  }
 });

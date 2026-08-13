@@ -1,0 +1,301 @@
+{
+  "$schema": "../../../schema/lesson.schema.json",
+  "schemaVersion": 1,
+
+  "id": "react-05-todo-list",
+  "track": "frontend",
+  "module": "react",
+  "order": 5,
+
+  "kind": "challenge",
+  "difficulty": "apprentice",
+  "estimatedMinutes": 26,
+
+  "title": {
+    "es": "La lista de tareas en React: derivar en vez de duplicar",
+    "en": "The todo list in React: derive instead of duplicating"
+  },
+  "summary": {
+    "es": "TodoMVC otra vez, ahora con la trampa propia de React: el `useState` de más que se queda desincronizado y nadie sabe por qué.",
+    "en": "TodoMVC again, now with React's own trap: the extra `useState` that goes out of sync and nobody knows why."
+  },
+  "concepts": ["react", "useState", "estado-derivado", "key", "listas"],
+  "prerequisites": ["react-02-jsx", "react-03-props", "react-04-state-and-events"],
+
+  "runtime": {
+    "kind": "sandpack",
+    "dependencies": { "react": "^19.0.0", "react-dom": "^19.0.0" },
+    "timeoutMs": 20000
+  },
+
+  "workspace": {
+    "entry": "src/App.jsx",
+    "allowCreate": false,
+    "allowDelete": false,
+    "protectedPaths": ["src/main.jsx"],
+    "files": [
+      {
+        "path": "src/App.jsx",
+        "active": true,
+        "content": "import { useState } from 'react';\n\nconst INICIALES = [\n  { id: 1, texto: 'Aprender useState', hecha: true },\n  { id: 2, texto: 'Dominar las listas', hecha: false },\n  { id: 3, texto: 'Vencer al boss', hecha: false },\n];\n\nexport default function App() {\n  const [tareas] = useState(INICIALES);\n\n  return (\n    <section>\n      <h1>Mis tareas</h1>\n\n      {/* TODO 1: pinta un <li className=\"tarea\"> por tarea.\n          Las hechas llevan además la clase \"hecha\". */}\n      <ul></ul>\n    </section>\n  );\n}\n"
+      },
+      {
+        "path": "src/main.jsx",
+        "readOnly": true,
+        "content": "import { createRoot } from 'react-dom/client';\nimport App from './App';\n\ncreateRoot(document.getElementById('root')).render(<App />);\n"
+      }
+    ]
+  },
+
+  "rules": [
+    {
+      "id": "renders-three",
+      "kind": "dom-assert",
+      "selector": "li.tarea",
+      "assert": "countEquals",
+      "count": 3,
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Deben pintarse tres `<li className=\"tarea\">`, uno por tarea.",
+        "en": "Three `<li className=\"tarea\">` must render, one per task."
+      },
+      "successMessage": {
+        "es": "Tres tareas, tres elementos.",
+        "en": "Three tasks, three elements."
+      },
+      "points": 30
+    },
+    {
+      "id": "marks-done",
+      "kind": "dom-assert",
+      "selector": "li.hecha",
+      "assert": "countEquals",
+      "count": 1,
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Solo la tarea ya hecha debe llevar la clase `hecha`, y debe salir de su dato, no escrita a mano.",
+        "en": "Only the completed task should carry the `hecha` class, and it must come from its data, not be hardcoded."
+      },
+      "points": 25
+    },
+    {
+      "id": "stable-key",
+      "kind": "regex-must",
+      "file": "src/App.jsx",
+      "pattern": "key=\\{[a-zA-Z]+\\.id\\}",
+      "flags": "m",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "La `key` debe salir del `id` de la tarea.",
+        "en": "The `key` must come from the task's `id`."
+      },
+      "points": 25
+    },
+    {
+      "id": "no-index-key",
+      "kind": "regex-forbid",
+      "file": "src/App.jsx",
+      "pattern": "key=\\{(index|i|idx)\\}",
+      "flags": "m",
+      "phase": "type",
+      "severity": "damage",
+      "message": {
+        "es": "¡Daño! El índice cambia cuando la lista cambia: React reutilizará el nodo equivocado y el estado saltará de fila.",
+        "en": "Damage! The index changes when the list changes: React will reuse the wrong node and state jumps rows."
+      },
+      "points": 10
+    },
+    {
+      "id": "shows-pending",
+      "kind": "dom-assert",
+      "selector": ".pendientes",
+      "assert": "textContains",
+      "expected": "2",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Falta el recuento: un `<p className=\"pendientes\">` con cuántas quedan sin hacer. Son 2.",
+        "en": "The count is missing: a `<p className=\"pendientes\">` with how many are left. There are 2."
+      },
+      "successMessage": {
+        "es": "Quedan 2, y el número se calcula al renderizar.",
+        "en": "2 left, and the number is computed while rendering."
+      },
+      "points": 30
+    },
+    {
+      "id": "no-derived-state",
+      "kind": "regex-forbid",
+      "file": "src/App.jsx",
+      "pattern": "useState\\([^)]*\\)\\s*;?\\s*\\/\\/\\s*pendientes|const\\s*\\[\\s*pendientes\\s*,",
+      "flags": "m",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "El recuento NO va en un `useState`. Es un dato derivado: se calcula de `tareas` en cada render y así no puede desincronizarse.",
+        "en": "The count does NOT go in a `useState`. It's derived data: compute it from `tareas` on every render so it can't fall out of sync."
+      },
+      "points": 35
+    },
+    {
+      "id": "no-useeffect-sync",
+      "kind": "regex-forbid",
+      "file": "src/App.jsx",
+      "pattern": "useEffect",
+      "flags": "m",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Un `useEffect` para mantener el contador al día es el síntoma, no la solución: significa que el dato está duplicado. Calcúlalo directamente.",
+        "en": "A `useEffect` to keep the counter up to date is the symptom, not the fix: it means the data is duplicated. Compute it directly."
+      },
+      "points": 25
+    }
+  ],
+
+  "steps": [
+    {
+      "id": "step-1-render",
+      "title": {
+        "es": "Pintar la lista, y la `key` que no miente",
+        "en": "Rendering the list, and the key that doesn't lie"
+      },
+      "body": {
+        "es": "En React una lista se pinta transformando un array en otro de elementos:\n\n```jsx\n{cosas.map((cosa) => (\n  <li key={cosa.id}>{cosa.texto}</li>\n))}\n```\n\nNo hay directiva de bucle: es `.map()`, JavaScript de toda la vida, y por eso lo que aprendiste en `js-03` vale aquí tal cual.\n\nLa `key` es lo que se copia sin entender. React la usa para saber **qué elemento del DOM corresponde a qué dato** entre dos renders; con una key estable puede mover nodos en lugar de reconstruirlos.\n\nY por eso **el índice es una key mentirosa**. Borra el primer elemento de una lista: la tarea que estaba en el índice 1 pasa al 0. React ve que la key 0 sigue existiendo y **reutiliza ese nodo** para otro dato. Con texto plano no se nota; en cuanto el elemento tiene estado —un input a medio escribir, una casilla marcada— ese estado se queda en la fila equivocada. Es el bug clásico: marcas la tercera casilla, borras la primera, y aparece marcada la segunda.\n\nPara la clase condicional, en JSX el atributo es `className` y se compone como cualquier string. Una plantilla con un ternario basta:\n\n```jsx\nclassName={`base ${condicion ? 'extra' : ''}`}\n```",
+        "en": "In React a list is rendered by transforming one array into another of elements:\n\n```jsx\n{things.map((thing) => (\n  <li key={thing.id}>{thing.text}</li>\n))}\n```\n\nThere's no loop directive: it's `.map()`, ordinary JavaScript, which is why what you learned in `js-03` applies here unchanged.\n\nThe `key` is what gets copied without understanding. React uses it to know **which DOM element belongs to which data** between renders; with a stable key it can move nodes instead of rebuilding them.\n\nWhich is why **the index is a lying key**. Delete the first item of a list: the task at index 1 becomes index 0. React sees key 0 still exists and **reuses that node** for different data. With plain text you don't notice; the moment the element holds state — a half-typed input, a ticked checkbox — that state stays on the wrong row. It's the classic bug: you tick the third checkbox, delete the first, and the second one shows ticked.\n\nFor the conditional class, in JSX the attribute is `className` and it composes like any string. A template with a ternary is enough:\n\n```jsx\nclassName={`base ${condition ? 'extra' : ''}`}\n```"
+      },
+      "task": {
+        "es": "Pinta un `<li className=\"tarea\">` por tarea con su texto, con `key` sacada del `id`, y añade la clase `hecha` a las que ya lo estén.",
+        "en": "Render one `<li className=\"tarea\">` per task with its text, keyed by `id`, and add the `hecha` class to completed ones."
+      },
+      "focusFile": "src/App.jsx",
+      "focusLines": [16, 18],
+      "ruleIds": ["renders-three", "marks-done", "stable-key", "no-index-key"],
+      "xp": 45,
+      "hints": [
+        {
+          "id": "h-map",
+          "tier": 1,
+          "text": {
+            "es": "El `.map()` va entre llaves dentro del JSX, porque es una expresión de JavaScript. Devuelve un `<li>` por tarea.",
+            "en": "The `.map()` goes inside braces within the JSX, because it's a JavaScript expression. Return one `<li>` per task."
+          },
+          "xpPenalty": 6,
+          "autoOfferAfterSeconds": 90
+        }
+      ],
+      "solution": [
+        {
+          "path": "src/App.jsx",
+          "content": "import { useState } from 'react';\n\nconst INICIALES = [\n  { id: 1, texto: 'Aprender useState', hecha: true },\n  { id: 2, texto: 'Dominar las listas', hecha: false },\n  { id: 3, texto: 'Vencer al boss', hecha: false },\n];\n\nexport default function App() {\n  const [tareas] = useState(INICIALES);\n\n  return (\n    <section>\n      <h1>Mis tareas</h1>\n\n      <ul>\n        {tareas.map((tarea) => (\n          <li\n            key={tarea.id}\n            className={`tarea ${tarea.hecha ? 'hecha' : ''}`}\n          >\n            {tarea.texto}\n          </li>\n        ))}\n      </ul>\n    </section>\n  );\n}\n"
+        }
+      ],
+      "bestPractice": {
+        "es": "**Estándar de la industria:** la misma regla vale en Vue, Svelte y Angular — cambia el nombre del atributo, no el motivo. Si tu dato no tiene identificador estable, el sitio de arreglarlo es el origen de los datos, no la plantilla.",
+        "en": "**Industry standard:** the same rule holds in Vue, Svelte, and Angular — the attribute's name changes, the reason doesn't. If your data has no stable identifier, the place to fix it is the data source, not the template."
+      }
+    },
+    {
+      "id": "step-2-derived",
+      "title": {
+        "es": "El `useState` que sobra",
+        "en": "The useState that shouldn't exist"
+      },
+      "body": {
+        "es": "Ahora hace falta enseñar cuántas quedan. Y aquí está el error más caro que se comete en React, con diferencia:\n\n```jsx\nconst [pendientes, setPendientes] = useState(2);   // ❌\n```\n\nEn cuanto existen **dos fuentes para el mismo hecho** —el array y el contador— hay que mantenerlas de acuerdo a mano. Alguien marca una tarea, se olvida de llamar a `setPendientes`, y la interfaz enseña «Quedan 2» con una sola pendiente. No hay error, no hay traza: solo un número que miente.\n\nEl parche habitual es peor que el problema:\n\n```jsx\nuseEffect(() => {\n  setPendientes(tareas.filter((t) => !t.hecha).length);\n}, [tareas]);   // ❌ un render de más, y el bug sigue latente\n```\n\nEso provoca **dos renders** por cada cambio —uno por el array, otro por el contador— y sigue habiendo dos fuentes; solo has añadido un vigilante.\n\nLa respuesta correcta es que **no hay estado que añadir**. El contador no es un dato: es una pregunta que se le hace al array, y se responde en cada render:\n\n```jsx\nconst pendientes = tareas.filter((t) => !t.hecha).length;\n```\n\nUna línea, sin hook, sin efecto y sin posibilidad de desincronizarse. La regla, que la documentación de React repite: **si puedes calcularlo a partir de lo que ya tienes, no lo guardes en estado**.\n\n(¿Y `useMemo`? Solo si el cálculo es caro de verdad. Filtrar tres elementos no lo es, y memoizarlo cuesta más que hacerlo.)",
+        "en": "Now you need to show how many are left. And here's the most expensive mistake in React, by a distance:\n\n```jsx\nconst [pending, setPending] = useState(2);   // ❌\n```\n\nThe moment **two sources for the same fact** exist — the array and the counter — you have to keep them in agreement by hand. Someone ticks a task, forgets to call `setPending`, and the UI shows \"2 left\" with a single one pending. No error, no stack trace: just a number that lies.\n\nThe usual patch is worse than the problem:\n\n```jsx\nuseEffect(() => {\n  setPending(tasks.filter((t) => !t.done).length);\n}, [tasks]);   // ❌ an extra render, and the bug is still latent\n```\n\nThat causes **two renders** per change — one for the array, one for the counter — and there are still two sources; you've only added a watchman.\n\nThe right answer is that **there's no state to add**. The counter isn't data: it's a question you ask the array, answered on every render:\n\n```jsx\nconst pending = tasks.filter((t) => !t.done).length;\n```\n\nOne line, no hook, no effect, and no way to fall out of sync. The rule, which React's own docs repeat: **if you can compute it from what you already have, don't store it in state**.\n\n(What about `useMemo`? Only if the computation is genuinely expensive. Filtering three items isn't, and memoizing it costs more than doing it.)"
+      },
+      "task": {
+        "es": "Muestra cuántas tareas quedan sin hacer en un `<p className=\"pendientes\">`, calculándolo del array — sin `useState` y sin `useEffect`.",
+        "en": "Show how many tasks are left in a `<p className=\"pendientes\">`, computed from the array — no `useState`, no `useEffect`."
+      },
+      "focusFile": "src/App.jsx",
+      "ruleIds": ["shows-pending", "no-derived-state", "no-useeffect-sync", "renders-three"],
+      "xp": 50,
+      "hints": [
+        {
+          "id": "h-plain",
+          "tier": 1,
+          "text": {
+            "es": "Es una `const` normal dentro del componente, encima del `return`. Se recalcula sola en cada render porque el cuerpo del componente vuelve a ejecutarse entero.",
+            "en": "It's an ordinary `const` inside the component, above the `return`. It recomputes by itself on every render because the component's body runs again in full."
+          },
+          "xpPenalty": 8,
+          "autoOfferAfterSeconds": 90
+        }
+      ],
+      "solution": [
+        {
+          "path": "src/App.jsx",
+          "content": "import { useState } from 'react';\n\nconst INICIALES = [\n  { id: 1, texto: 'Aprender useState', hecha: true },\n  { id: 2, texto: 'Dominar las listas', hecha: false },\n  { id: 3, texto: 'Vencer al boss', hecha: false },\n];\n\nexport default function App() {\n  const [tareas] = useState(INICIALES);\n\n  const pendientes = tareas.filter((tarea) => !tarea.hecha).length;\n\n  return (\n    <section>\n      <h1>Mis tareas</h1>\n\n      <p className=\"pendientes\">Quedan {pendientes}</p>\n\n      <ul>\n        {tareas.map((tarea) => (\n          <li\n            key={tarea.id}\n            className={`tarea ${tarea.hecha ? 'hecha' : ''}`}\n          >\n            {tarea.texto}\n          </li>\n        ))}\n      </ul>\n    </section>\n  );\n}\n"
+        }
+      ],
+      "bestPractice": {
+        "es": "**Pregunta de entrevista frecuente:** «¿cuándo usarías `useEffect`?» La respuesta que distingue empieza por cuándo **no**: para sincronizar un estado con otro. Un efecto es para salir de React —una petición, una suscripción, el título del documento—, no para mantener al día un dato que ya se puede calcular.",
+        "en": "**Common interview question:** \"when would you use `useEffect`?\" The answer that sets you apart starts with when **not** to: to sync one piece of state with another. An effect is for stepping outside React — a request, a subscription, the document title — not for keeping up to date something you can already compute."
+      }
+    },
+    {
+      "id": "step-3-immutable",
+      "title": {
+        "es": "Marcar una tarea sin tocar la que hay",
+        "en": "Ticking a task without touching the one you have"
+      },
+      "body": {
+        "es": "Falta lo que hace útil la lista: poder marcar una tarea. Y aquí aparece la segunda regla de React que no se puede saltar.\n\nLo que **no** funciona:\n\n```jsx\ntarea.hecha = !tarea.hecha;\nsetTareas(tareas);   // ❌ no repinta\n```\n\nReact compara el estado nuevo con el viejo por **identidad de referencia**, no mirando dentro. Has mutado el objeto y le pasas el **mismo array**: `tareas === tareas` es cierto, así que React concluye que nada cambió y no repinta. El dato está bien y la pantalla, mal — que es la peor combinación posible para depurar.\n\nLa forma correcta crea estructuras nuevas por el camino que cambia:\n\n```jsx\nsetTareas(tareas.map((t) =>\n  t.id === id ? { ...t, hecha: !t.hecha } : t\n));\n```\n\n`.map()` devuelve un array nuevo; el objeto tocado se sustituye por una copia con el campo cambiado, y los demás **se reutilizan tal cual**. Eso último importa: si copiaras todos, `memo` dejaría de acertar en las filas que no cambiaron.\n\nEs el mismo principio que viste en `js-03` con `.map()` frente a mutar, y el mismo que en `react-03` con las props: **los datos que fluyen hacia abajo no se tocan; se reemplazan por versiones nuevas**.\n\nAñade un `onClick` a cada `<li>` que alterne su estado. Al ejecutar, la lista debe seguir mostrando 3 tareas, 1 hecha y el contador en 2 — porque el contador se deriva y no puede quedarse atrás.",
+        "en": "What's missing is what makes the list useful: being able to tick a task. And here comes React's second unskippable rule.\n\nWhat **doesn't** work:\n\n```jsx\ntask.done = !task.done;\nsetTasks(tasks);   // ❌ doesn't repaint\n```\n\nReact compares new state against old by **reference identity**, not by looking inside. You mutated the object and handed it the **same array**: `tasks === tasks` is true, so React concludes nothing changed and doesn't repaint. The data is right and the screen is wrong — the worst possible combination to debug.\n\nThe correct form creates new structures along the path that changed:\n\n```jsx\nsetTasks(tasks.map((t) =>\n  t.id === id ? { ...t, done: !t.done } : t\n));\n```\n\n`.map()` returns a new array; the touched object is replaced by a copy with the changed field, and the rest **are reused as they are**. That last part matters: if you copied them all, `memo` would stop hitting on the rows that didn't change.\n\nIt's the same principle you saw in `js-03` with `.map()` versus mutating, and the same as in `react-03` with props: **data flowing downward isn't touched; it's replaced with new versions**.\n\nAdd an `onClick` to each `<li>` that toggles its state. On running, the list must still show 3 tasks, 1 done, and the counter at 2 — because the counter is derived and can't fall behind."
+      },
+      "task": {
+        "es": "Haz que pulsar una tarea alterne si está hecha, sin mutar el array ni los objetos. El recuento debe seguir siendo correcto.",
+        "en": "Make clicking a task toggle its done state, without mutating the array or the objects. The count must stay correct."
+      },
+      "focusFile": "src/App.jsx",
+      "ruleIds": ["renders-three", "marks-done", "shows-pending", "no-derived-state"],
+      "xp": 55,
+      "hints": [
+        {
+          "id": "h-setter",
+          "tier": 1,
+          "text": {
+            "es": "El `useState` de arriba tiene que dejar de ignorar su setter: `const [tareas, setTareas] = useState(...)`. Y la función que alterna recibe el `id` de la tarea pulsada.",
+            "en": "The `useState` above has to stop ignoring its setter: `const [tareas, setTareas] = useState(...)`. And the toggling function receives the clicked task's `id`."
+          },
+          "xpPenalty": 8,
+          "autoOfferAfterSeconds": 100
+        }
+      ],
+      "solution": [
+        {
+          "path": "src/App.jsx",
+          "content": "import { useState } from 'react';\n\nconst INICIALES = [\n  { id: 1, texto: 'Aprender useState', hecha: true },\n  { id: 2, texto: 'Dominar las listas', hecha: false },\n  { id: 3, texto: 'Vencer al boss', hecha: false },\n];\n\nexport default function App() {\n  const [tareas, setTareas] = useState(INICIALES);\n\n  const pendientes = tareas.filter((tarea) => !tarea.hecha).length;\n\n  function alternar(id) {\n    setTareas(\n      tareas.map((tarea) =>\n        tarea.id === id ? { ...tarea, hecha: !tarea.hecha } : tarea,\n      ),\n    );\n  }\n\n  return (\n    <section>\n      <h1>Mis tareas</h1>\n\n      <p className=\"pendientes\">Quedan {pendientes}</p>\n\n      <ul>\n        {tareas.map((tarea) => (\n          <li\n            key={tarea.id}\n            className={`tarea ${tarea.hecha ? 'hecha' : ''}`}\n            onClick={() => alternar(tarea.id)}\n          >\n            {tarea.texto}\n          </li>\n        ))}\n      </ul>\n    </section>\n  );\n}\n"
+        }
+      ]
+    }
+  ],
+
+  "drills": [],
+
+  "reward": {
+    "baseXp": 140,
+    "flawlessBonus": 50,
+    "noHintBonus": 30,
+    "comboMultiplierCap": 3,
+    "achievements": []
+  },
+
+  "solution": {
+    "files": [
+      {
+        "path": "src/App.jsx",
+        "content": "import { useState } from 'react';\n\nconst INICIALES = [\n  { id: 1, texto: 'Aprender useState', hecha: true },\n  { id: 2, texto: 'Dominar las listas', hecha: false },\n  { id: 3, texto: 'Vencer al boss', hecha: false },\n];\n\nexport default function App() {\n  const [tareas, setTareas] = useState(INICIALES);\n\n  const pendientes = tareas.filter((tarea) => !tarea.hecha).length;\n\n  function alternar(id) {\n    setTareas(\n      tareas.map((tarea) =>\n        tarea.id === id ? { ...tarea, hecha: !tarea.hecha } : tarea,\n      ),\n    );\n  }\n\n  return (\n    <section>\n      <h1>Mis tareas</h1>\n\n      <p className=\"pendientes\">Quedan {pendientes}</p>\n\n      <ul>\n        {tareas.map((tarea) => (\n          <li\n            key={tarea.id}\n            className={`tarea ${tarea.hecha ? 'hecha' : ''}`}\n            onClick={() => alternar(tarea.id)}\n          >\n            {tarea.texto}\n          </li>\n        ))}\n      </ul>\n    </section>\n  );\n}\n"
+      }
+    ],
+    "explanation": {
+      "es": "Un solo `useState` para toda la pantalla. El contador no es estado: es una pregunta al array, respondida en cada render, y por eso no puede quedarse desincronizado ni necesita un efecto que lo vigile. Y alternar una tarea crea estructuras nuevas solo en el camino que cambia — el array y el objeto tocado— dejando los demás intactos, que es lo que permite que la memoización siga acertando.",
+      "en": "A single `useState` for the whole screen. The counter isn't state: it's a question asked of the array, answered on every render, which is why it can't fall out of sync and needs no effect watching it. And toggling a task creates new structures only along the path that changed — the array and the touched object — leaving the rest untouched, which is what keeps memoization hitting."
+    }
+  }
+}
