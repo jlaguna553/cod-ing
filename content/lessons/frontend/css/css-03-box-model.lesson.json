@@ -1,16 +1,13 @@
 {
   "$schema": "../../../schema/lesson.schema.json",
   "schemaVersion": 1,
-
   "id": "css-03-box-model",
   "track": "frontend",
   "module": "css",
   "order": 3,
-
   "kind": "concept",
   "difficulty": "novice",
   "estimatedMinutes": 18,
-
   "title": {
     "es": "El modelo de caja: por qué 300px no miden 300px",
     "en": "The box model: why 300px isn't 300 pixels"
@@ -19,20 +16,28 @@
     "es": "Pones `width: 300px` y el navegador dibuja 356. No es un bug: es el modelo de caja por defecto, y hay una línea de CSS que lo arregla para siempre.",
     "en": "You write `width: 300px` and the browser draws 356. It isn't a bug: it's the default box model, and one line of CSS fixes it forever."
   },
-  "concepts": ["css", "box-model", "box-sizing", "padding", "border"],
-  "prerequisites": ["html-01-first-page"],
-
+  "concepts": [
+    "css",
+    "box-model",
+    "box-sizing",
+    "padding",
+    "border"
+  ],
+  "prerequisites": [
+    "html-01-first-page"
+  ],
   "runtime": {
     "kind": "dom",
     "dependencies": {},
     "timeoutMs": 5000
   },
-
   "workspace": {
     "entry": "index.html",
     "allowCreate": false,
     "allowDelete": false,
-    "protectedPaths": ["index.html"],
+    "protectedPaths": [
+      "index.html"
+    ],
     "files": [
       {
         "path": "index.html",
@@ -46,8 +51,26 @@
       }
     ]
   },
-
   "rules": [
+    {
+      "id": "card-has-background",
+      "kind": "dom-assert",
+      "selector": ".card",
+      "assert": "styleEquals",
+      "attribute": "background-color",
+      "expected": "rgb(30, 27, 75)",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Pinta el fondo de `.card` de `#1e1b4b`. Es la forma de ver dónde acaba la caja de verdad: el fondo cubre el padding, no solo el texto.",
+        "en": "Paint `.card`'s background `#1e1b4b`. It's how you see where the box really ends: the background covers the padding, not just the text."
+      },
+      "successMessage": {
+        "es": "El fondo delata el tamaño real: los 24px de padding también se pintan.",
+        "en": "The background gives away the real size: the 24px of padding get painted too."
+      },
+      "points": 25
+    },
     {
       "id": "card-is-300",
       "kind": "stdout-match",
@@ -130,9 +153,38 @@
         "en": "The 24px padding must stay: the goal is a box that measures 300px *including* its spacing, not removing it."
       },
       "points": 10
+    },
+    {
+      "id": "margin-added",
+      "kind": "regex-must",
+      "file": "styles.css",
+      "pattern": "margin:\\s*20px",
+      "flags": "m",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Añade `margin: 20px` a `.card` para comprobar qué le hace a su anchura.",
+        "en": "Add `margin: 20px` to `.card` to check what it does to its width."
+      },
+      "points": 20
+    },
+    {
+      "id": "still-300-with-margin",
+      "kind": "stdout-match",
+      "matches": "La tarjeta ocupa 300px",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Con el margen puesto, la tarjeta debe seguir ocupando 300px. Si cambió, has tocado la anchura o el padding en vez del margen.",
+        "en": "With the margin in place, the card must still occupy 300px. If it changed, you touched the width or padding instead of the margin."
+      },
+      "successMessage": {
+        "es": "40px de margen y la anchura no se ha movido: el margen no entra en la cuenta.",
+        "en": "40px of margin and the width didn't budge: margin doesn't enter the count."
+      },
+      "points": 35
     }
   ],
-
   "steps": [
     {
       "id": "step-1-measure",
@@ -141,16 +193,24 @@
         "en": "300 declared, 356 drawn"
       },
       "body": {
-        "es": "Ejecuta la página y lee la consola. La hoja de estilos dice `width: 300px`; el navegador dibuja **356**.\n\nLa cuenta es exacta:\n\n```\n  300   width\n+  24   padding izquierdo\n+  24   padding derecho\n+   4   borde izquierdo\n+   4   borde derecho\n─────\n  356   lo que ocupa en pantalla\n```\n\nEn el modelo por defecto —`content-box`— la propiedad `width` **no describe la caja**: describe solo el hueco interior donde cabe el contenido. El padding y el borde crecen hacia fuera, encima de esa cifra.\n\nEs contraintuitivo, y es contraintuitivo por accidente histórico: cuando se estandarizó, Internet Explorer ya hacía lo contrario —lo que la gente esperaba— pero el estándar se escribió al revés y ahí se quedó.\n\nEl síntoma clásico: tres columnas de `width: 33%` con un poco de padding y, de pronto, la tercera cae a la línea siguiente.",
-        "en": "Run the page and read the console. The stylesheet says `width: 300px`; the browser draws **356**.\n\nThe arithmetic is exact:\n\n```\n  300   width\n+  24   left padding\n+  24   right padding\n+   4   left border\n+   4   right border\n─────\n  356   what it occupies on screen\n```\n\nIn the default model — `content-box` — the `width` property **does not describe the box**: it describes only the inner slot the content fits into. Padding and border grow outward, on top of that number.\n\nIt's counter-intuitive, and it's counter-intuitive by historical accident: when this was standardized Internet Explorer already did the opposite — what people expected — but the standard was written the other way round and there it stayed.\n\nThe classic symptom: three columns at `width: 33%` with a little padding and, suddenly, the third one drops to the next line."
+        "es": "Ejecuta la página y lee la consola. La hoja de estilos dice `width: 300px`; el navegador dibuja **356**.\n\nLa cuenta es exacta:\n\n```\n  300   width\n+  24   padding izquierdo\n+  24   padding derecho\n+   4   borde izquierdo\n+   4   borde derecho\n─────\n  356   lo que ocupa en pantalla\n```\n\nEn el modelo por defecto —`content-box`— la propiedad `width` **no describe la caja**: describe solo el hueco interior donde cabe el contenido. El padding y el borde crecen hacia fuera, encima de esa cifra.\n\nEs contraintuitivo, y es contraintuitivo por accidente histórico: cuando se estandarizó, Internet Explorer ya hacía lo contrario —lo que la gente esperaba— pero el estándar se escribió al revés y ahí se quedó.\n\nEl síntoma clásico: tres columnas de `width: 33%` con un poco de padding y, de pronto, la tercera cae a la línea siguiente.\n\nPara verlo con los ojos y no solo con la consola, píntale un fondo a la tarjeta: el fondo de un elemento **cubre también su padding**, así que el rectángulo de color te enseña dónde acaba la caja de verdad.",
+        "en": "Run the page and read the console. The stylesheet says `width: 300px`; the browser draws **356**.\n\nThe arithmetic is exact:\n\n```\n  300   width\n+  24   left padding\n+  24   right padding\n+   4   left border\n+   4   right border\n─────\n  356   what it occupies on screen\n```\n\nIn the default model — `content-box` — the `width` property **does not describe the box**: it describes only the inner slot the content fits into. Padding and border grow outward, on top of that number.\n\nIt's counter-intuitive, and it's counter-intuitive by historical accident: when this was standardized Internet Explorer already did the opposite — what people expected — but the standard was written the other way round and there it stayed.\n\nThe classic symptom: three columns at `width: 33%` with a little padding and, suddenly, the third one drops to the next line.\n\nTo see it with your eyes and not just the console, give the card a background: an element's background **covers its padding too**, so the coloured rectangle shows you where the box really ends."
       },
       "task": {
-        "es": "Ejecuta la página y comprueba en la consola los dos anchos reales: 356 y 144.",
-        "en": "Run the page and check the two real widths in the console: 356 and 144."
+        "es": "Añade `background: #1e1b4b` a `.card`, ejecuta, y compara el rectángulo pintado con los 300px que declara la hoja de estilos.",
+        "en": "Add `background: #1e1b4b` to `.card`, run, and compare the painted rectangle against the 300px the stylesheet declares."
       },
       "focusFile": "styles.css",
-      "ruleIds": [],
-      "xp": 20
+      "ruleIds": [
+        "card-has-background"
+      ],
+      "xp": 30,
+      "solution": [
+        {
+          "path": "styles.css",
+          "content": "body {\n  margin: 0;\n  font-family: system-ui, sans-serif;\n}\n\n.card {\n  width: 300px;\n  padding: 24px;\n  border: 4px solid #7c3aed;\n  border-radius: 12px;\n  background: #1e1b4b;\n}\n\n.badge {\n  display: inline-block;\n  width: 120px;\n  padding: 6px 10px;\n  border: 2px solid #22d3ee;\n  border-radius: 999px;\n  text-align: center;\n}\n"
+        }
+      ]
     },
     {
       "id": "step-2-border-box",
@@ -167,7 +227,10 @@
         "en": "Add the universal reset at the top of `styles.css`. Don't touch the widths or the padding: the card must measure 300px and the badge 120px, with their spacing intact."
       },
       "focusFile": "styles.css",
-      "focusLines": [1, 1],
+      "focusLines": [
+        1,
+        1
+      ],
       "ruleIds": [
         "card-is-300",
         "badge-is-120",
@@ -201,7 +264,13 @@
       "bestPractice": {
         "es": "**Estándar de la industria:** el reset de `border-box` está en la primera regla de Bootstrap, Tailwind (`preflight`), y de prácticamente cualquier hoja de estilos profesional desde 2012. Si abres un proyecto y no lo encuentras, casi siempre es un descuido, no una decisión.",
         "en": "**Industry standard:** the `border-box` reset is the first rule in Bootstrap, in Tailwind (`preflight`), and in practically every professional stylesheet since 2012. If you open a project and can't find it, it's almost always an oversight, not a decision."
-      }
+      },
+      "solution": [
+        {
+          "path": "styles.css",
+          "content": "*,\n*::before,\n*::after {\n  box-sizing: border-box;\n}\n\nbody {\n  margin: 0;\n  font-family: system-ui, sans-serif;\n}\n\n.card {\n  width: 300px;\n  padding: 24px;\n  border: 4px solid #7c3aed;\n  border-radius: 12px;\n  background: #1e1b4b;\n}\n\n.badge {\n  display: inline-block;\n  width: 120px;\n  padding: 6px 10px;\n  border: 2px solid #22d3ee;\n  border-radius: 999px;\n  text-align: center;\n}\n"
+        }
+      ]
     },
     {
       "id": "step-3-margin",
@@ -210,25 +279,32 @@
         "en": "Margin never enters the count"
       },
       "body": {
-        "es": "Queda un matiz que confunde a mucha gente en la primera entrevista técnica: **`border-box` no incluye el margen**. Ninguno de los dos modelos lo hace.\n\n```\n┌─────────────────────────────────────┐\n│  margin  (espacio EXTERIOR, nunca   │\n│  ┌───────────────────────────────┐  │  cuenta en width)\n│  │ border ─── borde              │  │\n│  │  ┌─────────────────────────┐  │  │\n│  │  │ padding                 │  │  │  ← border-box mide\n│  │  │   ┌─────────────────┐   │  │  │     hasta aquí\n│  │  │   │  contenido      │   │  │  │  ← content-box mide\n│  │  │   └─────────────────┘   │  │  │     solo esto\n│  │  └─────────────────────────┘  │  │\n│  └───────────────────────────────┘  │\n└─────────────────────────────────────┘\n```\n\nLa distinción tiene lógica: padding y borde son **parte del elemento** —se pintan con su fondo, reciben sus clics—, mientras que el margen es **separación respecto a los vecinos**, y por eso pertenece al espacio entre cajas, no a la caja.\n\nDe ahí sale un comportamiento que solo tiene el margen: dos márgenes verticales adyacentes **se colapsan** en uno solo, y gana el mayor. Dos cajas con `margin: 20px` no quedan a 40px de distancia, quedan a 20. El padding jamás hace eso.",
-        "en": "One nuance is left that trips up a lot of people in their first technical interview: **`border-box` does not include the margin**. Neither model does.\n\n```\n┌─────────────────────────────────────┐\n│  margin  (OUTER space, never        │\n│  ┌───────────────────────────────┐  │  counts toward width)\n│  │ border ─── the border         │  │\n│  │  ┌─────────────────────────┐  │  │\n│  │  │ padding                 │  │  │  ← border-box measures\n│  │  │   ┌─────────────────┐   │  │  │     up to here\n│  │  │   │  content        │   │  │  │  ← content-box measures\n│  │  │   └─────────────────┘   │  │  │     only this\n│  │  └─────────────────────────┘  │  │\n│  └───────────────────────────────┘  │\n└─────────────────────────────────────┘\n```\n\nThe distinction is logical: padding and border are **part of the element** — they're painted with its background, they receive its clicks — while margin is **separation from the neighbours**, so it belongs to the space between boxes, not to the box.\n\nFrom that comes a behaviour only margin has: two adjacent vertical margins **collapse** into one, and the larger wins. Two boxes with `margin: 20px` don't end up 40px apart, they end up 20 apart. Padding never does that."
+        "es": "Queda un matiz que confunde a mucha gente en la primera entrevista técnica: **`border-box` no incluye el margen**. Ninguno de los dos modelos lo hace.\n\n```\n┌─────────────────────────────────────┐\n│  margin  (espacio EXTERIOR, nunca   │\n│  ┌───────────────────────────────┐  │  cuenta en width)\n│  │ border ─── borde              │  │\n│  │  ┌─────────────────────────┐  │  │\n│  │  │ padding                 │  │  │  ← border-box mide\n│  │  │   ┌─────────────────┐   │  │  │     hasta aquí\n│  │  │   │  contenido      │   │  │  │  ← content-box mide\n│  │  │   └─────────────────┘   │  │  │     solo esto\n│  │  └─────────────────────────┘  │  │\n│  └───────────────────────────────┘  │\n└─────────────────────────────────────┘\n```\n\nLa distinción tiene lógica: padding y borde son **parte del elemento** —se pintan con su fondo, reciben sus clics—, mientras que el margen es **separación respecto a los vecinos**, y por eso pertenece al espacio entre cajas, no a la caja.\n\nDe ahí sale un comportamiento que solo tiene el margen: dos márgenes verticales adyacentes **se colapsan** en uno solo, y gana el mayor. Dos cajas con `margin: 20px` no quedan a 40px de distancia, quedan a 20. El padding jamás hace eso.\n\nCompruébalo tú en lugar de creerme: añádele `margin: 20px` a la tarjeta y vuelve a ejecutar. La página sigue midiendo lo mismo — **300px**— aunque ahora haya 40px de aire alrededor. El margen empuja a los vecinos; no engorda la caja.",
+        "en": "One nuance is left that trips up a lot of people in their first technical interview: **`border-box` does not include the margin**. Neither model does.\n\n```\n┌─────────────────────────────────────┐\n│  margin  (OUTER space, never        │\n│  ┌───────────────────────────────┐  │  counts toward width)\n│  │ border ─── the border         │  │\n│  │  ┌─────────────────────────┐  │  │\n│  │  │ padding                 │  │  │  ← border-box measures\n│  │  │   ┌─────────────────┐   │  │  │     up to here\n│  │  │   │  content        │   │  │  │  ← content-box measures\n│  │  │   └─────────────────┘   │  │  │     only this\n│  │  └─────────────────────────┘  │  │\n│  └───────────────────────────────┘  │\n└─────────────────────────────────────┘\n```\n\nThe distinction is logical: padding and border are **part of the element** — they're painted with its background, they receive its clicks — while margin is **separation from the neighbours**, so it belongs to the space between boxes, not to the box.\n\nFrom that comes a behaviour only margin has: two adjacent vertical margins **collapse** into one, and the larger wins. Two boxes with `margin: 20px` don't end up 40px apart, they end up 20 apart. Padding never does that.\n\nCheck it yourself instead of taking my word: add `margin: 20px` to the card and run again. The page still measures the same — **300px** — even though there are now 40px of air around it. Margin pushes the neighbours; it doesn't fatten the box."
       },
       "task": {
-        "es": "Lee el diagrama y quédate con la frase: el margen es espacio *entre* cajas, no parte de la caja.",
-        "en": "Read the diagram and keep the sentence: margin is space *between* boxes, not part of the box."
+        "es": "Añade `margin: 20px` a `.card` y ejecuta: la anchura medida debe seguir siendo 300px.",
+        "en": "Add `margin: 20px` to `.card` and run: the measured width must still be 300px."
       },
       "focusFile": "styles.css",
-      "ruleIds": [],
-      "xp": 25,
+      "ruleIds": [
+        "margin-added",
+        "still-300-with-margin"
+      ],
+      "xp": 40,
       "bestPractice": {
         "es": "**Pregunta de entrevista frecuente:** «¿qué mide `width` con `box-sizing: border-box`?» La respuesta completa son tres partes: contenido + padding + borde, y **no** el margen. Añadir la última —y el colapso de márgenes— es lo que distingue una respuesta memorizada de una entendida.",
         "en": "**Common interview question:** \"what does `width` measure under `box-sizing: border-box`?\" The full answer has three parts: content + padding + border, and **not** margin. Adding that last part — and margin collapsing — is what separates a memorized answer from an understood one."
-      }
+      },
+      "solution": [
+        {
+          "path": "styles.css",
+          "content": "*,\n*::before,\n*::after {\n  box-sizing: border-box;\n}\n\nbody {\n  margin: 0;\n  font-family: system-ui, sans-serif;\n}\n\n.card {\n  width: 300px;\n  padding: 24px;\n  border: 4px solid #7c3aed;\n  border-radius: 12px;\n  background: #1e1b4b;\n  margin: 20px;\n}\n\n.badge {\n  display: inline-block;\n  width: 120px;\n  padding: 6px 10px;\n  border: 2px solid #22d3ee;\n  border-radius: 999px;\n  text-align: center;\n}\n"
+        }
+      ]
     }
   ],
-
   "drills": [],
-
   "reward": {
     "baseXp": 105,
     "flawlessBonus": 45,
@@ -236,12 +312,11 @@
     "comboMultiplierCap": 3,
     "achievements": []
   },
-
   "solution": {
     "files": [
       {
         "path": "styles.css",
-        "content": "*,\n*::before,\n*::after {\n  box-sizing: border-box;\n}\n\nbody {\n  margin: 0;\n  font-family: system-ui, sans-serif;\n}\n\n.card {\n  width: 300px;\n  padding: 24px;\n  border: 4px solid #7c3aed;\n  border-radius: 12px;\n}\n\n.badge {\n  display: inline-block;\n  width: 120px;\n  padding: 6px 10px;\n  border: 2px solid #22d3ee;\n  border-radius: 999px;\n  text-align: center;\n}\n"
+        "content": "*,\n*::before,\n*::after {\n  box-sizing: border-box;\n}\n\nbody {\n  margin: 0;\n  font-family: system-ui, sans-serif;\n}\n\n.card {\n  width: 300px;\n  padding: 24px;\n  border: 4px solid #7c3aed;\n  border-radius: 12px;\n  background: #1e1b4b;\n  margin: 20px;\n}\n\n.badge {\n  display: inline-block;\n  width: 120px;\n  padding: 6px 10px;\n  border: 2px solid #22d3ee;\n  border-radius: 999px;\n  text-align: center;\n}\n"
       }
     ],
     "explanation": {

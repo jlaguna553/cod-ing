@@ -1,16 +1,13 @@
 {
   "$schema": "../../../schema/lesson.schema.json",
   "schemaVersion": 1,
-
   "id": "html-01-first-page",
   "track": "frontend",
   "module": "html",
   "order": 1,
-
   "kind": "concept",
   "difficulty": "novice",
   "estimatedMinutes": 14,
-
   "title": {
     "es": "Tu primera página: el esqueleto de todo documento",
     "en": "Your first page: the skeleton every document has"
@@ -19,15 +16,19 @@
     "es": "Las cuatro piezas que lleva cualquier página del mundo, qué hace cada una y por qué el navegador te perdona si las olvidas — que es justo el problema.",
     "en": "The four pieces every page in the world carries, what each does, and why the browser forgives you when you forget them — which is exactly the problem."
   },
-  "concepts": ["html", "doctype", "head", "body", "metadata"],
+  "concepts": [
+    "html",
+    "doctype",
+    "head",
+    "body",
+    "metadata"
+  ],
   "prerequisites": [],
-
   "runtime": {
     "kind": "dom",
     "dependencies": {},
     "timeoutMs": 5000
   },
-
   "workspace": {
     "entry": "index.html",
     "allowCreate": false,
@@ -41,8 +42,25 @@
       }
     ]
   },
-
   "rules": [
+    {
+      "id": "two-paragraphs",
+      "kind": "dom-assert",
+      "selector": "p",
+      "assert": "countEquals",
+      "count": 2,
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Deben renderizarse dos párrafos. Aunque dejes el segundo sin cerrar, el navegador lo cierra por ti — eso es justo lo que este paso demuestra.",
+        "en": "Two paragraphs must render. Even if you leave the second one unclosed, the browser closes it for you — which is exactly what this step demonstrates."
+      },
+      "successMessage": {
+        "es": "Dos párrafos, uno de ellos mal cerrado. El navegador no ha dicho nada.",
+        "en": "Two paragraphs, one badly closed. The browser said nothing."
+      },
+      "points": 25
+    },
     {
       "id": "has-doctype",
       "kind": "regex-must",
@@ -141,7 +159,6 @@
       "points": 15
     }
   ],
-
   "steps": [
     {
       "id": "step-1-why",
@@ -150,16 +167,24 @@
         "en": "It works… and that's the problem"
       },
       "body": {
-        "es": "Abre la vista previa: la página **se ve**. El navegador ha rellenado por su cuenta todo lo que falta, porque HTML fue diseñado para no romperse nunca. Una etiqueta mal cerrada, un `<head>` ausente, un atributo inventado — el navegador lo arregla y sigue.\n\nEsa tolerancia es lo que ha mantenido la web viva treinta años. Y es también la razón por la que un documento incompleto pasa desapercibido hasta que aparecen los problemas:\n\n- Las tildes salen como `Ã©` en algunos servidores.\n- En el móvil la página aparece diminuta, como si fuera una web de escritorio.\n- La pestaña del navegador muestra la URL en vez de un nombre.\n- Un lector de pantalla lee el español con acento inglés.\n\nNinguno de esos fallos se ve en tu portátil el día que escribes el código. Todos aparecen después, en el dispositivo de otra persona.",
-        "en": "Open the preview: the page **shows up**. The browser has filled in everything that's missing on its own, because HTML was designed never to break. A badly closed tag, an absent `<head>`, an invented attribute — the browser patches it and moves on.\n\nThat tolerance is what has kept the web alive for thirty years. It's also why an incomplete document goes unnoticed until the problems arrive:\n\n- Accented characters come out as `Ã©` on some servers.\n- On a phone the page appears tiny, as if it were a desktop site.\n- The browser tab shows the URL instead of a name.\n- A screen reader reads Spanish with an English accent.\n\nNone of those show up on your laptop the day you write the code. All of them show up later, on someone else's device."
+        "es": "Abre la vista previa: la página **se ve**. El navegador ha rellenado por su cuenta todo lo que falta, porque HTML fue diseñado para no romperse nunca. Una etiqueta mal cerrada, un `<head>` ausente, un atributo inventado — el navegador lo arregla y sigue.\n\nEsa tolerancia es lo que ha mantenido la web viva treinta años. Y es también la razón por la que un documento incompleto pasa desapercibido hasta que aparecen los problemas:\n\n- Las tildes salen como `Ã©` en algunos servidores.\n- En el móvil la página aparece diminuta, como si fuera una web de escritorio.\n- La pestaña del navegador muestra la URL en vez de un nombre.\n- Un lector de pantalla lee el español con acento inglés.\n\nNinguno de esos fallos se ve en tu portátil el día que escribes el código. Todos aparecen después, en el dispositivo de otra persona.\n\nCompruébalo escribiendo tú el error: añade un segundo párrafo y **no lo cierres**. Ejecuta. La página sigue mostrando los dos, porque el navegador cierra la etiqueta por su cuenta. Ningún error, ningún aviso — y esa es exactamente la razón por la que un documento incompleto puede vivir meses en producción.",
+        "en": "Open the preview: the page **shows up**. The browser has filled in everything that's missing on its own, because HTML was designed never to break. A badly closed tag, an absent `<head>`, an invented attribute — the browser patches it and moves on.\n\nThat tolerance is what has kept the web alive for thirty years. It's also why an incomplete document goes unnoticed until the problems arrive:\n\n- Accented characters come out as `Ã©` on some servers.\n- On a phone the page appears tiny, as if it were a desktop site.\n- The browser tab shows the URL instead of a name.\n- A screen reader reads Spanish with an English accent.\n\nNone of those show up on your laptop the day you write the code. All of them show up later, on someone else's device.\n\nCheck it by writing the mistake yourself: add a second paragraph and **don't close it**. Run. The page still shows both, because the browser closes the tag on its own. No error, no warning — and that's exactly why an incomplete document can live in production for months."
       },
       "task": {
-        "es": "Ejecuta la página y fíjate en que se ve bien pese a estar incompleta. Mira el nombre de la pestaña.",
-        "en": "Run the page and notice it looks fine despite being incomplete. Look at the tab's name."
+        "es": "Añade un segundo `<p>` dentro del `<body>` sin cerrar la etiqueta, ejecuta y comprueba que se ve igual.",
+        "en": "Add a second `<p>` inside the `<body>` without closing the tag, run, and check it still looks fine."
       },
       "focusFile": "index.html",
-      "ruleIds": [],
-      "xp": 20
+      "ruleIds": [
+        "two-paragraphs"
+      ],
+      "xp": 30,
+      "solution": [
+        {
+          "path": "index.html",
+          "content": "<html>\n  <body>\n    <h1>Mi primera página</h1>\n    <p>Funciona… pero le faltan piezas.</p>\n    <p>Y esta etiqueta ni siquiera está cerrada.\n  </body>\n</html>\n"
+        }
+      ]
     },
     {
       "id": "step-2-skeleton",
@@ -176,7 +201,10 @@
         "en": "Complete `index.html` with the four pieces: doctype, language, and a `<head>` with charset, viewport and title."
       },
       "focusFile": "index.html",
-      "focusLines": [1, 2],
+      "focusLines": [
+        1,
+        2
+      ],
       "ruleIds": [
         "has-doctype",
         "has-lang",
@@ -211,20 +239,25 @@
       "bestPractice": {
         "es": "**Estándar de la industria:** este esqueleto es lo que genera cualquier herramienta moderna —`create-vite`, `create-next-app`— cuando arranca un proyecto. No lo escribirás a mano muy a menudo, pero sí lo vas a leer y a modificar constantemente: saber qué hace cada línea es la diferencia entre tocarlo con criterio y copiar y pegar.",
         "en": "**Industry standard:** this skeleton is what any modern tool — `create-vite`, `create-next-app` — generates when starting a project. You won't type it by hand often, but you will read and modify it constantly: knowing what each line does is the difference between editing with judgement and copy-pasting."
-      }
+      },
+      "solution": [
+        {
+          "path": "index.html",
+          "content": "<!doctype html>\n<html lang=\"es\">\n  <head>\n    <meta charset=\"utf-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />\n    <title>Mi primera página</title>\n  </head>\n  <body>\n    <h1>Mi primera página</h1>\n    <p>Funciona… pero le faltan piezas.</p>\n  </body>\n</html>\n"
+        }
+      ]
     }
   ],
-
   "drills": [],
-
   "reward": {
     "baseXp": 95,
     "flawlessBonus": 40,
     "noHintBonus": 20,
     "comboMultiplierCap": 3,
-    "achievements": ["first-steps"]
+    "achievements": [
+      "first-steps"
+    ]
   },
-
   "solution": {
     "files": [
       {

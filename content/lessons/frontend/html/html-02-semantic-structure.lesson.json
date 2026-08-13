@@ -1,16 +1,13 @@
 {
   "$schema": "../../../schema/lesson.schema.json",
   "schemaVersion": 1,
-
   "id": "html-02-semantic-structure",
   "track": "frontend",
   "module": "html",
   "order": 2,
-
   "kind": "concept",
   "difficulty": "novice",
   "estimatedMinutes": 15,
-
   "title": {
     "es": "HTML semántico: etiquetas que significan algo",
     "en": "Semantic HTML: tags that actually mean something"
@@ -19,15 +16,20 @@
     "es": "Deja de construir con `div` y aprende a usar las etiquetas que describen el contenido. Es la diferencia entre una página que un lector de pantalla puede navegar y una que no.",
     "en": "Stop building everything out of `div` and learn the tags that describe your content. It's the difference between a page a screen reader can navigate and one it can't."
   },
-  "concepts": ["html", "semantics", "accessibility", "seo"],
-  "prerequisites": ["html-01-first-page"],
-
+  "concepts": [
+    "html",
+    "semantics",
+    "accessibility",
+    "seo"
+  ],
+  "prerequisites": [
+    "html-01-first-page"
+  ],
   "runtime": {
     "kind": "dom",
     "dependencies": {},
     "timeoutMs": 5000
   },
-
   "workspace": {
     "entry": "index.html",
     "allowCreate": false,
@@ -46,7 +48,6 @@
       }
     ]
   },
-
   "rules": [
     {
       "id": "has-header",
@@ -144,7 +145,6 @@
       "points": 0
     }
   ],
-
   "steps": [
     {
       "id": "step-1-why",
@@ -153,17 +153,29 @@
         "en": "Why `div` isn't enough"
       },
       "body": {
-        "es": "Un `<div>` no significa nada. Es una caja. Sirve para agrupar cosas cuando ninguna otra etiqueta encaja.\n\nEl problema aparece cuando **todo** es un `div`. La página se ve bien y funciona con ratón, pero:\n\n- Un lector de pantalla no puede ofrecer «ir al contenido principal» porque no sabe cuál es.\n- El navegador no puede activar el modo lectura.\n- Google ve un muro de cajas sin jerarquía.\n\nHTML ya trae etiquetas que **describen el papel** de cada zona: `header`, `nav`, `main`, `article`, `aside`, `footer`. Se comportan igual que un `div` visualmente, pero además dicen qué son.",
-        "en": "A `<div>` means nothing. It's a box. It exists to group things when no other tag fits.\n\nThe problem shows up when **everything** is a `div`. The page looks fine and works with a mouse, but:\n\n- A screen reader can't offer \"skip to main content\" because it doesn't know which one that is.\n- The browser can't turn on reader mode.\n- Google sees a wall of boxes with no hierarchy.\n\nHTML already ships tags that **describe the role** of each region: `header`, `nav`, `main`, `article`, `aside`, `footer`. They look exactly like a `div`, but they also say what they are."
+        "es": "Un `<div>` no significa nada. Es una caja. Sirve para agrupar cosas cuando ninguna otra etiqueta encaja.\n\nEl problema aparece cuando **todo** es un `div`. La página se ve bien y funciona con ratón, pero:\n\n- Un lector de pantalla no puede ofrecer «ir al contenido principal» porque no sabe cuál es.\n- El navegador no puede activar el modo lectura.\n- Google ve un muro de cajas sin jerarquía.\n\nHTML ya trae etiquetas que **describen el papel** de cada zona: `header`, `nav`, `main`, `article`, `aside`, `footer`. Se comportan igual que un `div` visualmente, pero además dicen qué son.\n\nEmpieza por la más fácil de identificar y hazla tú: la franja de arriba con el logo y los enlaces es la **cabecera** de la página, y dentro de ella los enlaces son la **navegación**. Sustituye esos dos `div` por las etiquetas que describen lo que son. El resto de la página la conviertes en el paso siguiente.",
+        "en": "A `<div>` means nothing. It's a box. It exists to group things when no other tag fits.\n\nThe problem shows up when **everything** is a `div`. The page looks fine and works with a mouse, but:\n\n- A screen reader can't offer \"skip to main content\" because it doesn't know which one that is.\n- The browser can't turn on reader mode.\n- Google sees a wall of boxes with no hierarchy.\n\nHTML already ships tags that **describe the role** of each region: `header`, `nav`, `main`, `article`, `aside`, `footer`. They look exactly like a `div`, but they also say what they are.\n\nStart with the easiest one to spot and do it yourself: the strip at the top with the logo and links is the page **header**, and the links inside it are the **navigation**. Replace those two `div`s with the tags that describe what they are. You'll convert the rest of the page in the next step."
       },
       "task": {
-        "es": "Lee `index.html` y localiza las cinco zonas: cabecera, navegación, contenido principal, la entrada del blog y el pie.",
-        "en": "Read `index.html` and spot the five regions: header, navigation, main content, the blog post, and the footer."
+        "es": "Sustituye el `div.top` por un `<header>` y el `div.links` por un `<nav>`. La página debe verse exactamente igual.",
+        "en": "Replace `div.top` with a `<header>` and `div.links` with a `<nav>`. The page must look exactly the same."
       },
       "focusFile": "index.html",
-      "focusLines": [9, 25],
-      "ruleIds": [],
-      "xp": 20
+      "focusLines": [
+        9,
+        25
+      ],
+      "ruleIds": [
+        "has-header",
+        "has-nav"
+      ],
+      "xp": 30,
+      "solution": [
+        {
+          "path": "index.html",
+          "content": "<!doctype html>\n<html lang=\"es\">\n  <head>\n    <meta charset=\"utf-8\" />\n    <title>Mi blog</title>\n    <link rel=\"stylesheet\" href=\"./styles.css\" />\n  </head>\n  <body>\n    <header>\n      <div class=\"logo\">Mi blog</div>\n      <nav>\n        <a href=\"#inicio\">Inicio</a>\n        <a href=\"#sobre\">Sobre mí</a>\n      </nav>\n    </header>\n\n    <div class=\"content\">\n      <div class=\"post\">\n        <div class=\"post-title\">Cómo aprendí a programar</div>\n        <p>Empecé copiando código que no entendía. Funcionaba.</p>\n      </div>\n    </div>\n\n    <div class=\"bottom\">© 2026</div>\n  </body>\n</html>\n"
+        }
+      ]
     },
     {
       "id": "step-2-replace",
@@ -214,20 +226,25 @@
       "bestPractice": {
         "es": "**Accesibilidad como estándar, no como extra:** estas etiquetas crean *landmarks*, los puntos por los que un usuario de lector de pantalla salta por la página con una tecla. Cuestan lo mismo que un `div` y son la base de las WCAG. Escribirlas bien desde el principio sale gratis; añadirlas después es un refactor.",
         "en": "**Accessibility as the default, not an extra:** these tags create *landmarks* — the points a screen reader user jumps between with a single key. They cost exactly what a `div` costs and they're the foundation of WCAG. Getting them right up front is free; retrofitting them is a refactor."
-      }
+      },
+      "solution": [
+        {
+          "path": "index.html",
+          "content": "<!doctype html>\n<html lang=\"es\">\n  <head>\n    <meta charset=\"utf-8\" />\n    <title>Mi blog</title>\n    <link rel=\"stylesheet\" href=\"./styles.css\" />\n  </head>\n  <body>\n    <header>\n      <div class=\"logo\">Mi blog</div>\n      <nav>\n        <a href=\"#inicio\">Inicio</a>\n        <a href=\"#sobre\">Sobre mí</a>\n      </nav>\n    </header>\n\n    <main>\n      <article>\n        <h1>Cómo aprendí a programar</h1>\n        <p>Empecé copiando código que no entendía. Funcionaba.</p>\n      </article>\n    </main>\n\n    <footer>© 2026</footer>\n  </body>\n</html>\n"
+        }
+      ]
     }
   ],
-
   "drills": [],
-
   "reward": {
     "baseXp": 100,
     "flawlessBonus": 40,
     "noHintBonus": 25,
     "comboMultiplierCap": 3,
-    "achievements": ["semantic-scribe"]
+    "achievements": [
+      "semantic-scribe"
+    ]
   },
-
   "solution": {
     "files": [
       {

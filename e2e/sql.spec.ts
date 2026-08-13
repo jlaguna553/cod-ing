@@ -60,7 +60,12 @@ test('⭐ el error de Postgres se enseña tal cual', async ({ page }) => {
   await page.getByRole('button', { name: /ejecutar/i }).click();
 
   // El mensaje real de Postgres, con el nombre de la columna que no existe.
-  await expect(page.getByText(/column "precioo" does not exist/i)).toBeVisible({ timeout: BOOT });
+  // Se busca en el panel de resultados: el mismo texto aparece también en el
+  // detalle de la comprobación fallida, y sin acotar hay dos coincidencias.
+  await expect(page.locator('pre').filter({ hasText: 'does not exist' })).toBeVisible({
+    timeout: BOOT,
+  });
+  await expect(page.locator('pre')).toContainText('column "precioo" does not exist');
 });
 
 test('⭐ cada ejecución parte del mismo estado (la transacción se deshace)', async ({ page }) => {

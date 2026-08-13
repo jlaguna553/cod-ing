@@ -112,7 +112,7 @@ function toClientLesson(lesson: Localized<Lesson>): ClientLesson {
     ...rest,
     // Las reglas ocultas se evalúan en servidor (Fase 4): no viajan nunca.
     rules: rest.rules.filter((rule) => !rule.hidden),
-    steps: rest.steps.map((step) => ({
+    steps: rest.steps.map(({ solution: _stepSolution, ...step }) => ({
       ...step,
       ruleIds: step.ruleIds.filter((id) =>
         rest.rules.some((rule) => rule.id === id && !rule.hidden),

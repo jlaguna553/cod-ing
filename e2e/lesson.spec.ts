@@ -494,9 +494,19 @@ test('⭐ al terminar la lección hay salida: XP y enlace a la siguiente', async
   await page.getByRole('button', { name: /validar paso/i }).click();
   await expect(page.getByText(/todas las pruebas superadas/i)).toBeVisible({ timeout: 20_000 });
 
-  // Segundo paso: no tiene comprobaciones, así que se da por superado y el
-  // botón pasa a ser «Terminar lección».
+  // Segundo paso: también hay que resolverlo. Ya no queda ningún paso que se
+  // supere solo por leerlo — el editor está para escribir en él.
   await page.getByRole('button', { name: /siguiente/i }).click();
+  await insertInEditor(
+    page,
+    "const equipo = ['Ada'];\nequipo.push('Linus');\nconsole.log(equipo);\n\ntry {\n  equipo = ['otro'];\n} catch (error) {\n  console.log(error.message);\n}\n",
+  );
+  await page.getByRole('button', { name: /ejecutar/i }).click();
+  await expect(page.getByRole('log', { name: /consola/i })).toContainText(
+    'Assignment to constant variable',
+    { timeout: 20_000 },
+  );
+
   const finish = page.getByRole('button', { name: /terminar lección/i });
   await expect(finish).toBeVisible({ timeout: 10_000 });
   await finish.click();
@@ -507,16 +517,12 @@ test('⭐ al terminar la lección hay salida: XP y enlace a la siguiente', async
   await expect(page.getByRole('link', { name: /volver al mapa/i })).toBeVisible();
 });
 
-test('⭐ un paso sin comprobaciones no se queda bloqueado', async ({ page }) => {
-  await page.goto('/es/play/frontend/js-01-variables');
-  await waitForEditor(page);
-
-  await page.getByRole('button', { name: /siguiente/i }).click();
-  await page.getByRole('button', { name: /validar paso/i }).click();
-
-  // El paso 2 de js-01 es de solo lectura: debe darse por superado igualmente.
-  await expect(page.getByText(/paso superado/i)).toBeVisible({ timeout: 10_000 });
-});
+/*
+ * Aquí vivía «un paso sin comprobaciones no se queda bloqueado», que protegía
+ * el caso de un paso de solo lectura. Ya no existe ninguno: `validate-content`
+ * rechaza la lección que lo intente, así que el caso no puede volver y el test
+ * no tendría nada que proteger.
+ */
 
 test('⭐ css-03: el reset de border-box cambia lo que el navegador dibuja', async ({ page }) => {
   await page.goto('/es/play/frontend/css-03-box-model');

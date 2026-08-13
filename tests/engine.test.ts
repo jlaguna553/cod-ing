@@ -296,14 +296,61 @@ for (const lesson of allLessons()) {
   );
   if (staticRules.length === 0 || !lesson.solution) continue;
 
-  test(`⭐ ${lesson.id}: la solución de referencia supera sus propias reglas`, () => {
+  /*
+   * Con un ejercicio por paso, la solución final ya no cumple —ni debe— las
+   * reglas de los pasos anteriores. Cada paso que declara `solution` se
+   * comprueba contra la suya: sin esto, todas las promesas menos la última se
+   * quedan sin verificar.
+   */
+  for (const [index, step] of localized.steps.entries()) {
+    if (!step.solution) continue;
+
+    const stepRules = step.ruleIds
+      .map((id) => localized.rules.find((rule) => rule.id === id))
+      .filter(
+        (rule): rule is NonNullable<typeof rule> =>
+          rule !== undefined && STATIC_KINDS.has(rule.kind) && isImplemented(rule.kind),
+      );
+    if (stepRules.length === 0) continue;
+
+    test(`⭐ ${lesson.id} · paso ${index + 1} (${step.id}): su solución supera sus reglas`, () => {
+      const files = solvedWorkspace(lesson);
+      for (const file of step.solution ?? []) files[file.path] = file.content;
+      const context = emptyContext({ files });
+
+      for (const rule of stepRules) {
+        const result = evaluateRule(rule as never, context);
+        if (result === null) continue;
+        assert.equal(
+          result.passed,
+          true,
+          `[${lesson.id} · ${step.id}] "${rule.id}" falla contra la solución de su paso: ` +
+            `esperado ${result.detail?.expected ?? '—'}, obtenido ${result.detail?.actual ?? '—'}`,
+        );
+      }
+    });
+  }
+
+  test(`⭐ ${lesson.id}: la solución de referencia supera las reglas de su último paso`, () => {
     // El estado final: código de partida, los comandos que la lección espera
     // que el usuario ejecute, y la solución aplicada encima. Sin ejecutar los
     // comandos, una lección como react-04 nunca tendría el proyecto generado.
     const files = solvedWorkspace(lesson);
     const context = emptyContext({ files });
 
-    for (const rule of staticRules) {
+    /*
+     * Solo las reglas del ÚLTIMO paso.
+     *
+     * Con un ejercicio por paso, `solution` es el estado final y no tiene por
+     * qué cumplir las reglas de los pasos anteriores: la consulta del paso 3
+     * filtra por otra cosa que la del paso 1. Exigirle todas convertía en
+     * error lo que es el diseño. Los pasos intermedios los cubre la
+     * comprobación por paso de arriba, contra su propia solución.
+     */
+    const lastStep = localized.steps.at(-1);
+    const applicable = staticRules.filter((rule) => lastStep?.ruleIds.includes(rule.id));
+
+    for (const rule of applicable) {
       const result = evaluateRule(rule as never, context);
       if (result === null) continue;
       assert.equal(

@@ -648,6 +648,21 @@ ese es exactamente el sitio donde se cuela una tilde de más o una fila olvidada
 transacciones/aislamiento — el `ROLLBACK` que el runner ya usa por dentro da un buen
 punto de partida para explicarlo.
 
+### Todo paso se practica, y nada se bloquea (ADR-12)
+
+Dos cambios transversales a las 24 lecciones:
+
+**Los 15 pasos que no pedían escribir nada ahora piden.** Eran pasos de solo lectura —«lee
+el diagrama», «anota cuántas veces se renderiza», «explica en voz alta»— repartidos por 10
+lecciones. `validate-content.ts` los rechaza desde ahora: todo paso declara al menos una
+regla, y una lección con un paso pasivo no pasa CI.
+
+**Ninguna lección tiene candado.** El mapa avisa —`Recomendado antes: …`, con los títulos,
+no con un número— y deja entrar. Quien quiere practicar React entra por React.
+
+Ambos trajeron cambios de motor: `steps[].solution` (para poder verificar cada ejercicio
+por separado) y el estado `locked` fuera de `progression.ts`.
+
 ### Backlog del currículo — vacío
 
 `validate-content.ts` construye el grafo de prerequisitos y lista lo que no existe.

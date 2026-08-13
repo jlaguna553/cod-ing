@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { hasLocale } from 'next-intl';
-import { ArrowLeft, CheckCircle2, Circle, Lock, PlayCircle } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Circle, Info, PlayCircle } from 'lucide-react';
 import { Link } from '@/i18n/navigation';
 import { LocaleSwitch } from '@/components/i18n/LocaleSwitch';
 import { routing } from '@/i18n/routing';
@@ -150,9 +150,12 @@ export default async function TrackPage({ params }: TrackParams) {
                     difficulty={t(`difficulty.${node.lesson.difficulty}`)}
                     minutes={node.lesson.estimatedMinutes}
                     xp={xpByLesson[node.lesson.id] ?? 0}
-                    lockedLabel={
-                      node.missingPrerequisites.length > 0
-                        ? t('tracks.locked', { count: node.missingPrerequisites.length })
+                    recommendedFirst={node.recommendedFirst}
+                    recommendLabel={
+                      node.recommendedFirst.length > 0
+                        ? t('tracks.recommendedFirst', {
+                            lessons: node.recommendedFirst.join(' · '),
+                          })
                         : undefined
                     }
                     color={color}
@@ -176,7 +179,8 @@ function LessonRow({
   difficulty,
   minutes,
   xp,
-  lockedLabel,
+  recommendedFirst,
+  recommendLabel,
   color,
 }: {
   href: string;
@@ -187,14 +191,13 @@ function LessonRow({
   difficulty: string;
   minutes: number;
   xp: number;
-  lockedLabel?: string;
+  recommendedFirst: string[];
+  recommendLabel?: string;
   color: string;
 }) {
   const icon =
     state === 'completed' ? (
       <CheckCircle2 size={16} style={{ color: 'var(--color-success)' }} />
-    ) : state === 'locked' ? (
-      <Lock size={15} className="text-[var(--color-ink-faint)]" />
     ) : state === 'in-progress' ? (
       <PlayCircle size={16} style={{ color: 'var(--color-power)' }} />
     ) : (
@@ -202,12 +205,7 @@ function LessonRow({
     );
 
   const body = (
-    <div
-      className={
-        'flex items-start gap-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-panel)] px-3 py-2.5 transition-colors ' +
-        (state === 'locked' ? 'opacity-50' : 'hover:border-[var(--color-border-glow)]')
-      }
-    >
+    <div className="flex items-start gap-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-panel)] px-3 py-2.5 transition-colors hover:border-[var(--color-border-glow)]">
       <span className="mt-0.5 shrink-0">{icon}</span>
 
       <div className="min-w-0 flex-1">
@@ -217,8 +215,19 @@ function LessonRow({
           <Tag>{kind}</Tag>
           <Tag>{difficulty}</Tag>
           <Tag>{minutes} min</Tag>
-          {lockedLabel && <Tag>{lockedLabel}</Tag>}
         </div>
+
+        {/*
+          Aviso, no barrera. Se nombran las lecciones para que la decisión sea
+          informada: «requiere 2 lecciones previas» no dice cuáles, y con eso
+          no se puede decidir nada.
+        */}
+        {recommendLabel && recommendedFirst.length > 0 && (
+          <p className="mt-1.5 flex items-start gap-1.5 text-[10px] leading-snug text-[var(--color-power)]">
+            <Info size={11} className="mt-px shrink-0" />
+            {recommendLabel}
+          </p>
+        )}
       </div>
 
       <span className="shrink-0 font-mono text-[10px]" style={{ color }}>
@@ -227,9 +236,8 @@ function LessonRow({
     </div>
   );
 
-  // Una lección bloqueada no es un enlace: dejar pulsar y llegar a algo que no
-  // se puede resolver es peor que no dejar pulsar.
-  return state === 'locked' ? body : <Link href={href}>{body}</Link>;
+  // Siempre enlace: el aviso informa, no impide.
+  return <Link href={href}>{body}</Link>;
 }
 
 function Tag({ children }: { children: React.ReactNode }) {

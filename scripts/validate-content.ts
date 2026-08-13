@@ -40,6 +40,23 @@ async function findLessonFiles(dir: string): Promise<string[]> {
  */
 const SPOILER_ENFORCED_FROM: Difficulty[] = ['adept', 'expert', 'interview'];
 
+
+/**
+ * Un paso sin comprobaciones es un paso que no se practica.
+ *
+ * El editor está ahí para escribir. Un paso que solo dice «lee esto y quédate
+ * con la idea» convierte la pantalla en un libro con un editor decorativo al
+ * lado, y el usuario pasa al siguiente sin haber tecleado nada — que es justo
+ * lo contrario de para lo que existe la plataforma.
+ *
+ * La regla es dura a propósito: **todo paso debe pedir algo comprobable**. Si
+ * un concepto no se puede ejercitar, va dentro del cuerpo de otro paso que sí
+ * lo haga, no como paso propio.
+ */
+function findPassiveSteps(lesson: ReturnType<typeof LessonSchema.parse>): string[] {
+  return lesson.steps.filter((step) => step.ruleIds.length === 0).map((step) => step.id);
+}
+
 function findSolutionSpoilers(lesson: ReturnType<typeof LessonSchema.parse>): string[] {
   if (!lesson.solution) return [];
   if (!SPOILER_ENFORCED_FROM.includes(lesson.difficulty)) return [];
@@ -52,7 +69,17 @@ function findSolutionSpoilers(lesson: ReturnType<typeof LessonSchema.parse>): st
     ),
   );
 
-  const solutionLines = lesson.solution.files.flatMap((file) =>
+  /*
+   * También cuentan las soluciones por paso: si el enunciado del paso 2 trae
+   * literalmente la consulta que resuelve el paso 2, da igual dónde esté
+   * guardada esa consulta.
+   */
+  const solutionFiles = [
+    ...lesson.solution.files,
+    ...lesson.steps.flatMap((step) => step.solution ?? []),
+  ];
+
+  const solutionLines = solutionFiles.flatMap((file) =>
     file.content
       .split('\n')
       .map((line) => line.trim())
@@ -142,6 +169,16 @@ async function main() {
       console.error(`\n✖ ${rel}\n    el enunciado contiene la solución literal:`);
       for (const line of spoilers.slice(0, 5)) console.error(`      « ${line} »`);
       if (spoilers.length > 5) console.error(`      … y ${spoilers.length - 5} líneas más`);
+      continue;
+    }
+
+    const passive = findPassiveSteps(lesson);
+    if (passive.length > 0) {
+      failed++;
+      console.error(
+        `\n✖ ${rel}\n    pasos sin nada que resolver (el editor se queda de adorno): ` +
+          passive.join(', '),
+      );
       continue;
     }
 

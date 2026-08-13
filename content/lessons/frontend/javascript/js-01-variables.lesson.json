@@ -97,6 +97,38 @@
         "en": "Expected output is `Ada 10 cyan`."
       },
       "points": 20
+    },
+    {
+      "id": "proves-const-mutation",
+      "kind": "stdout-match",
+      "matches": "Ada.*Linus",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Imprime el array después de añadirle un nombre: debe salir con los dos, `Ada` y `Linus`. Eso demuestra que `const` no congela el contenido.",
+        "en": "Print the array after adding a name: both `Ada` and `Linus` must show. That proves `const` doesn't freeze the contents."
+      },
+      "successMessage": {
+        "es": "El array cambió y `const` no protestó: lo que congela es la referencia.",
+        "en": "The array changed and `const` didn't complain: what it freezes is the reference."
+      },
+      "points": 30
+    },
+    {
+      "id": "proves-reassign-throws",
+      "kind": "stdout-match",
+      "matches": "Assignment to constant variable",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Falta la prueba del otro lado: reasigna la variable dentro de un `try/catch` e imprime `error.message`. El texto exacto de ese error conviene reconocerlo.",
+        "en": "The other half of the proof is missing: reassign the variable inside a `try/catch` and print `error.message`. That exact error text is worth recognising."
+      },
+      "successMessage": {
+        "es": "«Assignment to constant variable»: el error que sí lanza `const`.",
+        "en": "\"Assignment to constant variable\": the error `const` does throw."
+      },
+      "points": 35
     }
   ],
   "steps": [
@@ -137,6 +169,12 @@
           "xpPenalty": 5,
           "autoOfferAfterSeconds": 60
         }
+      ],
+      "solution": [
+        {
+          "path": "index.js",
+          "content": "// El nombre del jugador no cambia en toda la partida.\nconst playerName = 'Ada';\n\n// La puntuación sube con cada acierto.\nlet score = 0;\nscore = score + 10;\n\n// El equipo se decide al empezar y ya no cambia.\nconst team = 'cyan';\n\nconsole.log(playerName, score, team);\n"
+        }
       ]
     },
     {
@@ -146,20 +184,41 @@
         "en": "What `const` does NOT mean"
       },
       "body": {
-        "es": "Aquí hay una confusión que arrastra mucha gente durante años.\n\n`const` **no** hace el valor inmutable. Lo que congela es la **referencia**: la variable no puede apuntar a otra cosa. Si lo que guarda es un objeto o un array, su contenido sí se puede modificar.\n\n```js\nconst equipo = ['Ada'];\nequipo.push('Linus');   // ✅ permitido: el array cambia, la referencia no\nequipo = ['otro'];      // ❌ TypeError: eso sí es reasignar\n```\n\nDicho de otro modo: `const` promete «esta caja siempre será la misma caja», no «lo que hay dentro no cambiará». Para congelar el contenido existe `Object.freeze`, aunque en la práctica se usa poco: lo habitual es simplemente no mutar (lo verás en la lección de `.map()`).",
-        "en": "Here's a confusion people carry for years.\n\n`const` does **not** make the value immutable. It freezes the **binding**: the variable can't point at something else. If what it holds is an object or an array, its contents can still be changed.\n\n```js\nconst team = ['Ada'];\nteam.push('Linus');   // ✅ allowed: the array changes, the binding doesn't\nteam = ['other'];     // ❌ TypeError: that's reassignment\n```\n\nPut differently: `const` promises \"this box will always be the same box\", not \"what's inside won't change\". To freeze the contents there's `Object.freeze`, though in practice it's rare: the usual approach is simply not to mutate (you'll see this in the `.map()` lesson)."
+        "es": "Aquí hay una confusión que arrastra mucha gente durante años.\n\n`const` **no** hace el valor inmutable. Lo que congela es la **referencia**: la variable no puede apuntar a otra cosa. Si lo que guarda es un objeto o un array, su contenido sí se puede modificar.\n\n```js\nconst equipo = ['Ada'];\nequipo.push('Linus');   // ✅ permitido: el array cambia, la referencia no\nequipo = ['otro'];      // ❌ TypeError: eso sí es reasignar\n```\n\nDicho de otro modo: `const` promete «esta caja siempre será la misma caja», no «lo que hay dentro no cambiará». Para congelar el contenido existe `Object.freeze`, aunque en la práctica se usa poco: lo habitual es simplemente no mutar (lo verás en la lección de `.map()`).\n\nNo te lo creas: demuéstralo. En este paso escribes las dos mitades —la mutación que `const` permite y la reasignación que no— y dejas que la consola te dé la razón. La reasignación lanza, así que va dentro de un `try/catch`; si no, corta la ejecución y no verías nada más.\n\n```js\ntry {\n  // aquí lo que debe fallar\n} catch (error) {\n  console.log(error.message);\n}\n```",
+        "en": "Here's a confusion people carry for years.\n\n`const` does **not** make the value immutable. It freezes the **binding**: the variable can't point at something else. If what it holds is an object or an array, its contents can still be changed.\n\n```js\nconst team = ['Ada'];\nteam.push('Linus');   // ✅ allowed: the array changes, the binding doesn't\nteam = ['other'];     // ❌ TypeError: that's reassignment\n```\n\nPut differently: `const` promises \"this box will always be the same box\", not \"what's inside won't change\". To freeze the contents there's `Object.freeze`, though in practice it's rare: the usual approach is simply not to mutate (you'll see this in the `.map()` lesson).\n\nDon't take my word for it: prove it. In this step you write both halves — the mutation `const` allows and the reassignment it doesn't — and let the console settle it. The reassignment throws, so it goes inside a `try/catch`; otherwise it halts execution and you'd see nothing else.\n\n```js\ntry {\n  // whatever must fail\n} catch (error) {\n  console.log(error.message);\n}\n```"
       },
       "task": {
-        "es": "Sin cambiar código: predice cuál de las dos líneas del ejemplo lanzaría un error y por qué.",
-        "en": "No code change: predict which of the two example lines would throw, and why."
+        "es": "Declara `const equipo = ['Ada']`, añádele `'Linus'` e imprímelo. Después, dentro de un `try/catch`, reasigna `equipo` e imprime `error.message`.",
+        "en": "Declare `const equipo = ['Ada']`, push `'Linus'` and print it. Then, inside a `try/catch`, reassign `equipo` and print `error.message`."
       },
       "focusFile": "index.js",
-      "ruleIds": [],
-      "xp": 25,
+      "ruleIds": [
+        "proves-const-mutation",
+        "proves-reassign-throws"
+      ],
+      "xp": 45,
       "bestPractice": {
         "es": "**Clean Code:** un archivo lleno de `const` se lee más rápido porque cada `let` es una señal de «aquí hay estado que cambia, préstale atención». Si todo es `let`, la señal desaparece y hay que seguir la pista de todo.",
         "en": "**Clean Code:** a file full of `const` reads faster because every `let` becomes a signal — \"there's changing state here, pay attention\". If everything is `let`, the signal disappears and you have to track everything."
-      }
+      },
+      "hints": [
+        {
+          "id": "h-order",
+          "tier": 1,
+          "text": {
+            "es": "Cuatro líneas: declarar, `push`, imprimir el array, y el `try/catch` con la reasignación dentro. El `console.log` del error va en el `catch`.",
+            "en": "Four lines: declare, `push`, print the array, and the `try/catch` with the reassignment inside. The error's `console.log` goes in the `catch`."
+          },
+          "xpPenalty": 6,
+          "autoOfferAfterSeconds": 80
+        }
+      ],
+      "solution": [
+        {
+          "path": "index.js",
+          "content": "const equipo = ['Ada'];\nequipo.push('Linus');\nconsole.log(equipo);\n\ntry {\n  equipo = ['otro'];\n} catch (error) {\n  console.log(error.message);\n}\n"
+        }
+      ]
     }
   ],
   "drills": [],
@@ -176,12 +235,12 @@
     "files": [
       {
         "path": "index.js",
-        "content": "// El nombre del jugador no cambia en toda la partida.\nconst playerName = 'Ada';\n\n// La puntuación sube con cada acierto.\nlet score = 0;\nscore = score + 10;\n\n// El equipo se decide al empezar y ya no cambia.\nconst team = 'cyan';\n\nconsole.log(playerName, score, team);\n"
+        "content": "const equipo = ['Ada'];\nequipo.push('Linus');\nconsole.log(equipo);\n\ntry {\n  equipo = ['otro'];\n} catch (error) {\n  console.log(error.message);\n}\n"
       }
     ],
     "explanation": {
-      "es": "Dos `const` y un `let`. La proporción es la normal en código real: la mayoría de las variables no se reasignan nunca, y marcarlo hace el archivo más fácil de leer.",
-      "en": "Two `const` and one `let`. That ratio is normal in real code: most variables are never reassigned, and marking it makes the file easier to read."
+      "es": "Las dos mitades de `const`, escritas y comprobadas en lugar de creídas: el array acepta un elemento nuevo sin rechistar y la reasignación lanza `Assignment to constant variable`. Congela la caja, no lo que hay dentro.",
+      "en": "Both halves of `const`, written and checked rather than believed: the array accepts a new element without complaint and the reassignment throws `Assignment to constant variable`. It freezes the box, not what's inside."
     }
   }
 }

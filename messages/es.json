@@ -35,7 +35,7 @@
       "description": "Bash, Linux, Docker, CI/CD, Nginx y Kubernetes. Que llegue a producción y siga en pie."
     },
     "empty": "Todavía no hay lecciones en esta ruta. Estamos en ello.",
-    "locked": "Requiere {count} lección(es) previa(s)"
+    "recommendedFirst": "Recomendado antes: {lessons}"
   },
   "difficulty": {
     "novice": "Novato",

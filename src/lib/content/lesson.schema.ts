@@ -346,6 +346,19 @@ export const StepSchema = z.object({
   xp: z.number().int().nonnegative().default(25),
   /** Nota de estándar de industria (Clean Code, SOLID, OWASP...). */
   bestPractice: LocalizedMarkdownSchema.optional(),
+  /**
+   * Estado del workspace que supera ESTE paso.
+   *
+   * Cuando una lección tiene un ejercicio por paso, la solución final ya no
+   * verifica los intermedios: la consulta del paso 3 no cumple —ni debe— las
+   * reglas del paso 1. Sin esto, las promesas de los pasos que no son el
+   * último se quedan sin comprobar, que es justo donde se cuela un enunciado
+   * imposible.
+   *
+   * **Nunca viaja al cliente** (`toClientLesson` la recorta) y el comprobador
+   * de spoilers la trata igual que la solución de la lección.
+   */
+  solution: z.array(z.object({ path: z.string(), content: z.string() })).optional(),
 });
 
 /**

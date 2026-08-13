@@ -26,14 +26,32 @@ const CHAIN = [
 
 const XP = { 'js-01': 100, 'js-02': 100, 'js-03': 100 };
 
-test('sin progreso, solo la primera lección está disponible', () => {
+test('⭐ sin progreso, TODAS las lecciones son accesibles', () => {
+  // Ninguna se bloquea: quien llega sabiendo que quiere practicar React entra
+  // por React. Lo que se hace es avisar, no cerrar la puerta.
   const [group] = buildTrackMap(CHAIN, [], XP);
 
   assert.equal(group.lessons[0].state, 'available');
-  assert.equal(group.lessons[1].state, 'locked');
-  assert.equal(group.lessons[2].state, 'locked');
+  assert.equal(group.lessons[1].state, 'available');
+  assert.equal(group.lessons[2].state, 'available');
   assert.equal(group.completed, 0);
   assert.equal(group.total, 3);
+});
+
+test('⭐ una lección con prerequisitos pendientes los nombra, y sigue accesible', () => {
+  const [group] = buildTrackMap(CHAIN, [], XP);
+
+  assert.equal(group.lessons[2].state, 'available', 'accesible pese a los huecos');
+  assert.deepEqual(group.lessons[2].missingPrerequisites, ['js-02']);
+  // Se nombran por título, no por id: «requiere 1 lección previa» no dice
+  // cuál, y con eso el usuario no puede decidir nada.
+  assert.deepEqual(group.lessons[2].recommendedFirst, ['js-02']);
+});
+
+test('⭐ «Continuar» recomienda la primera sin huecos detrás', () => {
+  const [group] = buildTrackMap(CHAIN, [], XP);
+  const next = nextRecommended([group]);
+  assert.equal(next?.lesson.id, 'js-01');
 });
 
 test('completar una lección desbloquea la siguiente', () => {
@@ -42,7 +60,8 @@ test('completar una lección desbloquea la siguiente', () => {
 
   assert.equal(group.lessons[0].state, 'completed');
   assert.equal(group.lessons[1].state, 'available');
-  assert.equal(group.lessons[2].state, 'locked', 'la tercera sigue bloqueada');
+  assert.deepEqual(group.lessons[1].missingPrerequisites, [], 'ya no queda nada por delante');
+  assert.deepEqual(group.lessons[2].missingPrerequisites, ['js-02'], 'a la tercera aún le falta una');
   assert.equal(group.xpEarned, 100);
 });
 

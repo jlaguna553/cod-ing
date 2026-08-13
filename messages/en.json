@@ -35,7 +35,7 @@
       "description": "Bash, Linux, Docker, CI/CD, Nginx and Kubernetes. Ship it, then keep it standing."
     },
     "empty": "No lessons on this track yet. We're on it.",
-    "locked": "Requires {count} earlier lesson(s)"
+    "recommendedFirst": "Recommended first: {lessons}"
   },
   "difficulty": {
     "novice": "Novice",

@@ -115,7 +115,8 @@
             "webcontainer",
             "pyodide",
             "remote",
-            "cli-sim"
+            "cli-sim",
+            "sql"
           ]
         },
         "command": {
@@ -736,6 +737,111 @@
                 "type": "integer",
                 "minimum": -9007199254740991,
                 "maximum": 9007199254740991
+              }
+            },
+            "required": [
+              "id",
+              "message",
+              "kind"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "phase": {
+                "default": "submit",
+                "type": "string",
+                "enum": [
+                  "type",
+                  "run",
+                  "submit"
+                ]
+              },
+              "severity": {
+                "default": "error",
+                "type": "string",
+                "enum": [
+                  "damage",
+                  "error",
+                  "warn"
+                ]
+              },
+              "message": {
+                "type": "object",
+                "properties": {
+                  "es": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "en": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "es",
+                  "en"
+                ]
+              },
+              "successMessage": {
+                "type": "object",
+                "properties": {
+                  "es": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "en": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "es",
+                  "en"
+                ]
+              },
+              "points": {
+                "default": 10,
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "hidden": {
+                "default": false,
+                "type": "boolean"
+              },
+              "kind": {
+                "type": "string",
+                "const": "sql-result"
+              },
+              "expectRows": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string"
+                  },
+                  "additionalProperties": {}
+                }
+              },
+              "expectColumns": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "expectRowCount": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "ordered": {
+                "default": false,
+                "type": "boolean"
               }
             },
             "required": [
@@ -1583,6 +1689,24 @@
               "es",
               "en"
             ]
+          },
+          "solution": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string"
+                },
+                "content": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "path",
+                "content"
+              ]
+            }
           }
         },
         "required": [
@@ -2115,6 +2239,111 @@
                       "type": "integer",
                       "minimum": -9007199254740991,
                       "maximum": 9007199254740991
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "message",
+                    "kind"
+                  ]
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "phase": {
+                      "default": "submit",
+                      "type": "string",
+                      "enum": [
+                        "type",
+                        "run",
+                        "submit"
+                      ]
+                    },
+                    "severity": {
+                      "default": "error",
+                      "type": "string",
+                      "enum": [
+                        "damage",
+                        "error",
+                        "warn"
+                      ]
+                    },
+                    "message": {
+                      "type": "object",
+                      "properties": {
+                        "es": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "en": {
+                          "type": "string",
+                          "minLength": 1
+                        }
+                      },
+                      "required": [
+                        "es",
+                        "en"
+                      ]
+                    },
+                    "successMessage": {
+                      "type": "object",
+                      "properties": {
+                        "es": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "en": {
+                          "type": "string",
+                          "minLength": 1
+                        }
+                      },
+                      "required": [
+                        "es",
+                        "en"
+                      ]
+                    },
+                    "points": {
+                      "default": 10,
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    "hidden": {
+                      "default": false,
+                      "type": "boolean"
+                    },
+                    "kind": {
+                      "type": "string",
+                      "const": "sql-result"
+                    },
+                    "expectRows": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "propertyNames": {
+                          "type": "string"
+                        },
+                        "additionalProperties": {}
+                      }
+                    },
+                    "expectColumns": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "expectRowCount": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    "ordered": {
+                      "default": false,
+                      "type": "boolean"
                     }
                   },
                   "required": [

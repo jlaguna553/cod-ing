@@ -71,40 +71,58 @@ async function runQuery(lesson: Lesson, sql: string): Promise<SqlQueryResult | {
 
 for (const lesson of sqlLessons()) {
   const localized = localize(lesson, 'es');
-  const sqlRules = localized.rules.filter((rule) => rule.kind === 'sql-result');
+  const ruleById = new Map(localized.rules.map((rule) => [rule.id, rule]));
 
   test(`⭐ ${lesson.id}: el esquema de la lección se aplica sin errores`, async () => {
     const outcome = await runQuery(lesson, 'SELECT 1 AS ok');
     assert.ok(!('error' in outcome), `el esquema falló: ${'error' in outcome ? outcome.error : ''}`);
   });
 
-  if (sqlRules.length === 0 || !lesson.solution) continue;
+  /*
+   * Cada paso se verifica contra SU propia solución.
+   *
+   * Con un ejercicio por paso, la consulta final ya no cumple —ni debe— las
+   * reglas de los pasos anteriores: la del paso 3 filtra por otra cosa. Sin
+   * `step.solution`, las promesas de todos los pasos menos el último se
+   * quedaban sin comprobar, que es justo donde se cuela un enunciado
+   * imposible o unas filas esperadas mal copiadas.
+   */
+  for (const [index, step] of localized.steps.entries()) {
+    const sqlRules = step.ruleIds
+      .map((id) => ruleById.get(id))
+      .filter((rule): rule is NonNullable<typeof rule> => rule?.kind === 'sql-result');
 
-  const solutionSql = lesson.solution.files.find(
-    (file) => file.path === lesson.workspace.entry,
-  )?.content;
+    if (sqlRules.length === 0) continue;
 
-  test(`⭐ ${lesson.id}: la consulta de referencia devuelve lo que la lección promete`, async () => {
-    assert.ok(solutionSql, `la solución no incluye ${lesson.workspace.entry}`);
+    const reference = (step.solution ?? lesson.solution?.files ?? []).find(
+      (file) => file.path === lesson.workspace.entry,
+    )?.content;
 
-    const outcome = await runQuery(lesson, solutionSql);
-    assert.ok(
-      !('error' in outcome),
-      `la solución de referencia no se ejecuta: ${'error' in outcome ? outcome.error : ''}`,
-    );
-
-    const context = emptyContext({ hasRun: true, sql: outcome });
-    for (const rule of sqlRules) {
-      const result = evaluateRule(rule as never, context);
-      assert.ok(result, `la regla "${rule.id}" quedó pendiente contra la solución`);
-      assert.equal(
-        result.passed,
-        true,
-        `[${lesson.id}] "${rule.id}" falla contra su propia solución: ` +
-          `esperado ${result.detail?.expected ?? '—'}, obtenido ${result.detail?.actual ?? '—'}`,
+    test(`⭐ ${lesson.id} · paso ${index + 1} (${step.id}): la consulta de referencia cumple lo que promete`, async () => {
+      assert.ok(
+        reference,
+        `el paso ${step.id} tiene reglas SQL pero ninguna solución que las verifique`,
       );
-    }
-  });
+
+      const outcome = await runQuery(lesson, reference);
+      assert.ok(
+        !('error' in outcome),
+        `la consulta de referencia no se ejecuta: ${'error' in outcome ? outcome.error : ''}`,
+      );
+
+      const context = emptyContext({ hasRun: true, sql: outcome });
+      for (const rule of sqlRules) {
+        const result = evaluateRule(rule as never, context);
+        assert.ok(result, `la regla "${rule.id}" quedó pendiente contra su solución`);
+        assert.equal(
+          result.passed,
+          true,
+          `[${lesson.id} · ${step.id}] "${rule.id}" falla contra su propia solución: ` +
+            `esperado ${result.detail?.expected ?? '—'}, obtenido ${result.detail?.actual ?? '—'}`,
+        );
+      }
+    });
+  }
 
   test(`⭐ ${lesson.id}: la consulta de partida NO pasa las comprobaciones`, async () => {
     const starter = lesson.workspace.files.find(
@@ -119,7 +137,9 @@ for (const lesson of sqlLessons()) {
       stderr: 'error' in outcome ? outcome.error : '',
     });
 
-    const blocking = sqlRules.filter((rule) => rule.severity === 'error');
+    const blocking = localized.rules.filter(
+      (rule) => rule.kind === 'sql-result' && rule.severity === 'error',
+    );
     const verdicts = blocking.map((rule) => evaluateRule(rule as never, context));
     assert.ok(
       verdicts.some((result) => result && !result.passed),

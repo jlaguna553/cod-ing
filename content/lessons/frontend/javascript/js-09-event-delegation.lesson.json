@@ -60,6 +60,36 @@
   },
   "rules": [
     {
+      "id": "counted-listeners",
+      "kind": "stdout-match",
+      "matches": "5000 listeners",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Cuenta los listeners que registra el bucle e imprímelo con el formato `5000 listeners`. Medir antes de optimizar no es opcional: es lo que distingue arreglar de adivinar.",
+        "en": "Count the listeners the loop registers and print it in the form `5000 listeners`. Measuring before optimizing isn't optional: it's what separates fixing from guessing."
+      },
+      "successMessage": {
+        "es": "5.000 listeners, uno por fila. Ahí está el coste, medido y no supuesto.",
+        "en": "5,000 listeners, one per row. There's the cost, measured rather than assumed."
+      },
+      "points": 30
+    },
+    {
+      "id": "measures-time",
+      "kind": "regex-must",
+      "file": "app.js",
+      "pattern": "__measure__|performance\\.now",
+      "flags": "m",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Envuelve el render en una medición de tiempo. `bench.js` ya expone `window.__measure__(etiqueta, fn)`; también vale `performance.now()` a mano.",
+        "en": "Wrap the render in a time measurement. `bench.js` already exposes `window.__measure__(label, fn)`; a manual `performance.now()` works too."
+      },
+      "points": 20
+    },
+    {
       "id": "single-listener",
       "kind": "ast-query",
       "file": "app.js",
@@ -154,20 +184,41 @@
         "en": "Measure before optimizing"
       },
       "body": {
-        "es": "Ejecuta el código tal cual está y mira la consola. Cinco mil filas, cinco mil closures, cinco mil listeners registrados en el navegador.\n\nEl coste no es solo el tiempo de arranque. Cada listener mantiene viva una referencia al objeto `row` de su fila, así que la memoria no se libera aunque quites la fila del DOM sin más — es una fuga de memoria clásica en tablas que se repintan a menudo.\n\nY hay un tercer problema, el más molesto en la práctica: si mañana añades filas nuevas por AJAX, **no tendrán listener**. Habrá que acordarse de registrarlo también ahí. Ese \"acordarse\" es exactamente lo que falla en producción.",
+        "es": "Antes de arreglar nada, mide. Es la diferencia entre optimizar y adivinar, y aquí lo vas a hacer tú: cuenta cuántos listeners registra el bucle y cronometra lo que tarda el render. `bench.js` ya te da la herramienta (`window.__measure__(etiqueta, fn)`) y las 5.000 filas. Cinco mil filas, cinco mil closures, cinco mil listeners registrados en el navegador.\n\nEl coste no es solo el tiempo de arranque. Cada listener mantiene viva una referencia al objeto `row` de su fila, así que la memoria no se libera aunque quites la fila del DOM sin más — es una fuga de memoria clásica en tablas que se repintan a menudo.\n\nY hay un tercer problema, el más molesto en la práctica: si mañana añades filas nuevas por AJAX, **no tendrán listener**. Habrá que acordarse de registrarlo también ahí. Ese \"acordarse\" es exactamente lo que falla en producción.",
         "en": "Run the code as it stands and watch the console. Five thousand rows, five thousand closures, five thousand listeners registered with the browser.\n\nThe cost isn't just startup time. Each listener holds a live reference to its row's `row` object, so memory isn't reclaimed even when you drop the row from the DOM — a classic leak in tables that repaint often.\n\nAnd there's a third problem, the most annoying one in practice: if tomorrow you append new rows over AJAX, **they'll have no listener**. Someone will have to remember to wire those up too. That \"remember to\" is precisely what fails in production."
       },
       "task": {
-        "es": "Ejecuta el código y anota el tiempo de renderizado que aparece en consola.",
-        "en": "Run the code and note the render time printed in the console."
+        "es": "Cuenta los listeners que registra el bucle e imprímelo como `5000 listeners`, y cronometra el render con `window.__measure__`.",
+        "en": "Count the listeners the loop registers and print it as `5000 listeners`, and time the render with `window.__measure__`."
       },
       "focusFile": "app.js",
       "focusLines": [
         13,
         17
       ],
-      "ruleIds": [],
-      "xp": 25
+      "ruleIds": [
+        "counted-listeners",
+        "measures-time"
+      ],
+      "xp": 35,
+      "hints": [
+        {
+          "id": "h-counter",
+          "tier": 1,
+          "text": {
+            "es": "Un contador fuera de la función, `++` justo donde se llama a `addEventListener`, y un `console.log` después del render. La medición envuelve la llamada: `window.__measure__('render', () => renderRows(...))`.",
+            "en": "A counter outside the function, `++` right where `addEventListener` is called, and a `console.log` after the render. The measurement wraps the call: `window.__measure__('render', () => renderRows(...))`."
+          },
+          "xpPenalty": 6,
+          "autoOfferAfterSeconds": 90
+        }
+      ],
+      "solution": [
+        {
+          "path": "app.js",
+          "content": "const table = document.querySelector('#grid tbody');\n\nlet listeners = 0;\n\nexport function renderRows(rows) {\n  table.innerHTML = '';\n\n  for (const row of rows) {\n    const tr = document.createElement('tr');\n    tr.innerHTML = `\n      <td>${row.id}</td>\n      <td>${row.name}</td>\n      <td><button class=\"select\">Seleccionar</button></td>\n    `;\n\n    // Un listener por fila: con 5.000 filas son 5.000 listeners.\n    listeners += 1;\n    tr.querySelector('.select').addEventListener('click', () => {\n      document.querySelector('#selected').textContent = row.name;\n    });\n\n    table.appendChild(tr);\n  }\n}\n\nwindow.__measure__('render', () => renderRows(window.__ROWS__));\nconsole.log(`${listeners} listeners registrados`);\n"
+        }
+      ]
     },
     {
       "id": "step-2-bubbling",
@@ -217,7 +268,13 @@
       "bestPractice": {
         "es": "**Estándar de la industria:** la delegación de eventos es la base de cómo React monta su sistema de eventos sintéticos — un puñado de listeners en la raíz en lugar de uno por componente. Entenderla aquí explica por qué en React no hay que preocuparse de quitar manejadores al desmontar.",
         "en": "**Industry standard:** event delegation is the foundation of how React wires its synthetic event system — a handful of listeners at the root instead of one per component. Understanding it here explains why you never have to detach handlers on unmount in React."
-      }
+      },
+      "solution": [
+        {
+          "path": "app.js",
+          "content": "const table = document.querySelector('#grid tbody');\nconst selected = document.querySelector('#selected');\n\nexport function renderRows(rows) {\n  table.innerHTML = '';\n\n  for (const row of rows) {\n    const tr = document.createElement('tr');\n    tr.dataset.name = row.name;\n    tr.innerHTML = `\n      <td>${row.id}</td>\n      <td>${row.name}</td>\n      <td><button class=\"select\" data-action=\"select\">Seleccionar</button></td>\n    `;\n    table.appendChild(tr);\n  }\n}\n\ntable.addEventListener('click', (event) => {\n  const button = event.target.closest('[data-action=\"select\"]');\n  if (!button) return;\n\n  selected.textContent = button.closest('tr').dataset.name;\n});\n\nrenderRows(window.__ROWS__);\n"
+        }
+      ]
     },
     {
       "id": "step-3-limits",
@@ -237,7 +294,13 @@
       "ruleIds": [
         "still-works"
       ],
-      "xp": 40
+      "xp": 40,
+      "solution": [
+        {
+          "path": "app.js",
+          "content": "const table = document.querySelector('#grid tbody');\nconst selected = document.querySelector('#selected');\n\nexport function renderRows(rows) {\n  table.innerHTML = '';\n\n  for (const row of rows) {\n    const tr = document.createElement('tr');\n    tr.dataset.name = row.name;\n    tr.innerHTML = `\n      <td>${row.id}</td>\n      <td>${row.name}</td>\n      <td><button class=\"select\" data-action=\"select\">Seleccionar</button></td>\n    `;\n    table.appendChild(tr);\n  }\n}\n\ntable.addEventListener('click', (event) => {\n  const button = event.target.closest('[data-action=\"select\"]');\n  if (!button) return;\n\n  selected.textContent = button.closest('tr').dataset.name;\n});\n\nrenderRows(window.__ROWS__);\n"
+        }
+      ]
     }
   ],
   "drills": [],

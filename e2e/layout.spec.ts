@@ -96,3 +96,26 @@ test('⭐ el árbol se muestra desplegado cuando hay varios archivos', async ({ 
   await expect(page.getByRole('button', { name: /styles\.css/ })).toBeVisible();
   await expect(page.getByRole('button', { name: /index\.html/ })).toBeVisible();
 });
+
+test('⭐ una lección con prerequisitos pendientes se puede abrir igualmente', async ({ page }) => {
+  await page.goto('/es/tracks/frontend');
+
+  // `react-10` cuelga de media cadena de React y de JavaScript. Sin progreso,
+  // antes salía con candado y sin enlace; ahora avisa y deja pasar.
+  const row = page.getByRole('link', { name: /igualdad referencial|render/i }).first();
+  await expect(row).toBeVisible();
+  await expect(page.getByText(/recomendado antes/i).first()).toBeVisible();
+
+  await row.click();
+  await expect(page).toHaveURL(/\/play\/frontend\//);
+  await page.waitForSelector('.monaco-editor', { timeout: 30_000 });
+});
+
+test('⭐ el aviso nombra las lecciones, no un número', async ({ page }) => {
+  await page.goto('/es/tracks/backend');
+
+  // «Requiere 2 lecciones previas» no dice cuáles, y con eso no se decide nada.
+  const notice = page.getByText(/recomendado antes/i).first();
+  await expect(notice).toBeVisible();
+  await expect(notice).toContainText(/SELECT|Agrupar/);
+});

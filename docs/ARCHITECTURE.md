@@ -466,6 +466,47 @@ impide que una lección afirme un resultado que su propia solución no produce.
 
 ---
 
+### ADR-12 · Todo paso pide escribir algo, y ninguna lección se bloquea
+
+Dos decisiones que van juntas porque tratan lo mismo: quién manda en la sesión.
+
+**Todo paso es un ejercicio.** Quince de los cincuenta y nueve pasos del temario
+terminaban en «lee esto y quédate con la idea». Funcionaban como texto, pero convertían
+la pantalla en un libro con un editor decorativo al lado: el usuario avanzaba sin haber
+tecleado nada, que es lo contrario de para lo que existe la plataforma. Ahora **todo paso
+declara al menos una regla**, y `validate-content.ts` rechaza la lección que no lo haga.
+Si un concepto no se puede ejercitar, va dentro del cuerpo de otro paso que sí lo haga.
+
+Convertirlos no fue reescribir el texto: fue encontrar en cada uno la comprobación que ya
+estaba implícita. El paso de `NULL` pasa de explicar que `= NULL` no funciona a **pedir la
+consulta que lo demuestra**; el de `const` pasa de predecir qué línea lanza a escribir el
+`try/catch` que lo imprime; el de rendimiento en React pasa de «anota cuántas veces se
+renderiza» a poner ese número en pantalla.
+
+**Consecuencia estructural: solución por paso.** Con un ejercicio por paso, la solución
+final ya no verifica los intermedios — la consulta del paso 3 no cumple, ni debe, las
+reglas del paso 1. `steps[].solution` guarda el estado que supera **ese** paso, nunca
+viaja al cliente y el comprobador de spoilers la trata igual que la solución de la
+lección. Los tests la usan para verificar cada promesa por separado; el test global pasó a
+comprobar solo las reglas del último paso, que es lo único que la solución final puede
+cumplir.
+
+Al añadirlo salió un fallo que llevaba desde la Fase 3 sin detectar: la solución de
+referencia de `vue-03` era **solo el bloque `<script>`**, sin `<template>`. Aplicarla
+dejaba el componente sin nada que renderizar. Nadie lo vio porque nada la ejecutaba.
+
+**Ninguna lección se bloquea.** El mapa marcaba con candado —y sin enlace— cualquier
+lección con prerequisitos sin completar. Quien llega sabiendo que quiere practicar React
+entra por React: puede venir de otro sitio, o querer refrescar una sola cosa. Cerrarle la
+puerta para proteger un orden que quizá ya cumple es la forma más rápida de que se vaya.
+
+Se sustituye por un aviso que **nombra** las lecciones previas (`Recomendado antes: …`),
+no que las cuenta: «requiere 2 lecciones previas» no dice cuáles, y con eso no se puede
+decidir nada. El botón «Continuar» sigue recomendando la primera sin huecos detrás —
+recomendar es su trabajo, elegir es del usuario.
+
+---
+
 ## 5. Modelo de datos de progreso (servidor)
 
 ```

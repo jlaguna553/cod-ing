@@ -1,16 +1,13 @@
 {
   "$schema": "../../../schema/lesson.schema.json",
   "schemaVersion": 1,
-
   "id": "react-10-render-performance",
   "track": "frontend",
   "module": "react",
   "order": 10,
-
   "kind": "interview",
   "difficulty": "interview",
   "estimatedMinutes": 35,
-
   "title": {
     "es": "Boss: la tabla que se traba al escribir",
     "en": "Boss fight: the table that stutters as you type"
@@ -19,20 +16,33 @@
     "es": "Un buscador sobre 2.000 filas tarda 400ms por pulsación. Diagnostica por qué se re-renderiza todo, arréglalo, y sabe defender cuándo NO hay que memoizar. Pregunta habitual de entrevista de React senior.",
     "en": "A search box over 2,000 rows takes 400ms per keystroke. Diagnose why everything re-renders, fix it, and be ready to argue when NOT to memoize. A staple of senior React interviews."
   },
-  "concepts": ["react", "performance", "memo", "usememo", "usecallback", "referential-equality"],
-  "prerequisites": ["react-04-state-and-events"],
-
+  "concepts": [
+    "react",
+    "performance",
+    "memo",
+    "usememo",
+    "usecallback",
+    "referential-equality"
+  ],
+  "prerequisites": [
+    "react-04-state-and-events"
+  ],
   "runtime": {
     "kind": "sandpack",
-    "dependencies": { "react": "^19.0.0", "react-dom": "^19.0.0" },
+    "dependencies": {
+      "react": "^19.0.0",
+      "react-dom": "^19.0.0"
+    },
     "timeoutMs": 20000
   },
-
   "workspace": {
     "entry": "src/Dashboard.jsx",
     "allowCreate": true,
     "allowDelete": false,
-    "protectedPaths": ["src/main.jsx", "src/renderCounter.js"],
+    "protectedPaths": [
+      "src/main.jsx",
+      "src/renderCounter.js"
+    ],
     "files": [
       {
         "path": "src/Dashboard.jsx",
@@ -51,8 +61,25 @@
       }
     ]
   },
-
   "rules": [
+    {
+      "id": "shows-row-budget",
+      "kind": "dom-assert",
+      "selector": ".counts",
+      "assert": "textContains",
+      "expected": "2000",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Pon en pantalla cuántas filas pasan el filtro y cuántas se pintan, en un `<p class=\"counts\">`. Sin ese número, «va lento» es una impresión, no un diagnóstico.",
+        "en": "Put on screen how many rows pass the filter and how many get painted, in a `<p class=\"counts\">`. Without that number, \"it's slow\" is an impression, not a diagnosis."
+      },
+      "successMessage": {
+        "es": "2.000 filtradas, 50 pintadas: ya tienes de qué hablar.",
+        "en": "2,000 filtered, 50 painted: now you have something to reason about."
+      },
+      "points": 30
+    },
     {
       "id": "memoizes-filter",
       "kind": "regex-must",
@@ -131,9 +158,26 @@
         "en": "The table must still show 50 rows: optimizing can't change behaviour."
       },
       "points": 20
+    },
+    {
+      "id": "defers-query",
+      "kind": "regex-must",
+      "file": "src/Dashboard.jsx",
+      "pattern": "useDeferredValue\\s*\\(",
+      "flags": "m",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Aplica `useDeferredValue` al texto del buscador y filtra por el valor diferido. No memoiza nada: cambia la prioridad.",
+        "en": "Apply `useDeferredValue` to the search text and filter by the deferred value. It memoizes nothing: it changes the priority."
+      },
+      "successMessage": {
+        "es": "El input responde con cada tecla y la tabla se recalcula cuando puede.",
+        "en": "The input responds on every keystroke and the table recomputes when it can."
+      },
+      "points": 40
     }
   ],
-
   "steps": [
     {
       "id": "step-1-diagnose",
@@ -142,17 +186,28 @@
         "en": "Count renders before touching anything"
       },
       "body": {
-        "es": "En una entrevista, empezar a repartir `memo` por el archivo es la respuesta que suspende. La buena empieza midiendo: **qué se está re-renderizando y por qué.**\n\nEl proyecto trae un contador (`window.__renderCounts__`). Escribe una letra en el buscador y míralo. Después pulsa una fila —que solo cambia `selected`— y vuelve a mirarlo.\n\nLo que vas a encontrar, y conviene que sepas explicarlo con estas palabras:\n\n1. **React re-renderiza un componente cuando cambia su estado, y con él todo su subárbol.** No es un bug: es el modelo. Cambiar `selected` repinta `Dashboard` entero, incluidas las 50 filas que no tienen nada que ver.\n2. **El filtrado de 2.000 elementos se rehace en cada render**, aunque `query` no haya cambiado, porque es código suelto en el cuerpo del componente.\n3. **Cada render crea funciones nuevas.** `() => setSelected(id)` es una función distinta cada vez, aunque el código sea idéntico. Y como React compara las props por **identidad**, no por contenido, esa prop «cambia» siempre.\n\nEse tercer punto es el que suele decidir la entrevista, porque explica por qué mucha gente añade `memo` y no mejora nada.",
-        "en": "In an interview, sprinkling `memo` across the file is the answer that fails. The good one starts by measuring: **what is re-rendering, and why.**\n\nThe project ships a counter (`window.__renderCounts__`). Type a letter in the search box and look at it. Then click a row — which only changes `selected` — and look again.\n\nWhat you'll find, and it's worth being able to say it in these words:\n\n1. **React re-renders a component when its state changes, and its whole subtree with it.** That's not a bug: it's the model. Changing `selected` repaints all of `Dashboard`, including the 50 rows that have nothing to do with it.\n2. **The 2,000-item filter is redone on every render**, even when `query` hasn't changed, because it's loose code in the component body.\n3. **Every render creates new functions.** `() => setSelected(id)` is a different function each time, even though the code is identical. And since React compares props by **identity**, not by content, that prop \"changes\" every time.\n\nThat third point usually decides the interview, because it explains why so many people add `memo` and see no improvement."
+        "es": "En una entrevista, empezar a repartir `memo` por el archivo es la respuesta que suspende. La buena empieza midiendo: **qué se está re-renderizando y por qué.**\n\nEl proyecto trae un contador (`window.__renderCounts__`). Escribe una letra en el buscador y míralo. Después pulsa una fila —que solo cambia `selected`— y vuelve a mirarlo.\n\nLo que vas a encontrar, y conviene que sepas explicarlo con estas palabras:\n\n1. **React re-renderiza un componente cuando cambia su estado, y con él todo su subárbol.** No es un bug: es el modelo. Cambiar `selected` repinta `Dashboard` entero, incluidas las 50 filas que no tienen nada que ver.\n2. **El filtrado de 2.000 elementos se rehace en cada render**, aunque `query` no haya cambiado, porque es código suelto en el cuerpo del componente.\n3. **Cada render crea funciones nuevas.** `() => setSelected(id)` es una función distinta cada vez, aunque el código sea idéntico. Y como React compara las props por **identidad**, no por contenido, esa prop «cambia» siempre.\n\nEse tercer punto es el que suele decidir la entrevista, porque explica por qué mucha gente añade `memo` y no mejora nada.\n\nY para no quedarte en la impresión, ponlo en pantalla: cuántas filas pasan el filtro y cuántas se pintan de verdad. Son dos números que cambian toda la conversación — «pinta 50 de 2.000» se discute; «va lento» no.",
+        "en": "In an interview, sprinkling `memo` across the file is the answer that fails. The good one starts by measuring: **what is re-rendering, and why.**\n\nThe project ships a counter (`window.__renderCounts__`). Type a letter in the search box and look at it. Then click a row — which only changes `selected` — and look again.\n\nWhat you'll find, and it's worth being able to say it in these words:\n\n1. **React re-renders a component when its state changes, and its whole subtree with it.** That's not a bug: it's the model. Changing `selected` repaints all of `Dashboard`, including the 50 rows that have nothing to do with it.\n2. **The 2,000-item filter is redone on every render**, even when `query` hasn't changed, because it's loose code in the component body.\n3. **Every render creates new functions.** `() => setSelected(id)` is a different function each time, even though the code is identical. And since React compares props by **identity**, not by content, that prop \"changes\" every time.\n\nThat third point usually decides the interview, because it explains why so many people add `memo` and see no improvement.\n\nAnd so you don't stop at an impression, put it on screen: how many rows pass the filter and how many actually get painted. Two numbers that change the whole conversation — \"it paints 50 of 2,000\" can be discussed; \"it's slow\" can't."
       },
       "task": {
-        "es": "Ejecuta, escribe en el buscador y pulsa una fila. Anota cuántas veces se renderiza `Row` en cada caso.",
-        "en": "Run it, type in the search box and click a row. Note how many times `Row` renders in each case."
+        "es": "Añade un `<p class=\"counts\">` que muestre cuántas filas pasan el filtro y cuántas se pintan.",
+        "en": "Add a `<p class=\"counts\">` showing how many rows pass the filter and how many get painted."
       },
       "focusFile": "src/Dashboard.jsx",
-      "focusLines": [25, 33],
-      "ruleIds": [],
-      "xp": 45
+      "focusLines": [
+        25,
+        33
+      ],
+      "ruleIds": [
+        "shows-row-budget"
+      ],
+      "xp": 30,
+      "solution": [
+        {
+          "path": "src/Dashboard.jsx",
+          "content": "import { useState } from 'react';\nimport { countRender } from './renderCounter';\n\nconst ROWS = Array.from({ length: 2000 }, (_, i) => ({\n  id: i,\n  name: `Jugador ${i}`,\n  score: (i * 37) % 500,\n}));\n\nfunction Row({ player, onSelect }) {\n  countRender('Row');\n  return (\n    <tr onClick={() => onSelect(player.id)}>\n      <td>{player.name}</td>\n      <td>{player.score}</td>\n    </tr>\n  );\n}\n\nfunction Toolbar({ onReset }) {\n  countRender('Toolbar');\n  return <button onClick={onReset}>Reiniciar</button>;\n}\n\nexport default function Dashboard() {\n  countRender('Dashboard');\n  const [query, setQuery] = useState('');\n  const [selected, setSelected] = useState(null);\n\n  // Se recalcula en CADA render, incluso al cambiar `selected`.\n  const visible = ROWS.filter((row) =>\n    row.name.toLowerCase().includes(query.toLowerCase()),\n  );\n\n  return (\n    <div>\n      <input value={query} onChange={(e) => setQuery(e.target.value)} />\n      <Toolbar onReset={() => setQuery('')} />\n      <p>Seleccionado: {selected ?? '—'}</p>\n      <p className=\"counts\">{visible.length} filtradas · {visible.slice(0, 50).length} pintadas</p>\n      <table>\n        <tbody>\n          {visible.slice(0, 50).map((player) => (\n            <Row key={player.id} player={player} onSelect={(id) => setSelected(id)} />\n          ))}\n        </tbody>\n      </table>\n    </div>\n  );\n}\n"
+        }
+      ]
     },
     {
       "id": "step-2-fix",
@@ -202,7 +257,13 @@
       "bestPractice": {
         "es": "**Actualizaciones funcionales y dependencias:** si dentro de un manejador estabilizado necesitas el estado anterior, usa la forma funcional del actualizador. Así el manejador no depende del estado y su array de dependencias puede quedar vacío — sigue siendo estable de verdad.",
         "en": "**Functional updates and dependencies:** if a stabilized handler needs the previous state, use the functional form of the setter. That way the handler doesn't depend on the state and its dependency array can stay empty — genuinely stable."
-      }
+      },
+      "solution": [
+        {
+          "path": "src/Dashboard.jsx",
+          "content": "import { useState, useMemo, useCallback, memo } from 'react';\nimport { countRender } from './renderCounter';\n\nconst ROWS = Array.from({ length: 2000 }, (_, i) => ({\n  id: i,\n  name: `Jugador ${i}`,\n  score: (i * 37) % 500,\n}));\n\nconst Row = memo(function Row({ player, onSelect }) {\n  countRender('Row');\n  return (\n    <tr onClick={() => onSelect(player.id)}>\n      <td>{player.name}</td>\n      <td>{player.score}</td>\n    </tr>\n  );\n});\n\nconst Toolbar = memo(function Toolbar({ onReset }) {\n  countRender('Toolbar');\n  return <button onClick={onReset}>Reiniciar</button>;\n});\n\nexport default function Dashboard() {\n  countRender('Dashboard');\n  const [query, setQuery] = useState('');\n  const [selected, setSelected] = useState(null);\n\n  const visible = useMemo(\n    () => ROWS.filter((row) => row.name.toLowerCase().includes(query.toLowerCase())),\n    [query],\n  );\n\n  const handleSelect = useCallback((id) => setSelected(id), []);\n  const handleReset = useCallback(() => setQuery(''), []);\n\n  return (\n    <div>\n      <input value={query} onChange={(e) => setQuery(e.target.value)} />\n      <Toolbar onReset={handleReset} />\n      <p>Seleccionado: {selected ?? '—'}</p>\n      <table>\n        <tbody>\n          {visible.slice(0, 50).map((player) => (\n            <Row key={player.id} player={player} onSelect={handleSelect} />\n          ))}\n        </tbody>\n      </table>\n    </div>\n  );\n}\n"
+        }
+      ]
     },
     {
       "id": "step-3-when-not",
@@ -211,21 +272,40 @@
         "en": "When NOT to memoize"
       },
       "body": {
-        "es": "Aquí es donde se separa a quien ha leído un tutorial de quien ha mantenido una aplicación.\n\n**La memoización no es gratis.** Cada `useMemo` guarda un valor y compara dependencias en cada render; cada `memo` hace una comparación superficial de todas las props. En un componente que renderiza rápido, esa comparación puede costar más que el propio render.\n\nCuándo **no** aplicarla:\n\n- Componentes pequeños que pintan poco. Comparar props cuesta más que repintar tres nodos.\n- Props que cambian casi siempre. La caché nunca acierta y solo pagas el coste.\n- Antes de medir. Memoizar por si acaso es la forma más común de complicar un archivo sin ganar nada.\n\nY el argumento de cierre, el que demuestra criterio: **muchas veces la mejor optimización no es memoizar, sino mover el estado.** Si el `query` viviera en un componente pequeño junto al `input`, en lugar de en `Dashboard`, escribir no repintaría la tabla en absoluto — sin un solo hook de memoización. Colocar bien el estado elimina el problema; memoizar solo lo mitiga.\n\nConviene además saber que el compilador de React apunta a automatizar buena parte de esto, lo que refuerza la conclusión: la memoización manual es un parche sobre una estructura mejorable, no una virtud.",
-        "en": "This is where someone who read a tutorial parts ways with someone who has maintained an app.\n\n**Memoization isn't free.** Every `useMemo` stores a value and compares dependencies on each render; every `memo` shallow-compares all props. In a component that renders fast, that comparison can cost more than the render itself.\n\nWhen **not** to use it:\n\n- Small components that paint little. Comparing props costs more than repainting three nodes.\n- Props that change almost every time. The cache never hits and you only pay the cost.\n- Before measuring. Memoizing just in case is the most common way to complicate a file for nothing.\n\nAnd the closing argument, the one that shows judgement: **often the best optimization isn't memoizing, it's moving the state.** If `query` lived in a small component next to the `input` instead of in `Dashboard`, typing wouldn't repaint the table at all — without a single memoization hook. Placing state well removes the problem; memoizing only softens it.\n\nIt's also worth knowing that the React compiler aims to automate much of this, which reinforces the conclusion: manual memoization is a patch over an improvable structure, not a virtue."
+        "es": "Aquí es donde se separa a quien ha leído un tutorial de quien ha mantenido una aplicación.\n\n**La memoización no es gratis.** Cada `useMemo` guarda un valor y compara dependencias en cada render; cada `memo` hace una comparación superficial de todas las props. En un componente que renderiza rápido, esa comparación puede costar más que el propio render.\n\nCuándo **no** aplicarla:\n\n- Componentes pequeños que pintan poco. Comparar props cuesta más que repintar tres nodos.\n- Props que cambian casi siempre. La caché nunca acierta y solo pagas el coste.\n- Antes de medir. Memoizar por si acaso es la forma más común de complicar un archivo sin ganar nada.\n\nY el argumento de cierre, el que demuestra criterio: **muchas veces la mejor optimización no es memoizar, sino mover el estado.** Si el `query` viviera en un componente pequeño junto al `input`, en lugar de en `Dashboard`, escribir no repintaría la tabla en absoluto — sin un solo hook de memoización. Colocar bien el estado elimina el problema; memoizar solo lo mitiga.\n\nConviene además saber que el compilador de React apunta a automatizar buena parte de esto, lo que refuerza la conclusión: la memoización manual es un parche sobre una estructura mejorable, no una virtud.\n\nY una herramienta que no es memoización y resuelve justo esto: `useDeferredValue`. Le pasas el texto del buscador y te devuelve una copia que React puede actualizar **con menos prioridad**. El `input` responde a cada tecla igual de rápido, y el filtrado de las 2.000 filas se recalcula cuando el navegador tiene hueco. No guarda nada en caché: reordena el trabajo.\n\nEs la respuesta que se espera de alguien senior, porque reconoce que el problema no era «se recalcula», sino «se recalcula bloqueando lo que el usuario está mirando».",
+        "en": "This is where someone who read a tutorial parts ways with someone who has maintained an app.\n\n**Memoization isn't free.** Every `useMemo` stores a value and compares dependencies on each render; every `memo` shallow-compares all props. In a component that renders fast, that comparison can cost more than the render itself.\n\nWhen **not** to use it:\n\n- Small components that paint little. Comparing props costs more than repainting three nodes.\n- Props that change almost every time. The cache never hits and you only pay the cost.\n- Before measuring. Memoizing just in case is the most common way to complicate a file for nothing.\n\nAnd the closing argument, the one that shows judgement: **often the best optimization isn't memoizing, it's moving the state.** If `query` lived in a small component next to the `input` instead of in `Dashboard`, typing wouldn't repaint the table at all — without a single memoization hook. Placing state well removes the problem; memoizing only softens it.\n\nIt's also worth knowing that the React compiler aims to automate much of this, which reinforces the conclusion: manual memoization is a patch over an improvable structure, not a virtue.\n\nAnd a tool that isn't memoization and solves exactly this: `useDeferredValue`. You hand it the search text and it returns a copy React can update at **lower priority**. The `input` responds to every keystroke just as fast, and filtering the 2,000 rows recomputes when the browser has room. It caches nothing: it reorders the work.\n\nIt's the answer expected from a senior, because it recognises the problem wasn't \"it recomputes\", but \"it recomputes while blocking what the user is looking at\"."
       },
       "task": {
-        "es": "Sin cambiar código: describe cómo reestructurarías el componente para que escribir en el buscador no tocara la tabla, sin usar memoización.",
-        "en": "No code change: describe how you'd restructure the component so typing in the search box never touches the table, without memoization."
+        "es": "Filtra por una copia diferida del texto del buscador con `useDeferredValue`, sin tocar la memoización del paso anterior.",
+        "en": "Filter by a deferred copy of the search text using `useDeferredValue`, without touching the previous step's memoization."
       },
       "focusFile": "src/Dashboard.jsx",
-      "ruleIds": [],
-      "xp": 55
+      "ruleIds": [
+        "defers-query",
+        "still-filters"
+      ],
+      "xp": 45,
+      "hints": [
+        {
+          "id": "h-deferred",
+          "tier": 1,
+          "text": {
+            "es": "Se importa desde `react`. Se crea al lado del estado (`const diferido = useDeferredValue(query)`) y es ese valor —no `query`— el que entra en el filtro y en sus dependencias.",
+            "en": "Import it from `react`. Create it next to the state (`const deferred = useDeferredValue(query)`) and it's that value — not `query` — that goes into the filter and its dependencies."
+          },
+          "xpPenalty": 8,
+          "autoOfferAfterSeconds": 100
+        }
+      ],
+      "solution": [
+        {
+          "path": "src/Dashboard.jsx",
+          "content": "import { useState, useMemo, useCallback, useDeferredValue, memo } from 'react';\nimport { countRender } from './renderCounter';\n\nconst ROWS = Array.from({ length: 2000 }, (_, i) => ({\n  id: i,\n  name: `Jugador ${i}`,\n  score: (i * 37) % 500,\n}));\n\nconst Row = memo(function Row({ player, onSelect }) {\n  countRender('Row');\n  return (\n    <tr onClick={() => onSelect(player.id)}>\n      <td>{player.name}</td>\n      <td>{player.score}</td>\n    </tr>\n  );\n});\n\nconst Toolbar = memo(function Toolbar({ onReset }) {\n  countRender('Toolbar');\n  return <button onClick={onReset}>Reiniciar</button>;\n});\n\nexport default function Dashboard() {\n  countRender('Dashboard');\n  const [query, setQuery] = useState('');\n  const [selected, setSelected] = useState(null);\n\n  // El input responde a cada tecla; el filtro se recalcula con menos prioridad.\n  const deferredQuery = useDeferredValue(query);\n\n  const visible = useMemo(\n    () => ROWS.filter((row) => row.name.toLowerCase().includes(deferredQuery.toLowerCase())),\n    [deferredQuery],\n  );\n\n  const handleSelect = useCallback((id) => setSelected(id), []);\n  const handleReset = useCallback(() => setQuery(''), []);\n\n  return (\n    <div>\n      <input value={query} onChange={(e) => setQuery(e.target.value)} />\n      <Toolbar onReset={handleReset} />\n      <p>Seleccionado: {selected ?? '—'}</p>\n      <table>\n        <tbody>\n          {visible.slice(0, 50).map((player) => (\n            <Row key={player.id} player={player} onSelect={handleSelect} />\n          ))}\n        </tbody>\n      </table>\n    </div>\n  );\n}\n"
+        }
+      ]
     }
   ],
-
   "drills": [],
-
   "interview": {
     "prompt": {
       "es": "Un compañero te pasa este dashboard: escribir en el buscador va a tirones y el equipo lo achaca a «que React es lento». Tienes 25 minutos. Diagnostica en voz alta qué se re-renderiza y por qué, aplica los arreglos por orden de impacto, y termina explicando qué NO memoizarías y por qué.",
@@ -294,20 +374,21 @@
     ],
     "rubric": []
   },
-
   "reward": {
     "baseXp": 420,
     "flawlessBonus": 160,
     "noHintBonus": 100,
     "comboMultiplierCap": 2,
-    "achievements": ["render-surgeon", "algorithm-slayer"]
+    "achievements": [
+      "render-surgeon",
+      "algorithm-slayer"
+    ]
   },
-
   "solution": {
     "files": [
       {
         "path": "src/Dashboard.jsx",
-        "content": "import { useState, useMemo, useCallback, memo } from 'react';\nimport { countRender } from './renderCounter';\n\nconst ROWS = Array.from({ length: 2000 }, (_, i) => ({\n  id: i,\n  name: `Jugador ${i}`,\n  score: (i * 37) % 500,\n}));\n\nconst Row = memo(function Row({ player, onSelect }) {\n  countRender('Row');\n  return (\n    <tr onClick={() => onSelect(player.id)}>\n      <td>{player.name}</td>\n      <td>{player.score}</td>\n    </tr>\n  );\n});\n\nconst Toolbar = memo(function Toolbar({ onReset }) {\n  countRender('Toolbar');\n  return <button onClick={onReset}>Reiniciar</button>;\n});\n\nexport default function Dashboard() {\n  countRender('Dashboard');\n  const [query, setQuery] = useState('');\n  const [selected, setSelected] = useState(null);\n\n  const visible = useMemo(\n    () => ROWS.filter((row) => row.name.toLowerCase().includes(query.toLowerCase())),\n    [query],\n  );\n\n  const handleSelect = useCallback((id) => setSelected(id), []);\n  const handleReset = useCallback(() => setQuery(''), []);\n\n  return (\n    <div>\n      <input value={query} onChange={(e) => setQuery(e.target.value)} />\n      <Toolbar onReset={handleReset} />\n      <p>Seleccionado: {selected ?? '—'}</p>\n      <table>\n        <tbody>\n          {visible.slice(0, 50).map((player) => (\n            <Row key={player.id} player={player} onSelect={handleSelect} />\n          ))}\n        </tbody>\n      </table>\n    </div>\n  );\n}\n"
+        "content": "import { useState, useMemo, useCallback, useDeferredValue, memo } from 'react';\nimport { countRender } from './renderCounter';\n\nconst ROWS = Array.from({ length: 2000 }, (_, i) => ({\n  id: i,\n  name: `Jugador ${i}`,\n  score: (i * 37) % 500,\n}));\n\nconst Row = memo(function Row({ player, onSelect }) {\n  countRender('Row');\n  return (\n    <tr onClick={() => onSelect(player.id)}>\n      <td>{player.name}</td>\n      <td>{player.score}</td>\n    </tr>\n  );\n});\n\nconst Toolbar = memo(function Toolbar({ onReset }) {\n  countRender('Toolbar');\n  return <button onClick={onReset}>Reiniciar</button>;\n});\n\nexport default function Dashboard() {\n  countRender('Dashboard');\n  const [query, setQuery] = useState('');\n  const [selected, setSelected] = useState(null);\n\n  // El input responde a cada tecla; el filtro se recalcula con menos prioridad.\n  const deferredQuery = useDeferredValue(query);\n\n  const visible = useMemo(\n    () => ROWS.filter((row) => row.name.toLowerCase().includes(deferredQuery.toLowerCase())),\n    [deferredQuery],\n  );\n\n  const handleSelect = useCallback((id) => setSelected(id), []);\n  const handleReset = useCallback(() => setQuery(''), []);\n\n  return (\n    <div>\n      <input value={query} onChange={(e) => setQuery(e.target.value)} />\n      <Toolbar onReset={handleReset} />\n      <p>Seleccionado: {selected ?? '—'}</p>\n      <table>\n        <tbody>\n          {visible.slice(0, 50).map((player) => (\n            <Row key={player.id} player={player} onSelect={handleSelect} />\n          ))}\n        </tbody>\n      </table>\n    </div>\n  );\n}\n"
       }
     ],
     "explanation": {
