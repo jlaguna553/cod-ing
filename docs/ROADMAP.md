@@ -622,6 +622,32 @@ Verificado ejecutando la `Shell` con el código de partida y con la solución.
 `workspace.allowCreate`) y ejercita el ADR-07: el usuario teclea `npm create vite@latest`,
 ve el árbol llenarse y solo entonces escribe React.
 
+### Backend — arrancado con SQL sobre PGlite (ADR-11)
+
+El track que estaba vacío ya tiene su primer módulo, y ejecuta **PostgreSQL de verdad**
+dentro del navegador. No hizo falta un runtime remoto ni un servidor de ejecución: PGlite
+ya era dependencia del proyecto para los tests de la capa de datos.
+
+| Lección | Tipo / Nivel | Qué enseña de verdad |
+|---|---|---|
+| `sql-01-select` | concept / novice | `SELECT`, `WHERE`, por qué `SELECT *` no llega a producción, y `NULL` |
+| `sql-02-aggregate` | concept / apprentice | `GROUP BY`, `WHERE` vs `HAVING`, y el orden real de ejecución |
+| `sql-03-joins` | **challenge** / adept | `LEFT JOIN`, y el `WHERE` que lo convierte en `INNER` sin avisar |
+
+Las tres encadenan: `sql-02` termina señalando una categoría que **desaparece** del
+informe, y `sql-03` existe para recuperarla. El cierre de `sql-03` es el error más caro
+del SQL cotidiano precisamente porque el resultado *parece* correcto — nadie revisa un
+panel buscando la fila que no está.
+
+Lo que hace fiable este contenido es `tests/sql-lessons.test.ts`: ejecuta cada lección
+contra un PGlite real en Node, aplica su esquema, corre la consulta de referencia y la
+pasa por el validador. Las filas esperadas se escriben a mano en el JSON de la lección, y
+ese es exactamente el sitio donde se cuela una tilde de más o una fila olvidada.
+
+**Pendiente del módulo:** subconsultas y CTEs, índices con `EXPLAIN ANALYZE`, y
+transacciones/aislamiento — el `ROLLBACK` que el runner ya usa por dentro da un buen
+punto de partida para explicarlo.
+
 ### Backlog del currículo — vacío
 
 `validate-content.ts` construye el grafo de prerequisitos y lista lo que no existe.
@@ -631,14 +657,13 @@ Los **ciclos sí son error**: un track sin punto de entrada no se puede empezar.
 
 Hoy no queda ninguna referencia rota: **toda lección citada como prerequisito existe**.
 
-**Sin empezar:** TypeScript y Next.js (módulos completos), y **el track Backend entero**,
-que hoy se ve vacío en producción. Antes de escribir su contenido hay una decisión de
-motor pendiente: ningún runner actual ejecuta Node ni Python. La vía más barata es
-empezar por **SQL sobre PGlite**, que ya es una dependencia del proyecto y daría al track
-un primer módulo sin añadir ni un byte de WASM nuevo.
+**Sin empezar:** TypeScript y Next.js (módulos completos). En Backend, Node y Python
+siguen sin motor: ningún runner actual los ejecuta, y esa decisión sigue abierta —
+runtime remoto con base efímera por petición, o Pyodide para el caso de Python.
 
-**Módulos cerrados: 6 de 7** (JavaScript, React, Vue, HTML, CSS y Docker). Todos con
+**Módulos cerrados: 6 de 8** (JavaScript, React, Vue, HTML, CSS y Docker). Todos con
 cadena completa desde su primera lección; React y Docker además con boss de entrevista.
+SQL queda abierto a propósito: tiene cadena completa y tema por delante.
 
 ---
 

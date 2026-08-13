@@ -1,0 +1,212 @@
+{
+  "$schema": "../../../schema/lesson.schema.json",
+  "schemaVersion": 1,
+
+  "id": "sql-01-select",
+  "track": "backend",
+  "module": "sql",
+  "order": 1,
+
+  "kind": "concept",
+  "difficulty": "novice",
+  "estimatedMinutes": 18,
+
+  "title": {
+    "es": "SELECT: pedir exactamente lo que necesitas",
+    "en": "SELECT: asking for exactly what you need"
+  },
+  "summary": {
+    "es": "La primera consulta, contra un PostgreSQL de verdad corriendo en tu navegador. Y por qué `SELECT *` es cómodo escribiéndolo y caro todo lo demás.",
+    "en": "Your first query, against a real PostgreSQL running in your browser. And why `SELECT *` is comfortable to write and expensive everywhere else."
+  },
+  "concepts": ["sql", "select", "where", "postgres"],
+  "prerequisites": [],
+
+  "runtime": {
+    "kind": "sql",
+    "dependencies": {},
+    "timeoutMs": 15000
+  },
+
+  "workspace": {
+    "entry": "query.sql",
+    "allowCreate": false,
+    "allowDelete": false,
+    "protectedPaths": ["schema.sql"],
+    "files": [
+      {
+        "path": "query.sql",
+        "active": true,
+        "content": "-- Tu consulta va aquí. Pulsa Ejecutar para verla correr\n-- contra un PostgreSQL de verdad.\nSELECT * FROM productos;\n"
+      },
+      {
+        "path": "schema.sql",
+        "readOnly": true,
+        "content": "CREATE TABLE productos (\n  id          SERIAL PRIMARY KEY,\n  nombre      TEXT NOT NULL,\n  categoria   TEXT NOT NULL,\n  precio      NUMERIC(10,2) NOT NULL,\n  stock       INTEGER NOT NULL,\n  descatalogado BOOLEAN NOT NULL DEFAULT FALSE\n);\n\nINSERT INTO productos (nombre, categoria, precio, stock, descatalogado) VALUES\n  ('Teclado mecánico',  'periféricos', 89.90,  12, FALSE),\n  ('Ratón vertical',    'periféricos', 45.50,   0, FALSE),\n  ('Monitor 27\"',       'pantallas',  219.00,   5, FALSE),\n  ('Monitor 24\"',       'pantallas',  149.00,  18, FALSE),\n  ('Webcam 1080p',      'video',       59.90,   3, TRUE),\n  ('Micrófono USB',     'audio',       79.00,   7, FALSE),\n  ('Alfombrilla XL',    'periféricos',  19.90, 140, FALSE);\n"
+      }
+    ]
+  },
+
+  "rules": [
+    {
+      "id": "returns-two-columns",
+      "kind": "sql-result",
+      "expectColumns": ["nombre", "precio"],
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "El resultado debe traer exactamente dos columnas: `nombre` y `precio`, en ese orden.",
+        "en": "The result must return exactly two columns: `nombre` and `precio`, in that order."
+      },
+      "successMessage": {
+        "es": "Dos columnas, las que pediste.",
+        "en": "Two columns, the ones you asked for."
+      },
+      "points": 30
+    },
+    {
+      "id": "returns-expensive-rows",
+      "kind": "sql-result",
+      "expectRows": [
+        { "nombre": "Teclado mecánico", "precio": 89.9 },
+        { "nombre": "Monitor 27\"", "precio": 219.0 },
+        { "nombre": "Monitor 24\"", "precio": 149.0 }
+      ],
+      "ordered": false,
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Deben salir los tres productos de más de 80 €, ni uno más ni uno menos.",
+        "en": "The three products over €80 must come out — no more, no fewer."
+      },
+      "successMessage": {
+        "es": "Las tres filas correctas.",
+        "en": "The three correct rows."
+      },
+      "points": 40
+    },
+    {
+      "id": "no-select-star",
+      "kind": "regex-forbid",
+      "file": "query.sql",
+      "pattern": "SELECT\\s+\\*",
+      "flags": "i",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Nada de `SELECT *`: nombra las columnas que necesitas. El paso 2 explica por qué.",
+        "en": "No `SELECT *`: name the columns you need. Step 2 explains why."
+      },
+      "points": 20
+    }
+  ],
+
+  "steps": [
+    {
+      "id": "step-1-first-query",
+      "title": {
+        "es": "Esto es Postgres de verdad",
+        "en": "This is real Postgres"
+      },
+      "body": {
+        "es": "Antes de escribir nada, una aclaración que cambia cómo te tomas lo que viene: **lo que corre aquí es PostgreSQL**, compilado a WebAssembly y ejecutándose dentro de tu pestaña. No es un simulador ni un subconjunto. Los tipos son los suyos, los mensajes de error son los suyos y el planificador es el suyo. Si escribes mal un `GROUP BY`, el error que verás es exactamente el que verías en un servidor de producción — y aprender a leerlo es parte del oficio.\n\nEl archivo `schema.sql`, a la izquierda, ya ha creado la tabla y ha metido siete productos. Puedes abrirlo: leer el esquema antes de consultarlo es el primer reflejo que conviene coger.\n\nPulsa **Ejecutar** con la consulta que ya está escrita y mira la rejilla.\n\nUn detalle sobre `precio`: es `NUMERIC(10,2)`, no un número en coma flotante. Postgres devuelve los `NUMERIC` como **texto**, y no por capricho — un `float` no puede representar `89.90` exactamente, y en cuanto sumas dinero ese error se acumula. La regla, en cualquier base de datos: **dinero nunca en coma flotante**.",
+        "en": "Before writing anything, one clarification that changes how you take what follows: **what runs here is PostgreSQL**, compiled to WebAssembly and executing inside your tab. It isn't a simulator or a subset. The types are its own, the error messages are its own, and so is the planner. If you write a bad `GROUP BY`, the error you see is exactly the one you'd see on a production server — and learning to read it is part of the job.\n\nThe `schema.sql` file on the left has already created the table and inserted seven products. You can open it: reading the schema before querying it is the first reflex worth acquiring.\n\nHit **Run** with the query that's already written and look at the grid.\n\nOne detail about `precio`: it's `NUMERIC(10,2)`, not a floating-point number. Postgres returns `NUMERIC` as **text**, and not out of whim — a `float` can't represent `89.90` exactly, and once you start adding money that error accumulates. The rule, in any database: **never store money as floating point**."
+      },
+      "task": {
+        "es": "Ejecuta la consulta de partida y mira las siete filas en la rejilla.",
+        "en": "Run the starting query and look at the seven rows in the grid."
+      },
+      "focusFile": "query.sql",
+      "ruleIds": [],
+      "xp": 25
+    },
+    {
+      "id": "step-2-columns",
+      "title": {
+        "es": "Por qué `SELECT *` no llega a producción",
+        "en": "Why `SELECT *` doesn't reach production"
+      },
+      "body": {
+        "es": "`SELECT *` es lo más cómodo que se puede escribir, y por eso está en todos los tutoriales. En un sistema real es un problema en cuatro frentes:\n\n1. **Trae lo que no necesitas.** Si la tabla tiene una columna `descripcion` de 4 KB y tú solo quieres el nombre, ese texto viaja igual: se lee del disco, se serializa, cruza la red y se descarta. Multiplícalo por cada petición.\n2. **Rompe los índices que sí servirían.** Postgres puede resolver una consulta leyendo **solo el índice**, sin tocar la tabla —lo llaman *index-only scan*— pero solo si todas las columnas pedidas están en él. Un `*` lo descarta siempre.\n3. **Se rompe en silencio cuando alguien cambia el esquema.** El día que se añade una columna, tu código recibe un campo que no espera; el día que se reordenan, un `INSERT INTO … SELECT *` empieza a meter datos en la columna equivocada **sin dar error**.\n4. **Filtra datos sin querer.** Añaden `password_hash` a la tabla de usuarios y tu endpoint, que hacía `SELECT *`, empieza a devolverlo en el JSON. Es una de las formas más tontas de tener una brecha.\n\nAsí que nombra las columnas. Y ya que estamos, filtra: sin `WHERE` te traes la tabla entera para descartar la mayoría en el código, que es exactamente el trabajo que la base de datos hace mejor que tú.\n\nLa estructura básica, en el orden en que se escribe:\n\n```sql\nSELECT columna_a, columna_b\nFROM   tabla\nWHERE  condicion;\n```",
+        "en": "`SELECT *` is the most comfortable thing you can type, which is why it's in every tutorial. In a real system it's a problem on four fronts:\n\n1. **It fetches what you don't need.** If the table has a 4 KB `descripcion` column and you only want the name, that text travels anyway: read from disk, serialized, across the network, and discarded. Multiply by every request.\n2. **It defeats the indexes that would have helped.** Postgres can answer a query by reading **only the index**, never touching the table — an *index-only scan* — but only if every requested column is in it. A `*` rules that out every time.\n3. **It breaks silently when someone changes the schema.** The day a column is added, your code receives a field it doesn't expect; the day columns are reordered, an `INSERT INTO … SELECT *` starts writing data into the wrong column **without raising an error**.\n4. **It leaks data by accident.** Someone adds `password_hash` to the users table and your endpoint, which did `SELECT *`, starts returning it in the JSON. It's one of the dumbest ways to have a breach.\n\nSo name your columns. And while you're at it, filter: with no `WHERE` you drag the whole table over to discard most of it in code — exactly the work the database does better than you.\n\nThe basic shape, in the order it's written:\n\n```sql\nSELECT column_a, column_b\nFROM   table\nWHERE  condition;\n```"
+      },
+      "task": {
+        "es": "Devuelve solo `nombre` y `precio` de los productos que cuesten más de 80.",
+        "en": "Return only `nombre` and `precio` for products costing more than 80."
+      },
+      "focusFile": "query.sql",
+      "ruleIds": ["returns-two-columns", "returns-expensive-rows", "no-select-star"],
+      "xp": 55,
+      "hints": [
+        {
+          "id": "h-shape",
+          "tier": 1,
+          "text": {
+            "es": "Tres líneas: qué columnas quieres, de qué tabla, y la condición. El nombre de la tabla es `productos` y la columna a comparar es `precio`.",
+            "en": "Three lines: which columns you want, from which table, and the condition. The table is `productos` and the column to compare is `precio`."
+          },
+          "xpPenalty": 5,
+          "autoOfferAfterSeconds": 90
+        },
+        {
+          "id": "h-strict",
+          "tier": 2,
+          "text": {
+            "es": "«Más de 80» es estrictamente mayor: `> 80`, no `>= 80`. Con `>=` saldría una fila de más si hubiera algún producto a 80 exactos.",
+            "en": "\"More than 80\" is strictly greater: `> 80`, not `>= 80`. With `>=` you'd get an extra row if any product cost exactly 80."
+          },
+          "xpPenalty": 10
+        }
+      ],
+      "bestPractice": {
+        "es": "**Estándar de la industria:** la excepción razonable a esta regla es el análisis exploratorio — cuando estás mirando una tabla por primera vez en una consola, `SELECT *` es lo correcto. La regla es para el SQL que **se guarda en el repositorio**: el que corre en cada petición, el que otra persona mantendrá y el que nadie volverá a leer con calma.",
+        "en": "**Industry standard:** the reasonable exception is exploratory analysis — when you're eyeballing a table for the first time in a console, `SELECT *` is right. The rule is for SQL that **gets committed**: the kind that runs on every request, that someone else will maintain, and that nobody will ever read carefully again."
+      }
+    },
+    {
+      "id": "step-3-null",
+      "title": {
+        "es": "NULL no es cero, ni vacío, ni falso",
+        "en": "NULL is not zero, empty, or false"
+      },
+      "body": {
+        "es": "Te vas a encontrar con `NULL` en la segunda semana, así que mejor ahora. `NULL` no es un valor: es la **ausencia** de valor, «no se sabe». Y esa distinción tiene una consecuencia que sorprende a todo el mundo una vez:\n\n```sql\nSELECT NULL = NULL;    -- NULL, no TRUE\nSELECT NULL <> 5;      -- NULL, no TRUE\n```\n\nComparar con algo desconocido da desconocido. Por eso `WHERE columna = NULL` **nunca devuelve nada** —ni siquiera error— y hay que escribir `IS NULL` / `IS NOT NULL`.\n\nDe ahí sale la trampa clásica. Si buscas los productos que no son de periféricos:\n\n```sql\nWHERE categoria <> 'periféricos'\n```\n\nlas filas cuya `categoria` sea `NULL` **no aparecen**, aunque «no se sabe» claramente no es `'periféricos'`. Postgres no puede afirmarlo, así que las descarta. Si las quieres, hay que pedirlas:\n\n```sql\nWHERE categoria <> 'periféricos' OR categoria IS NULL\n```\n\nEn esta tabla `categoria` es `NOT NULL`, así que el problema no se da — y ese es justo el motivo de declarar `NOT NULL` siempre que puedas. En la rejilla, un `NULL` se muestra en gris y en cursiva para que no se confunda con la cadena `'NULL'`, que es un valor perfectamente normal y una fuente de bugs muy real.",
+        "en": "You'll meet `NULL` in your second week, so better now. `NULL` isn't a value: it's the **absence** of one, \"unknown\". And that distinction has a consequence that surprises everyone exactly once:\n\n```sql\nSELECT NULL = NULL;    -- NULL, not TRUE\nSELECT NULL <> 5;      -- NULL, not TRUE\n```\n\nComparing against something unknown yields unknown. That's why `WHERE column = NULL` **never returns anything** — not even an error — and you have to write `IS NULL` / `IS NOT NULL`.\n\nFrom that comes the classic trap. If you look for products that aren't peripherals:\n\n```sql\nWHERE categoria <> 'periféricos'\n```\n\nrows whose `categoria` is `NULL` **won't appear**, even though \"unknown\" is clearly not `'periféricos'`. Postgres can't assert that, so it drops them. If you want them, you have to ask:\n\n```sql\nWHERE categoria <> 'periféricos' OR categoria IS NULL\n```\n\nIn this table `categoria` is `NOT NULL`, so the problem doesn't arise — and that's exactly why you declare `NOT NULL` whenever you can. In the grid, a `NULL` shows greyed and italic so it can't be confused with the string `'NULL'`, which is a perfectly ordinary value and a very real source of bugs."
+      },
+      "task": {
+        "es": "Quédate con la regla: para `NULL` se usa `IS NULL`, nunca `=`. Y declara `NOT NULL` siempre que el dato sea obligatorio.",
+        "en": "Keep the rule: for `NULL` use `IS NULL`, never `=`. And declare `NOT NULL` whenever the data is mandatory."
+      },
+      "focusFile": "query.sql",
+      "ruleIds": [],
+      "xp": 30,
+      "bestPractice": {
+        "es": "**Pregunta de entrevista frecuente:** «¿qué devuelve `COUNT(*)` frente a `COUNT(columna)`?» `COUNT(*)` cuenta filas; `COUNT(columna)` cuenta filas **donde esa columna no es NULL**. Es la misma regla de siempre —los `NULL` no se cuentan— y es la respuesta que separa a quien ha leído sobre `NULL` de quien se ha peleado con él.",
+        "en": "**Common interview question:** \"what does `COUNT(*)` return versus `COUNT(column)`?\" `COUNT(*)` counts rows; `COUNT(column)` counts rows **where that column is not NULL**. It's the same rule as always — `NULL`s don't count — and it's the answer that separates someone who has read about `NULL` from someone who has fought with it."
+      }
+    }
+  ],
+
+  "drills": [],
+
+  "reward": {
+    "baseXp": 110,
+    "flawlessBonus": 45,
+    "noHintBonus": 25,
+    "comboMultiplierCap": 3,
+    "achievements": ["first-steps"]
+  },
+
+  "solution": {
+    "files": [
+      {
+        "path": "query.sql",
+        "content": "SELECT nombre, precio\nFROM   productos\nWHERE  precio > 80;\n"
+      }
+    ],
+    "explanation": {
+      "es": "Tres líneas que piden exactamente lo que hace falta y nada más. La base de datos filtra siete filas hasta tres y devuelve dos columnas de seis: ese descarte, hecho donde están los datos, es la diferencia entre una consulta que escala y una que funciona hasta que la tabla crece.",
+      "en": "Three lines asking for exactly what's needed and nothing else. The database filters seven rows down to three and returns two columns out of six: that discarding, done where the data lives, is the difference between a query that scales and one that works until the table grows."
+    }
+  }
+}

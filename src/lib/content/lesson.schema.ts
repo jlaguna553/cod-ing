@@ -58,6 +58,7 @@ export const RuntimeKindSchema = z.enum([
   'pyodide',      // Python en WASM
   'remote',       // Piston/Judge0 vía /api/run: Go, SQL, Java...
   'cli-sim',      // simulador determinista: docker, kubectl, git (ADR-03)
+  'sql',          // Postgres de verdad en el navegador, vía PGlite (ADR-11)
 ]);
 
 /**
@@ -221,6 +222,29 @@ export const ValidationRuleSchema = z.discriminatedUnion('kind', [
     equals: z.string().optional(),
     matches: z.string().optional(),
     expectExitCode: z.number().int().default(0),
+  }),
+  /**
+   * Resultado de una consulta SQL (ADR-11).
+   *
+   * Se comprueba el **conjunto de filas devuelto**, no el texto de la
+   * consulta: hay muchas formas correctas de escribir el mismo `SELECT`, y
+   * corregir por sintaxis penalizaría a quien resuelve bien de otra manera.
+   * Para lo que sí es sintaxis —«usa un JOIN, no una subconsulta»— ya está
+   * `regex-must`.
+   */
+  z.object({
+    ...RuleBase,
+    kind: z.literal('sql-result'),
+    /** Filas esperadas, en JSON. Cada objeto es una fila por nombre de columna. */
+    expectRows: z.array(z.record(z.string(), z.unknown())).optional(),
+    /** Nombres de columna esperados, en orden. */
+    expectColumns: z.array(z.string()).optional(),
+    expectRowCount: z.number().int().nonnegative().optional(),
+    /**
+     * Si el orden de las filas importa. Por defecto NO: sin `ORDER BY`,
+     * Postgres no garantiza ninguno y exigirlo sería exigir suerte.
+     */
+    ordered: z.boolean().default(false),
   }),
   z.object({
     ...RuleBase,

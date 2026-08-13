@@ -33,6 +33,13 @@ export function surfacesFor(lesson: ClientLesson): Surfaces {
   const kind = lesson.runtime.kind;
 
   /*
+   * SQL tiene su propia superficie: una rejilla de resultados. La consola se
+   * mantiene porque el error de Postgres sí es texto —y leerlo es parte de la
+   * lección—, pero lo que se mira al ejecutar es la tabla.
+   */
+  if (kind === 'sql') return { preview: true, console: true, terminal: false };
+
+  /*
    * En `cli-sim` la terminal ES la salida: no hay proceso aparte que imprima
    * por consola, así que ofrecer las dos sería ofrecer la misma cosa dos veces.
    */

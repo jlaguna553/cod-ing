@@ -20,6 +20,21 @@ export interface EvaluationContext {
   document: Document | null;
   /** Comandos que el usuario ha ejecutado, en orden. */
   transcript: string[];
+  /**
+   * Resultado de la última consulta SQL (ADR-11).
+   *
+   * `null` con `hasRun` en true significa que la consulta falló; `null` con
+   * `hasRun` en false, que aún no se ha ejecutado nada. La distinción decide
+   * entre marcar en rojo y dejar en gris.
+   */
+  sql: SqlQueryResult | null;
+}
+
+/** Forma mínima que el evaluador necesita de un resultado SQL. */
+export interface SqlQueryResult {
+  columns: string[];
+  rows: Array<Record<string, unknown>>;
+  rowCount: number;
 }
 
 export function emptyContext(partial: Partial<EvaluationContext> = {}): EvaluationContext {
@@ -31,6 +46,7 @@ export function emptyContext(partial: Partial<EvaluationContext> = {}): Evaluati
     hasRun: false,
     document: null,
     transcript: [],
+    sql: null,
     ...partial,
   };
 }

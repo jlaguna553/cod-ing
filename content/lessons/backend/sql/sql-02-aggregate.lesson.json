@@ -1,0 +1,218 @@
+{
+  "$schema": "../../../schema/lesson.schema.json",
+  "schemaVersion": 1,
+
+  "id": "sql-02-aggregate",
+  "track": "backend",
+  "module": "sql",
+  "order": 2,
+
+  "kind": "concept",
+  "difficulty": "apprentice",
+  "estimatedMinutes": 22,
+
+  "title": {
+    "es": "Agrupar y ordenar: donde WHERE deja de servir",
+    "en": "Grouping and ordering: where WHERE stops working"
+  },
+  "summary": {
+    "es": "`GROUP BY`, `HAVING` y `ORDER BY`. Por qué `WHERE` no puede filtrar por un `SUM()`, y por qué un `LIMIT` sin `ORDER BY` devuelve lo que le da la gana.",
+    "en": "`GROUP BY`, `HAVING`, and `ORDER BY`. Why `WHERE` can't filter on a `SUM()`, and why a `LIMIT` without `ORDER BY` returns whatever it feels like."
+  },
+  "concepts": ["sql", "group-by", "having", "order-by", "aggregate"],
+  "prerequisites": ["sql-01-select"],
+
+  "runtime": {
+    "kind": "sql",
+    "dependencies": {},
+    "timeoutMs": 15000
+  },
+
+  "workspace": {
+    "entry": "query.sql",
+    "allowCreate": false,
+    "allowDelete": false,
+    "protectedPaths": ["schema.sql"],
+    "files": [
+      {
+        "path": "query.sql",
+        "active": true,
+        "content": "-- Cuenta cuántos productos hay en total.\n-- El paso 2 pide algo bastante más útil.\nSELECT COUNT(*) AS total FROM productos;\n"
+      },
+      {
+        "path": "schema.sql",
+        "readOnly": true,
+        "content": "CREATE TABLE productos (\n  id          SERIAL PRIMARY KEY,\n  nombre      TEXT NOT NULL,\n  categoria   TEXT NOT NULL,\n  precio      NUMERIC(10,2) NOT NULL,\n  stock       INTEGER NOT NULL,\n  descatalogado BOOLEAN NOT NULL DEFAULT FALSE\n);\n\nINSERT INTO productos (nombre, categoria, precio, stock, descatalogado) VALUES\n  ('Teclado mecánico',  'periféricos', 89.90,  12, FALSE),\n  ('Ratón vertical',    'periféricos', 45.50,   0, FALSE),\n  ('Alfombrilla XL',    'periféricos', 19.90, 140, FALSE),\n  ('Monitor 27\"',       'pantallas',  219.00,   5, FALSE),\n  ('Monitor 24\"',       'pantallas',  149.00,  18, FALSE),\n  ('Webcam 1080p',      'video',       59.90,   3, TRUE),\n  ('Micrófono USB',     'audio',       79.00,   7, FALSE),\n  ('Auriculares',       'audio',      129.00,  22, FALSE);\n"
+      }
+    ]
+  },
+
+  "rules": [
+    {
+      "id": "columns",
+      "kind": "sql-result",
+      "expectColumns": ["categoria", "unidades"],
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "El resultado debe tener dos columnas: `categoria` y `unidades` — la segunda es un alias, hay que ponerlo con `AS`.",
+        "en": "The result must have two columns: `categoria` and `unidades` — the second is an alias, set it with `AS`."
+      },
+      "points": 25
+    },
+    {
+      "id": "grouped-and-ordered",
+      "kind": "sql-result",
+      "expectRows": [
+        { "categoria": "periféricos", "unidades": 152 },
+        { "categoria": "audio", "unidades": 29 },
+        { "categoria": "pantallas", "unidades": 23 }
+      ],
+      "ordered": true,
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Deben salir las tres categorías con más unidades en stock, de mayor a menor. Solo cuentan los productos que no estén descatalogados.",
+        "en": "The three categories with the most units in stock must come out, highest first. Only products that aren't discontinued count."
+      },
+      "successMessage": {
+        "es": "Agrupado, filtrado y ordenado como se pedía.",
+        "en": "Grouped, filtered, and ordered as asked."
+      },
+      "points": 45
+    },
+    {
+      "id": "has-order-by",
+      "kind": "regex-must",
+      "file": "query.sql",
+      "pattern": "ORDER\\s+BY",
+      "flags": "i",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Falta `ORDER BY`. Un `LIMIT` sin orden explícito devuelve tres filas cualesquiera — hoy las correctas, mañana no.",
+        "en": "`ORDER BY` is missing. A `LIMIT` with no explicit order returns any three rows — the right ones today, not tomorrow."
+      },
+      "points": 25
+    },
+    {
+      "id": "has-limit",
+      "kind": "regex-must",
+      "file": "query.sql",
+      "pattern": "LIMIT\\s+3",
+      "flags": "i",
+      "phase": "submit",
+      "severity": "warn",
+      "message": {
+        "es": "Recorta con `LIMIT 3` en la base de datos. Traerte todas las categorías para quedarte con tres en el código es trabajo tirado.",
+        "en": "Trim with `LIMIT 3` in the database. Fetching every category to keep three in code is wasted work."
+      },
+      "points": 15
+    }
+  ],
+
+  "steps": [
+    {
+      "id": "step-1-aggregate",
+      "title": {
+        "es": "Una fila por grupo",
+        "en": "One row per group"
+      },
+      "body": {
+        "es": "Una función de agregado —`COUNT`, `SUM`, `AVG`, `MIN`, `MAX`— convierte muchas filas en una. Sin `GROUP BY`, toda la tabla es un solo grupo y el resultado es una única fila; es lo que hace la consulta de partida.\n\nCon `GROUP BY` decides **por qué** se agrupa:\n\n```sql\nSELECT categoria, COUNT(*) AS cuantos\nFROM   productos\nGROUP BY categoria;\n```\n\nUna fila por categoría distinta. Y aquí aparece la regla que Postgres impone sin excepciones: **toda columna del `SELECT` que no esté dentro de un agregado tiene que estar en el `GROUP BY`**. Si pides `nombre` junto a `COUNT(*)` agrupando por `categoria`, Postgres pregunta —con razón— *cuál* de los nombres del grupo quieres, y falla:\n\n```\nERROR: column \"productos.nombre\" must appear in the GROUP BY clause\n       or be used in an aggregate function\n```\n\nMerece la pena provocarlo una vez y leerlo entero: es de los errores más honestos que da una base de datos, y MySQL en modo laxo lo *permite* devolviendo un valor arbitrario, que es bastante peor que fallar.\n\nUn detalle de tipos: `COUNT()` y `SUM()` sobre enteros devuelven `bigint`, y `AVG()` devuelve `numeric`. Los dos llegan como texto a JavaScript por lo mismo que el `precio` de la lección anterior — un `bigint` no cabe en un `number` sin perder precisión.",
+        "en": "An aggregate function — `COUNT`, `SUM`, `AVG`, `MIN`, `MAX` — turns many rows into one. With no `GROUP BY`, the whole table is a single group and the result is one row; that's what the starting query does.\n\nWith `GROUP BY` you decide **what** it groups by:\n\n```sql\nSELECT categoria, COUNT(*) AS cuantos\nFROM   productos\nGROUP BY categoria;\n```\n\nOne row per distinct category. And here comes the rule Postgres enforces without exception: **every column in the `SELECT` that isn't inside an aggregate must appear in the `GROUP BY`**. If you ask for `nombre` alongside `COUNT(*)` while grouping by `categoria`, Postgres asks — rightly — *which* of the group's names you want, and fails:\n\n```\nERROR: column \"productos.nombre\" must appear in the GROUP BY clause\n       or be used in an aggregate function\n```\n\nIt's worth triggering once and reading in full: it's one of the most honest errors a database gives, and MySQL in loose mode *allows* it by returning an arbitrary value, which is considerably worse than failing.\n\nA note on types: `COUNT()` and `SUM()` over integers return `bigint`, and `AVG()` returns `numeric`. Both arrive in JavaScript as text for the same reason as the previous lesson's `precio` — a `bigint` doesn't fit in a `number` without losing precision."
+      },
+      "task": {
+        "es": "Ejecuta la consulta de partida y observa que devuelve una sola fila. Luego prueba a agrupar por categoría.",
+        "en": "Run the starting query and notice it returns a single row. Then try grouping by category."
+      },
+      "focusFile": "query.sql",
+      "ruleIds": [],
+      "xp": 25
+    },
+    {
+      "id": "step-2-where-vs-having",
+      "title": {
+        "es": "WHERE filtra filas; HAVING filtra grupos",
+        "en": "WHERE filters rows; HAVING filters groups"
+      },
+      "body": {
+        "es": "La confusión más común con `GROUP BY` es intentar filtrar por un agregado en el `WHERE`:\n\n```sql\nWHERE SUM(stock) > 50    -- ERROR: aggregate functions are not allowed in WHERE\n```\n\nNo es un capricho de sintaxis, es una cuestión de **cuándo** se ejecuta cada cosa. Este es el orden real, que no es el orden en que se escribe:\n\n```\nFROM      → de dónde salen las filas\nWHERE     → descarta FILAS, una a una      ← aquí aún no hay grupos\nGROUP BY  → junta las que quedan en grupos\nHAVING    → descarta GRUPOS enteros        ← aquí ya hay SUM(), COUNT()…\nSELECT    → calcula las columnas y aplica los alias\nORDER BY  → ordena\nLIMIT     → recorta\n```\n\nCuando el `WHERE` corre todavía no existe ningún `SUM()`: los grupos no se han formado. Por eso el filtro por agregado va en `HAVING`, que corre después.\n\nY de ese orden sale otra consecuencia útil: el `ORDER BY` va **después** del `SELECT`, así que puede usar los alias que el `SELECT` acaba de crear (`ORDER BY unidades DESC`), mientras que el `WHERE` no puede — cuando se evalúa, ese alias aún no existe.\n\nÚltimo aviso, y es de los que cuestan un incidente: **un `LIMIT` sin `ORDER BY` no tiene un resultado definido**. Postgres devuelve las filas que le resulten más baratas de producir, y eso cambia con el plan, con los índices y con el tamaño de la tabla. Funciona en tu portátil con ocho filas y devuelve otra cosa en producción con ocho millones.",
+        "en": "The most common confusion with `GROUP BY` is trying to filter on an aggregate in the `WHERE`:\n\n```sql\nWHERE SUM(stock) > 50    -- ERROR: aggregate functions are not allowed in WHERE\n```\n\nThat isn't a syntax whim, it's a question of **when** each thing runs. This is the real order, which isn't the order you write it in:\n\n```\nFROM      → where the rows come from\nWHERE     → discards ROWS, one by one     ← no groups exist yet\nGROUP BY  → gathers the survivors into groups\nHAVING    → discards whole GROUPS         ← SUM(), COUNT()… exist here\nSELECT    → computes the columns and applies aliases\nORDER BY  → sorts\nLIMIT     → trims\n```\n\nWhen the `WHERE` runs there is no `SUM()` yet: the groups haven't been formed. That's why an aggregate filter goes in `HAVING`, which runs later.\n\nAnd from that order comes another useful consequence: `ORDER BY` runs **after** `SELECT`, so it can use the aliases `SELECT` just created (`ORDER BY unidades DESC`), while `WHERE` cannot — when it's evaluated, that alias doesn't exist yet.\n\nOne last warning, the kind that costs an incident: **a `LIMIT` without `ORDER BY` has no defined result**. Postgres returns whichever rows are cheapest to produce, and that changes with the plan, the indexes, and the table size. It works on your laptop with eight rows and returns something else in production with eight million."
+      },
+      "task": {
+        "es": "Devuelve las 3 categorías con más unidades en stock, de mayor a menor, contando solo los productos que no estén descatalogados. Las columnas deben llamarse `categoria` y `unidades`.",
+        "en": "Return the 3 categories with the most units in stock, highest first, counting only products that aren't discontinued. The columns must be named `categoria` and `unidades`."
+      },
+      "focusFile": "query.sql",
+      "ruleIds": ["columns", "grouped-and-ordered", "has-order-by", "has-limit"],
+      "xp": 60,
+      "hints": [
+        {
+          "id": "h-where",
+          "tier": 1,
+          "text": {
+            "es": "«Que no estén descatalogados» filtra **filas**, no grupos: eso es `WHERE descatalogado = FALSE`, y va antes del `GROUP BY`.",
+            "en": "\"Not discontinued\" filters **rows**, not groups: that's `WHERE descatalogado = FALSE`, and it goes before the `GROUP BY`."
+          },
+          "xpPenalty": 6,
+          "autoOfferAfterSeconds": 100
+        },
+        {
+          "id": "h-alias",
+          "tier": 2,
+          "text": {
+            "es": "El alias se pone con `SUM(stock) AS unidades`, y el `ORDER BY` puede usarlo directamente porque corre después del `SELECT`. Ordenar de mayor a menor es `DESC`.",
+            "en": "The alias is set with `SUM(stock) AS unidades`, and `ORDER BY` can use it directly because it runs after `SELECT`. Highest first is `DESC`."
+          },
+          "xpPenalty": 12
+        }
+      ],
+      "bestPractice": {
+        "es": "**Estándar de la industria:** cuando una consulta con `GROUP BY` se vuelve lenta, lo primero es mirar si el filtro está en el sitio correcto. Un `WHERE` descarta filas **antes** de agrupar y reduce el trabajo; el mismo criterio puesto en `HAVING` obliga a construir todos los grupos para luego tirarlos. Dan el mismo resultado y cuestan cosas muy distintas.",
+        "en": "**Industry standard:** when a `GROUP BY` query gets slow, the first thing to check is whether the filter is in the right place. A `WHERE` discards rows **before** grouping and shrinks the work; the same condition in `HAVING` forces every group to be built and then thrown away. Same result, very different cost."
+      }
+    },
+    {
+      "id": "step-3-count-trap",
+      "title": {
+        "es": "La categoría que desaparece",
+        "en": "The category that vanishes"
+      },
+      "body": {
+        "es": "Un último detalle que muerde en cuanto los datos son reales. Fíjate en lo que **no** sale en tu resultado: `video` no aparece, porque su único producto está descatalogado y el `WHERE` lo descartó antes de agrupar. La categoría no sale con `0` unidades — **no sale en absoluto**.\n\nEs correcto: `GROUP BY` solo puede formar grupos con las filas que le llegan, y a `video` no le llegó ninguna. Pero si lo que querías era un informe con todas las categorías, incluidas las que se quedaron a cero, esta consulta te miente por omisión, y en un panel de negocio ese cero ausente es la diferencia entre «no hay stock» y «no existe la categoría».\n\nPara que aparezcan las categorías vacías hace falta partir de una lista completa de categorías y **traer** los productos que encajen —permitiendo que no encaje ninguno—, que es exactamente lo que hace un `LEFT JOIN`. Es el tema de la lección siguiente, y esta ausencia es el mejor motivo para necesitarlo.\n\nY el remate, que es una pregunta de entrevista clásica: en ese informe, `COUNT(*)` daría **1** para una categoría sin productos —cuenta filas, y el `LEFT JOIN` produce una fila con las columnas a `NULL`— mientras que `COUNT(p.id)` daría **0**, porque los `NULL` no se cuentan. La misma consulta, dos resultados, y solo uno es el que quieres.",
+        "en": "One last detail that bites as soon as the data is real. Notice what is **not** in your result: `video` doesn't appear, because its only product is discontinued and the `WHERE` dropped it before grouping. The category doesn't show up with `0` units — **it doesn't show up at all**.\n\nThat's correct: `GROUP BY` can only form groups from the rows it receives, and `video` sent none. But if what you wanted was a report of every category, including the ones at zero, this query lies by omission — and on a business dashboard that missing zero is the difference between \"out of stock\" and \"no such category\".\n\nTo make empty categories appear you need to start from a complete list of categories and **bring in** whichever products match, allowing that none do — which is exactly what a `LEFT JOIN` does. That's the next lesson's subject, and this absence is the best reason to need it.\n\nAnd the kicker, a classic interview question: in that report, `COUNT(*)` would return **1** for a category with no products — it counts rows, and the `LEFT JOIN` produces one row with `NULL` columns — while `COUNT(p.id)` would return **0**, because `NULL`s aren't counted. Same query, two answers, and only one is the one you want."
+      },
+      "task": {
+        "es": "Comprueba en tu resultado que `video` no aparece, y quédate con por qué.",
+        "en": "Check that `video` is absent from your result, and remember why."
+      },
+      "focusFile": "query.sql",
+      "ruleIds": [],
+      "xp": 30
+    }
+  ],
+
+  "drills": [],
+
+  "reward": {
+    "baseXp": 120,
+    "flawlessBonus": 45,
+    "noHintBonus": 25,
+    "comboMultiplierCap": 3,
+    "achievements": []
+  },
+
+  "solution": {
+    "files": [
+      {
+        "path": "query.sql",
+        "content": "SELECT   categoria, SUM(stock) AS unidades\nFROM     productos\nWHERE    descatalogado = FALSE\nGROUP BY categoria\nORDER BY unidades DESC\nLIMIT    3;\n"
+      }
+    ],
+    "explanation": {
+      "es": "Las seis cláusulas en el orden en que se escriben, que no es el orden en que se ejecutan. El `WHERE` descarta la fila descatalogada antes de agrupar —más barato que agrupar y tirar después—, el alias creado en el `SELECT` se reutiliza en el `ORDER BY`, y el `LIMIT` recorta donde están los datos en lugar de traerlos todos para descartarlos en el servidor de aplicación.",
+      "en": "Six clauses in the order you write them, which isn't the order they run in. The `WHERE` drops the discontinued row before grouping — cheaper than grouping and discarding after — the alias created in `SELECT` is reused in `ORDER BY`, and the `LIMIT` trims where the data lives instead of hauling everything over to discard it in the application server."
+    }
+  }
+}

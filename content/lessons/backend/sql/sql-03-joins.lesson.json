@@ -1,0 +1,225 @@
+{
+  "$schema": "../../../schema/lesson.schema.json",
+  "schemaVersion": 1,
+
+  "id": "sql-03-joins",
+  "track": "backend",
+  "module": "sql",
+  "order": 3,
+
+  "kind": "challenge",
+  "difficulty": "adept",
+  "estimatedMinutes": 26,
+
+  "title": {
+    "es": "JOIN: el filtro que convierte tu LEFT en un INNER",
+    "en": "JOIN: the filter that turns your LEFT into an INNER"
+  },
+  "summary": {
+    "es": "Unir dos tablas es fácil. Lo difícil es que las filas sin pareja sigan estando cuando llega el `WHERE` — y ahí es donde se pierden en silencio.",
+    "en": "Joining two tables is easy. The hard part is keeping the unmatched rows once the `WHERE` arrives — and that's exactly where they vanish silently."
+  },
+  "concepts": ["sql", "join", "left-join", "null", "foreign-key"],
+  "prerequisites": ["sql-01-select", "sql-02-aggregate"],
+
+  "runtime": {
+    "kind": "sql",
+    "dependencies": {},
+    "timeoutMs": 15000
+  },
+
+  "workspace": {
+    "entry": "query.sql",
+    "allowCreate": false,
+    "allowDelete": false,
+    "protectedPaths": ["schema.sql"],
+    "files": [
+      {
+        "path": "query.sql",
+        "active": true,
+        "content": "-- Punto de partida: solo salen las categorías que tienen productos.\n-- Faltan dos, y el informe no dice que falten.\nSELECT   c.nombre AS categoria, COUNT(p.id) AS productos\nFROM     categorias c\nJOIN     productos p ON p.categoria_id = c.id\nWHERE    p.descatalogado = FALSE\nGROUP BY c.nombre\nORDER BY c.nombre;\n"
+      },
+      {
+        "path": "schema.sql",
+        "readOnly": true,
+        "content": "CREATE TABLE categorias (\n  id     SERIAL PRIMARY KEY,\n  nombre TEXT NOT NULL UNIQUE\n);\n\nCREATE TABLE productos (\n  id            SERIAL PRIMARY KEY,\n  nombre        TEXT NOT NULL,\n  categoria_id  INTEGER NOT NULL REFERENCES categorias(id),\n  precio        NUMERIC(10,2) NOT NULL,\n  stock         INTEGER NOT NULL,\n  descatalogado BOOLEAN NOT NULL DEFAULT FALSE\n);\n\nINSERT INTO categorias (nombre) VALUES\n  ('periféricos'), ('pantallas'), ('video'), ('audio'), ('cables');\n\nINSERT INTO productos (nombre, categoria_id, precio, stock, descatalogado) VALUES\n  ('Teclado mecánico', 1,  89.90,  12, FALSE),\n  ('Ratón vertical',   1,  45.50,   0, FALSE),\n  ('Alfombrilla XL',   1,  19.90, 140, FALSE),\n  ('Monitor 27\"',      2, 219.00,   5, FALSE),\n  ('Monitor 24\"',      2, 149.00,  18, FALSE),\n  ('Webcam 1080p',     3,  59.90,   3, TRUE),\n  ('Micrófono USB',    4,  79.00,   7, FALSE),\n  ('Auriculares',      4, 129.00,  22, FALSE);\n"
+      }
+    ]
+  },
+
+  "rules": [
+    {
+      "id": "columns",
+      "kind": "sql-result",
+      "expectColumns": ["categoria", "productos"],
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Las columnas deben llamarse `categoria` y `productos`.",
+        "en": "The columns must be named `categoria` and `productos`."
+      },
+      "points": 20
+    },
+    {
+      "id": "all-categories",
+      "kind": "sql-result",
+      "expectRows": [
+        { "categoria": "audio", "productos": 2 },
+        { "categoria": "cables", "productos": 0 },
+        { "categoria": "pantallas", "productos": 2 },
+        { "categoria": "periféricos", "productos": 3 },
+        { "categoria": "video", "productos": 0 }
+      ],
+      "ordered": true,
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Deben salir las cinco categorías por orden alfabético, y las que no tienen productos activos deben marcar 0 — no desaparecer.",
+        "en": "All five categories must appear in alphabetical order, and those with no active products must read 0 — not vanish."
+      },
+      "successMessage": {
+        "es": "Las cinco categorías, con sus ceros incluidos.",
+        "en": "All five categories, zeros included."
+      },
+      "points": 50
+    },
+    {
+      "id": "uses-left-join",
+      "kind": "regex-must",
+      "file": "query.sql",
+      "pattern": "LEFT\\s+(OUTER\\s+)?JOIN",
+      "flags": "i",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Hace falta un `LEFT JOIN`: un `JOIN` normal solo devuelve las filas con pareja, y las categorías vacías no la tienen.",
+        "en": "You need a `LEFT JOIN`: a plain `JOIN` only returns matched rows, and empty categories have no match."
+      },
+      "points": 30
+    },
+    {
+      "id": "no-count-star",
+      "kind": "regex-forbid",
+      "file": "query.sql",
+      "pattern": "COUNT\\s*\\(\\s*\\*\\s*\\)",
+      "flags": "i",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "`COUNT(*)` cuenta filas, y una categoría sin productos produce una fila —con las columnas a `NULL`—, así que contaría 1 en vez de 0. Cuenta una columna de la tabla de la derecha.",
+        "en": "`COUNT(*)` counts rows, and a category with no products still produces one row — with `NULL` columns — so it would count 1 instead of 0. Count a column from the right-hand table."
+      },
+      "points": 25
+    }
+  ],
+
+  "steps": [
+    {
+      "id": "step-1-inner",
+      "title": {
+        "es": "Lo que el informe no dice",
+        "en": "What the report doesn't say"
+      },
+      "body": {
+        "es": "Ejecuta la consulta de partida. Devuelve tres filas: `audio`, `pantallas` y `periféricos`.\n\nAhora abre `schema.sql` y cuenta las categorías que hay: **cinco**. Faltan `cables` —que no tiene ningún producto— y `video`, cuyo único producto está descatalogado.\n\nEl informe no dice que falten. No hay un cero, ni un hueco, ni un aviso: simplemente no existen. Y este es el fallo que más caro sale de todo el SQL cotidiano, porque **el resultado parece correcto**. Nadie revisa un panel buscando la fila que no está.\n\nLa causa es lo que hace un `JOIN` a secas —un `INNER JOIN`—: devuelve **solo las combinaciones que encajan**. Una fila de la izquierda sin pareja a la derecha desaparece del resultado, y con ella la información de que existía.\n\n```\ncategorias        productos          INNER JOIN\n─────────         ─────────          ──────────\ncables       ✗    (ninguno)          (desaparece)\nvideo        ✗    webcam (descat.)   (desaparece)\naudio        ✓    micro, auris       audio × 2\n```",
+        "en": "Run the starting query. It returns three rows: `audio`, `pantallas`, and `periféricos`.\n\nNow open `schema.sql` and count the categories: **five**. Missing are `cables` — which has no products at all — and `video`, whose only product is discontinued.\n\nThe report doesn't say they're missing. There's no zero, no gap, no warning: they simply don't exist. And this is the costliest bug in everyday SQL, because **the result looks right**. Nobody audits a dashboard looking for the row that isn't there.\n\nThe cause is what a bare `JOIN` — an `INNER JOIN` — does: it returns **only the combinations that match**. A left-hand row with no partner on the right disappears from the result, and with it the fact that it ever existed.\n\n```\ncategorias        productos          INNER JOIN\n─────────         ─────────          ──────────\ncables       ✗    (none)             (disappears)\nvideo        ✗    webcam (discont.)  (disappears)\naudio        ✓    mic, headphones    audio × 2\n```"
+      },
+      "task": {
+        "es": "Ejecuta la consulta de partida y compara sus tres filas con las cinco categorías de `schema.sql`.",
+        "en": "Run the starting query and compare its three rows against the five categories in `schema.sql`."
+      },
+      "focusFile": "query.sql",
+      "ruleIds": [],
+      "xp": 25
+    },
+    {
+      "id": "step-2-left-and-on",
+      "title": {
+        "es": "El WHERE que deshace tu LEFT JOIN",
+        "en": "The WHERE that undoes your LEFT JOIN"
+      },
+      "body": {
+        "es": "Un `LEFT JOIN` conserva **todas** las filas de la tabla izquierda, tengan pareja o no. Cuando no la tienen, las columnas de la derecha vienen a `NULL`.\n\nY aquí está la trampa, que es de las que se comen a gente con años de oficio. Supón que quieres los clientes con sus pedidos **pagados**, incluidos los clientes sin ningún pedido:\n\n```sql\nSELECT  cl.nombre, COUNT(pe.id)\nFROM    clientes cl\nLEFT JOIN pedidos pe ON pe.cliente_id = cl.id\nWHERE   pe.estado = 'pagado'      -- ← aquí se rompe\nGROUP BY cl.nombre;\n```\n\nEl `LEFT JOIN` hace su trabajo: trae al cliente sin pedidos con todas las columnas de `pedidos` a `NULL`. Pero después llega el `WHERE` y evalúa `NULL = 'pagado'`, que —como viste en la primera lección— **no es falso, es `NULL`**, y una condición que no es cierta descarta la fila.\n\nResultado: el `LEFT JOIN` se comporta exactamente como un `INNER JOIN`. Escribiste `LEFT`, y no sirve de nada.\n\nLa diferencia está en **dónde** pones la condición:\n\n- En el **`ON`** se evalúa *al emparejar*: decide qué filas de la derecha cuentan como pareja. Las de la izquierda se conservan igualmente.\n- En el **`WHERE`** se evalúa *después de unir*: filtra el resultado ya combinado, y ahí las filas sin pareja ya son candidatas a caer.\n\nRegla práctica: **las condiciones sobre la tabla de la derecha van en el `ON`; las de la tabla de la izquierda, en el `WHERE`**.\n\nQueda una cosa más, y va sobre contar. Una fila sin pareja existe —con las columnas de la derecha vacías—, así que un recuento de filas la contaría como una. Para saber cuántos productos hay de verdad, cuenta algo que solo tenga valor cuando hubo pareja.",
+        "en": "A `LEFT JOIN` keeps **every** row from the left-hand table, matched or not. When there's no match, the right-hand columns come back as `NULL`.\n\nAnd here's the trap, one that catches people with years of experience. Say you want customers with their **paid** orders, including customers with no orders at all:\n\n```sql\nSELECT  cl.nombre, COUNT(pe.id)\nFROM    clientes cl\nLEFT JOIN pedidos pe ON pe.cliente_id = cl.id\nWHERE   pe.estado = 'pagado'      -- ← it breaks here\nGROUP BY cl.nombre;\n```\n\nThe `LEFT JOIN` does its job: it brings in the order-less customer with every `pedidos` column set to `NULL`. But then the `WHERE` arrives and evaluates `NULL = 'pagado'`, which — as you saw in the first lesson — **isn't false, it's `NULL`**, and a condition that isn't true drops the row.\n\nResult: the `LEFT JOIN` behaves exactly like an `INNER JOIN`. You wrote `LEFT`, and it bought you nothing.\n\nThe difference is **where** you put the condition:\n\n- In the **`ON`** it's evaluated *while matching*: it decides which right-hand rows count as a match. The left-hand rows survive regardless.\n- In the **`WHERE`** it's evaluated *after joining*: it filters the already-combined result, and there the unmatched rows are fair game.\n\nRule of thumb: **conditions on the right-hand table go in the `ON`; conditions on the left-hand table go in the `WHERE`**.\n\nOne more thing, about counting. An unmatched row does exist — with the right-hand columns empty — so a row count would count it as one. To know how many products there really are, count something that only has a value when there was a match."
+      },
+      "task": {
+        "es": "Arregla el informe: las cinco categorías por orden alfabético, con cuántos productos **no descatalogados** tiene cada una. Las vacías deben marcar 0. Columnas: `categoria` y `productos`.",
+        "en": "Fix the report: all five categories in alphabetical order, with how many **non-discontinued** products each has. Empty ones must read 0. Columns: `categoria` and `productos`."
+      },
+      "focusFile": "query.sql",
+      "focusLines": [3, 8],
+      "ruleIds": ["columns", "all-categories", "uses-left-join", "no-count-star"],
+      "xp": 70,
+      "hints": [
+        {
+          "id": "h-side",
+          "tier": 1,
+          "text": {
+            "es": "La tabla que no puede perder filas es `categorias`, así que es la que va a la izquierda. El filtro de `descatalogado` es una condición sobre la tabla de la derecha.",
+            "en": "The table that can't lose rows is `categorias`, so that's the one on the left. The `descatalogado` filter is a condition on the right-hand table."
+          },
+          "xpPenalty": 8,
+          "autoOfferAfterSeconds": 120
+        },
+        {
+          "id": "h-count",
+          "tier": 2,
+          "text": {
+            "es": "Dos condiciones en el mismo `ON`, unidas con `AND`. Y para contar, elige una columna de `productos` que sea `NULL` cuando no hubo pareja — la clave primaria sirve.",
+            "en": "Two conditions in the same `ON`, joined with `AND`. And to count, pick a `productos` column that is `NULL` when there was no match — the primary key works."
+          },
+          "xpPenalty": 15
+        }
+      ],
+      "bestPractice": {
+        "es": "**Estándar de la industria:** cuando una consulta con `LEFT JOIN` devuelve menos filas de las que debería, mira el `WHERE` antes que nada. Es la causa en la gran mayoría de los casos, y el síntoma es siempre el mismo: el `LEFT` está escrito y no sirve para nada. La única excepción legítima es `WHERE columna_derecha IS NULL`, que es el modo deliberado de pedir «solo las filas SIN pareja».",
+        "en": "**Industry standard:** when a `LEFT JOIN` query returns fewer rows than it should, check the `WHERE` before anything else. It's the cause in the vast majority of cases, and the symptom is always the same: the `LEFT` is written and does nothing. The one legitimate exception is `WHERE right_column IS NULL`, which is the deliberate way to ask for \"only the rows WITHOUT a match\"."
+      }
+    },
+    {
+      "id": "step-3-cost",
+      "title": {
+        "es": "Lo que cuesta unir",
+        "en": "What joining costs"
+      },
+      "body": {
+        "es": "Dos cosas que separan a quien escribe `JOIN` de quien entiende lo que provoca.\n\n**La multiplicación de filas.** Un `JOIN` no «añade columnas»: produce una fila por cada combinación que encaja. Si un cliente tiene 3 pedidos, el nombre del cliente aparece 3 veces. Es correcto y es la fuente del error clásico de informes: sumar un importe que vive en la tabla izquierda después de unir con la derecha lo multiplica por el número de parejas. Cuando se hincha un total sin explicación, la causa suele ser esta.\n\n**El índice de la clave foránea.** Postgres crea un índice automáticamente para la clave **primaria**, pero **no** para las claves foráneas. Y el `JOIN` busca por la foránea. Sin ese índice, cada fila de la izquierda obliga a recorrer la tabla de la derecha entera; con dos tablas de mil filas son un millón de comparaciones que nadie te cobra hasta que los datos crecen.\n\n```sql\nCREATE INDEX ON productos (categoria_id);\n```\n\nEs una línea, y es de lo primero que se mira cuando una consulta con `JOIN` se vuelve lenta. Se comprueba con `EXPLAIN ANALYZE`: si en el plan aparece un `Seq Scan` sobre la tabla grande donde esperabas un `Index Scan`, ahí está.",
+        "en": "Two things that separate someone who writes `JOIN` from someone who understands what it causes.\n\n**Row multiplication.** A `JOIN` doesn't \"add columns\": it produces one row per matching combination. If a customer has 3 orders, the customer's name appears 3 times. That's correct, and it's the source of the classic reporting bug: summing an amount that lives in the left table after joining to the right multiplies it by the number of matches. When a total inflates for no apparent reason, this is usually why.\n\n**The foreign key index.** Postgres creates an index automatically for the **primary** key, but **not** for foreign keys. And the `JOIN` searches by the foreign key. Without that index, every left-hand row forces a scan of the entire right-hand table; with two thousand-row tables that's a million comparisons nobody charges you for until the data grows.\n\n```sql\nCREATE INDEX ON productos (categoria_id);\n```\n\nIt's one line, and it's among the first things to check when a `JOIN` query turns slow. Verify with `EXPLAIN ANALYZE`: if the plan shows a `Seq Scan` over the big table where you expected an `Index Scan`, that's it."
+      },
+      "task": {
+        "es": "Quédate con las dos: un `JOIN` multiplica filas, y las claves foráneas no traen índice de serie.",
+        "en": "Keep both: a `JOIN` multiplies rows, and foreign keys don't come with an index."
+      },
+      "focusFile": "query.sql",
+      "ruleIds": [],
+      "xp": 30,
+      "bestPractice": {
+        "es": "**Pregunta de entrevista frecuente:** «¿diferencia entre `INNER JOIN` y `LEFT JOIN`?» La respuesta de manual —uno devuelve solo coincidencias, el otro conserva la izquierda— la sabe todo el mundo. La que distingue es la siguiente: *un `LEFT JOIN` con una condición sobre la tabla derecha en el `WHERE` se convierte en un `INNER JOIN`, porque `NULL` no supera ninguna comparación*.",
+        "en": "**Common interview question:** \"difference between `INNER JOIN` and `LEFT JOIN`?\" The textbook answer — one returns only matches, the other keeps the left side — everybody knows. The one that sets you apart is the follow-up: *a `LEFT JOIN` with a right-table condition in the `WHERE` becomes an `INNER JOIN`, because `NULL` passes no comparison*."
+      }
+    }
+  ],
+
+  "drills": [],
+
+  "reward": {
+    "baseXp": 140,
+    "flawlessBonus": 55,
+    "noHintBonus": 30,
+    "comboMultiplierCap": 3,
+    "achievements": []
+  },
+
+  "solution": {
+    "files": [
+      {
+        "path": "query.sql",
+        "content": "SELECT    c.nombre AS categoria, COUNT(p.id) AS productos\nFROM      categorias c\nLEFT JOIN productos p\n       ON p.categoria_id = c.id\n      AND p.descatalogado = FALSE\nGROUP BY  c.nombre\nORDER BY  c.nombre;\n"
+      }
+    ],
+    "explanation": {
+      "es": "Solo cambian dos cosas respecto al punto de partida, y ninguna es la lógica: el `JOIN` pasa a ser `LEFT` y el filtro de descatalogado se muda del `WHERE` al `ON`. Con eso, `cables` y `video` vuelven al informe con su cero — que era la información que faltaba. `COUNT(p.id)` en lugar de `COUNT(*)` es lo que hace que ese cero sea un cero: la fila existe, pero su `id` es `NULL`, y los `NULL` no se cuentan.",
+      "en": "Only two things change from the starting point, and neither is the logic: the `JOIN` becomes `LEFT` and the discontinued filter moves from the `WHERE` to the `ON`. With that, `cables` and `video` return to the report with their zero — which was the missing information. `COUNT(p.id)` instead of `COUNT(*)` is what makes that zero a zero: the row exists, but its `id` is `NULL`, and `NULL`s aren't counted."
+    }
+  }
+}

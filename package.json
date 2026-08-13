@@ -16,7 +16,10 @@
     "check": "npm run content:check && npm run i18n:check && npm run test && npm run build",
     "e2e": "playwright test",
     "dev:local": "next dev -p 4300 -H 0.0.0.0",
-    "db:migrate": "tsx --conditions=react-server scripts/migrate.ts"
+    "db:migrate": "tsx --conditions=react-server scripts/migrate.ts",
+    "pglite:copy": "tsx scripts/copy-pglite.ts",
+    "prebuild": "npm run pglite:copy",
+    "predev": "npm run pglite:copy"
   },
   "keywords": [],
   "author": "",

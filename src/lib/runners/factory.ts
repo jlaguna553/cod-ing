@@ -12,9 +12,10 @@ import { RunnerBootError } from './types';
  *
  * | kind           | lecciones | estado                                    |
  * |----------------|-----------|-------------------------------------------|
- * | `dom`          | 8         | ✅ implementado                            |
- * | `sandpack`     | 5         | ✅ implementado                            |
- * | `cli-sim`      | 1         | ✅ implementado                            |
+ * | `dom`          | 9         | ✅ implementado                            |
+ * | `sandpack`     | 8         | ✅ implementado                            |
+ * | `cli-sim`      | 3         | ✅ implementado                            |
+ * | `sql`          | 3         | ✅ implementado — Postgres en WASM (ADR-11)|
  * | `webcontainer` | 1         | ⏸️ bloqueado por la licencia (ADR-07)      |
  * | `pyodide`      | 0         | ⏸️ sin contenido que lo use                |
  * | `remote`       | 0         | ⏸️ sin contenido que lo use                |
@@ -37,6 +38,11 @@ export async function createRunner(kind: RuntimeKind, mount: HTMLElement): Promi
     case 'cli-sim': {
       const { CliSimRunner } = await import('./cli-sim');
       return new CliSimRunner();
+    }
+
+    case 'sql': {
+      const { SqlRunner } = await import('./sql');
+      return new SqlRunner();
     }
 
     case 'webcontainer':

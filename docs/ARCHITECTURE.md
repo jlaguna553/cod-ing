@@ -414,6 +414,58 @@ en jsdom este fallo no existe.
 
 ---
 
+### ADR-11 · SQL se ejecuta contra un PostgreSQL real en el navegador, servido por nosotros
+
+**Contexto.** El track de Backend estaba vacío y ningún runner sabía ejecutar SQL. Las
+dos salidas eran un runner remoto —una base efímera por petición, aislada, con su coste
+y su superficie de ataque— o meter la base de datos en la pestaña.
+
+**Decisión.** PGlite: PostgreSQL compilado a WebAssembly, corriendo en el cliente. No es
+un simulador ni un subconjunto; es el mismo motor, con sus tipos, su planificador y sus
+mensajes de error. Que un `GROUP BY` mal escrito falle con el texto exacto que fallaría
+en producción **es parte de lo que la lección enseña**.
+
+Pesa: ~18 MB de wasm y datos, y unos 3,5 s de arranque. Se paga una vez por sesión y el
+navegador lo cachea; a cambio, cada ejecución posterior es instantánea y local, que es
+justo el bucle en el que se itera al aprender SQL. Un runner remoto invierte el reparto:
+arranque barato y un viaje de red en cada intento.
+
+**No se puede empaquetar.** `import('@electric-sql/pglite')` a secas revienta en el
+navegador con `m.instantiateWasm is not a function`: el paquete trae su propio grafo de
+chunks y el reempaquetado le rompe la interoperabilidad del namespace. Se probaron las
+dos vías documentadas —pasarle `pgliteWasmModule`/`fsBundle` a mano, y servirlo desde un
+CDN— y la que resuelve el problema de raíz es **no dejar que el bundler lo toque**: el
+módulo se pide con un `import()` construido en tiempo de ejecución, que no es analizable
+estáticamente.
+
+**Servido desde nuestro origen, no desde un CDN.** jsDelivr funciona y es una línea
+menos, pero ata cada lección de SQL a que un dominio ajeno esté disponible y sin
+bloquear —una condición que ya arrastramos con Sandpack y que no conviene repetir—. Los
+archivos se copian de `node_modules` en cada build (`scripts/copy-pglite.ts`, enganchado
+a `prebuild`), así que la versión queda clavada a la del `package.json` y **no entran
+18 MB de binarios en git**: `public/pglite/` está en `.gitignore`.
+
+**Cada ejecución parte del mismo estado.** La consulta del usuario corre entre `BEGIN` y
+`ROLLBACK`. Sin eso, una lección de `INSERT` duplicaría filas en el segundo intento y el
+resultado dependería de cuántas veces has pulsado «Ejecutar» — con la evaluación
+cambiando de veredicto por debajo.
+
+**Se corrige el resultado, no el texto.** La regla `sql-result` compara el **conjunto de
+filas devuelto**. `WHERE precio > 100` y `WHERE NOT precio <= 100` son la misma respuesta
+y las dos valen; suspender la segunda sería corregir el estilo disfrazado de corregir el
+resultado. Cuando la lección sí quiere una forma concreta —«resuélvelo con un `JOIN`»—
+eso se pide con `regex-must`, y así queda explícito en el enunciado. El orden de las
+filas no se exige salvo que la regla lo pida: sin `ORDER BY`, Postgres no garantiza
+ninguno, y exigirlo sería exigir suerte.
+
+**Guardia.** `tests/sql-lessons.test.ts` ejecuta cada lección de SQL contra un PGlite de
+verdad en Node: aplica su esquema, corre la consulta de referencia y la pasa por el
+validador. Las filas esperadas de una lección se escriben a mano en el JSON, que es
+exactamente el sitio donde se cuela una tilde de más o una fila olvidada; esto es lo que
+impide que una lección afirme un resultado que su propia solución no produce.
+
+---
+
 ## 5. Modelo de datos de progreso (servidor)
 
 ```
@@ -433,7 +485,8 @@ user_achievements(user_id, achievement_id, unlocked_at)
 | Riesgo | Impacto | Mitigación |
 |---|---|---|
 | Licencia comercial de WebContainers | Alto | ADR-02: runner intercambiable por `RemoteRunner` |
-| Coste/abuso del runner remoto (Go, SQL) | Medio | Rate limiting por usuario en `/api/run`, cola, timeout 10s |
+| Coste/abuso del runner remoto (Go, Java) | Medio | Rate limiting por usuario en `/api/run`, cola, timeout 10s. SQL ya no lo necesita: corre en el cliente (ADR-11) |
 | Volumen de autoría de contenido bilingüe | **Alto** | Es el cuello de botella real del proyecto, no la tecnología. `AUTHORING.md` + validación en CI + una lección "plantilla" por arquetipo |
 | Bundle de Monaco (~5MB) | Medio | Carga dinámica, solo los lenguajes del track activo |
+| Peso de PGlite (~18MB) | Medio | Solo lo descargan las lecciones de SQL, una vez por sesión y cacheado; ninguna otra lección lo toca (ADR-11) |
 | FX de partículas en móvil/portátiles modestos | Bajo | Respetar `prefers-reduced-motion` + toggle "Modo rendimiento" |

@@ -70,7 +70,8 @@
     "output": "Output",
     "preview": "Preview",
     "terminal": "Terminal",
-    "console": "Console"
+    "console": "Console",
+    "results": "Result"
   },
   "editor": {
     "run": "Run",
@@ -161,5 +162,12 @@
     "backToMap": "Back to the map",
     "lastOfModule": "That was the last exercise in this module. Head back to the map to pick another.",
     "alreadyDone": "You had already completed it"
+  },
+  "sql": {
+    "runToSee": "Run the query to see the result",
+    "error": "PostgreSQL error",
+    "rowCount": "{count} row(s)",
+    "affected": "{count} row(s) affected",
+    "results": "Result"
   }
 }

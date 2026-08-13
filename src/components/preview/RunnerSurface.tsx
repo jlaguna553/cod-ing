@@ -2,12 +2,13 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { AlertTriangle, Loader2, Monitor, SquareTerminal, TerminalSquare } from 'lucide-react';
+import { AlertTriangle, Loader2, Monitor, SquareTerminal, Table2, TerminalSquare } from 'lucide-react';
 import { defaultSurface, needsTabs, surfacesFor } from '@/lib/content/surfaces';
 import { useLessonStore } from '@/stores/useLessonStore';
 import { useRunnerStore } from '@/stores/useRunnerStore';
 import { XtermPane } from '@/components/terminal/XtermPane';
 import { ConsolePane } from './ConsolePane';
+import { SqlResultGrid } from './SqlResultGrid';
 
 type Tab = 'preview' | 'console' | 'terminal';
 
@@ -75,14 +76,20 @@ export function RunnerSurface() {
 
   const showTerminal = surfaces.terminal && active === 'terminal';
   const showConsole = surfaces.console && active === 'console';
+  // SQL no monta iframe: su «vista previa» es la rejilla de resultados.
+  const showGrid = lesson.runtime.kind === 'sql' && active === 'preview';
 
   return (
     <div className="flex h-full flex-col gap-2">
       {showTabs && (
         <div className="flex shrink-0 gap-1">
           {surfaces.preview && (
-            <TabButton active={active === 'preview'} onClick={() => setTab('preview')} icon={<Monitor size={11} />}>
-              {t('panels.preview')}
+            <TabButton
+              active={active === 'preview'}
+              onClick={() => setTab('preview')}
+              icon={lesson.runtime.kind === 'sql' ? <Table2 size={11} /> : <Monitor size={11} />}
+            >
+              {t(lesson.runtime.kind === 'sql' ? 'panels.results' : 'panels.preview')}
             </TabButton>
           )}
           {surfaces.console && (
@@ -114,14 +121,23 @@ export function RunnerSurface() {
           Con opacidad cero el iframe sigue siendo un elemento renderizado para
           el navegador, solo que no se ve.
         */}
+        {/*
+          El punto de montaje solo ocupa sitio cuando hay algo que montar. En
+          SQL no hay iframe —la salida es la rejilla— y dejarlo en el flujo con
+          `h-full` empujaba la tabla fuera del panel: se renderizaba entera,
+          122 px de alto, 280 px por debajo del borde inferior y recortada por
+          el `overflow-hidden`. El panel se veía vacío con los datos dentro.
+        */}
         <div
           ref={mountRef}
           className={
-            surfaces.preview && active === 'preview'
+            surfaces.preview && active === 'preview' && !showGrid
               ? 'h-full w-full'
               : 'pointer-events-none absolute inset-0 opacity-0'
           }
         />
+
+        {showGrid && <SqlResultGrid />}
 
         {showConsole && <ConsolePane />}
 

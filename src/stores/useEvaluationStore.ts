@@ -35,7 +35,10 @@ function buildContext() {
   const lesson = useLessonStore.getState();
   const runner = useRunnerStore.getState();
 
-  const active = getActiveRunner() as { getDocument?: () => Document | null } | null;
+  const active = getActiveRunner() as {
+    getDocument?: () => Document | null;
+    getSqlResult?: () => import('@/lib/engine/context').SqlQueryResult | null;
+  } | null;
 
   /*
    * La salida se toma de los LOGS acumulados, no de `lastResult.stdout`.
@@ -66,6 +69,7 @@ function buildContext() {
     hasRun: runner.lastResult !== null,
     document: active?.getDocument?.() ?? null,
     transcript: getTranscript(),
+    sql: active?.getSqlResult?.() ?? null,
   });
 }
 

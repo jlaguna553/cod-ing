@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { Eraser, Monitor, SquareTerminal, TerminalSquare } from 'lucide-react';
+import { Eraser, Monitor, SquareTerminal, Table2, TerminalSquare } from 'lucide-react';
 import type { RuntimeKind } from '@/lib/content/types';
 import { defaultSurface, surfacesFor } from '@/lib/content/surfaces';
 import { useLessonStore } from '@/stores/useLessonStore';
@@ -18,7 +18,10 @@ export function OutputDock({ runtimeKind = 'dom' }: { runtimeKind?: RuntimeKind 
    * siempre «Vista previa» salvo en DevOps, así que una lección de consola
    * anunciaba una vista previa vacía.
    */
-  const primary = lesson ? defaultSurface(surfacesFor(lesson)) : 'preview';
+  const surface = lesson ? defaultSurface(surfacesFor(lesson)) : 'preview';
+  // En SQL la superficie principal es una rejilla de resultados, no un preview.
+  const primary =
+    surface === 'preview' && lesson?.runtime.kind === 'sql' ? 'results' : surface;
   const status = useRunnerStore((s) => s.status);
   const logs = useRunnerStore((s) => s.logs);
   const clearLogs = useRunnerStore((s) => s.clearLogs);
@@ -32,6 +35,8 @@ export function OutputDock({ runtimeKind = 'dom' }: { runtimeKind?: RuntimeKind 
             <TerminalSquare size={13} />
           ) : primary === 'console' ? (
             <SquareTerminal size={13} />
+          ) : primary === 'results' ? (
+            <Table2 size={13} />
           ) : (
             <Monitor size={13} />
           )}

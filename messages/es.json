@@ -70,7 +70,8 @@
     "output": "Salida",
     "preview": "Vista previa",
     "terminal": "Terminal",
-    "console": "Consola"
+    "console": "Consola",
+    "results": "Resultado"
   },
   "editor": {
     "run": "Ejecutar",
@@ -161,5 +162,12 @@
     "backToMap": "Volver al mapa",
     "lastOfModule": "Has terminado el último ejercicio de este módulo. Vuelve al mapa para elegir otro.",
     "alreadyDone": "Ya la habías completado"
+  },
+  "sql": {
+    "runToSee": "Ejecuta la consulta para ver el resultado",
+    "error": "Error de PostgreSQL",
+    "rowCount": "{count} fila(s)",
+    "affected": "{count} fila(s) afectadas",
+    "results": "Resultado"
   }
 }

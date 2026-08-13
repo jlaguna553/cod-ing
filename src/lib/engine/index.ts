@@ -7,6 +7,7 @@ import type { EvaluationContext, Validator } from './context';
 import { astQuery } from './validators/ast';
 import { dockerfileLint } from './validators/dockerfile-lint';
 import { domAssert } from './validators/dom';
+import { sqlResult } from './validators/sql';
 import { cliTranscript, fileExists, regexForbid, regexMust, stdoutMatch } from './validators/text';
 
 export type { EvaluationContext } from './context';
@@ -52,6 +53,7 @@ const VALIDATORS: Partial<Record<ValidationRule['kind'], RegisteredValidator>> =
   'ast-query': as(astQuery),
   'dom-assert': as(domAssert),
   'dockerfile-lint': as(dockerfileLint),
+  'sql-result': as(sqlResult),
 };
 
 export function isImplemented(kind: ValidationRule['kind']): boolean {
