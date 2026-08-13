@@ -319,6 +319,8 @@ for (const [track, id] of [
   ['frontend', 'vue-03-reactivity'],
   ['frontend', 'react-10-render-performance'],
   ['devops', 'docker-07-layer-cache'],
+  ['devops', 'docker-03-dockerfile-basics'],
+  ['devops', 'docker-05-images-layers'],
 ] as const) {
   test(`la lección ${id} monta su editor y su contenido`, async ({ page }) => {
     const errors: string[] = [];
@@ -554,6 +556,25 @@ test('⭐ html-01: el esqueleto completo se valida sin cambiar lo que se ve', as
     timeout: 20_000,
   });
 
+  await page.getByRole('button', { name: /validar paso/i }).click();
+  await expect(page.getByText(/todas las pruebas superadas/i)).toBeVisible({ timeout: 20_000 });
+});
+
+test('⭐ docker-03: la terminal construye la imagen y la lección lo registra', async ({ page }) => {
+  await page.goto('/es/play/devops/docker-03-dockerfile-basics');
+  await waitForEditor(page);
+
+  // `cli-sim` no tiene vista previa: la terminal ocupa el panel entero.
+  const rows = page.locator('.xterm-rows');
+  await expect(rows).toBeVisible({ timeout: 20_000 });
+
+  await page.locator('.xterm').click();
+  await page.keyboard.type('docker build -t api .');
+  await page.keyboard.press('Enter');
+  await expect(rows).toContainText('Successfully built', { timeout: 20_000 });
+
+  // La regla del paso 1 es una transcripción: exige haber ejecutado el
+  // comando de verdad, no escribir el Dockerfile correcto de memoria.
   await page.getByRole('button', { name: /validar paso/i }).click();
   await expect(page.getByText(/todas las pruebas superadas/i)).toBeVisible({ timeout: 20_000 });
 });

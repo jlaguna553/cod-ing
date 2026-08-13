@@ -1,0 +1,270 @@
+{
+  "$schema": "../../../schema/lesson.schema.json",
+  "schemaVersion": 1,
+
+  "id": "docker-05-images-layers",
+  "track": "devops",
+  "module": "docker",
+  "order": 5,
+
+  "kind": "concept",
+  "difficulty": "adept",
+  "estimatedMinutes": 25,
+
+  "title": {
+    "es": "Capas: lo que borras sigue ahí",
+    "en": "Layers: what you delete is still there"
+  },
+  "summary": {
+    "es": "Una imagen es una pila de capas inmutables. Entender eso explica de golpe por qué tu imagen pesa 700 MB y por qué la clave que borraste sigue siendo pública.",
+    "en": "An image is a stack of immutable layers. Understanding that explains at once why your image weighs 700 MB and why the key you deleted is still public."
+  },
+  "concepts": ["docker", "layers", "image-size", "docker-history", "secrets"],
+  "prerequisites": ["docker-03-dockerfile-basics"],
+
+  "runtime": {
+    "kind": "cli-sim",
+    "cliScenario": "docker/layers",
+    "command": "docker build -t api .",
+    "dependencies": {},
+    "timeoutMs": 15000,
+    "terminal": {
+      "enabled": true,
+      "allowedCommands": ["docker", "ls", "cat", "cd", "pwd", "echo", "clear", "node"]
+    }
+  },
+
+  "workspace": {
+    "entry": "Dockerfile",
+    "allowCreate": true,
+    "allowDelete": false,
+    "protectedPaths": ["package.json", "src/server.js"],
+    "files": [
+      {
+        "path": "Dockerfile",
+        "active": true,
+        "content": "FROM node:20\n\nWORKDIR /app\n\nENV NPM_TOKEN=sk-live-9f2a4c7e1b6d8a30\n\nRUN apt-get update\nRUN apt-get install -y curl\nRUN apt-get clean\nRUN rm -rf /var/lib/apt/lists/*\n\nCOPY . .\n\nRUN npm ci\n\nCMD [\"node\", \"src/server.js\"]\n"
+      },
+      {
+        "path": ".dockerignore",
+        "content": "node_modules\n.git\n*.log\n.env\n"
+      },
+      {
+        "path": "package.json",
+        "readOnly": true,
+        "content": "{\n  \"name\": \"api\",\n  \"version\": \"1.0.0\",\n  \"main\": \"src/server.js\",\n  \"scripts\": {\n    \"start\": \"node src/server.js\"\n  },\n  \"dependencies\": {\n    \"express\": \"4.19.2\"\n  }\n}\n"
+      },
+      {
+        "path": "src/server.js",
+        "readOnly": true,
+        "content": "const express = require('express');\n\nconst app = express();\n\napp.get('/health', (_req, res) => res.json({ ok: true }));\n\napp.listen(3000, () => console.log('API escuchando en :3000'));\n"
+      }
+    ]
+  },
+
+  "rules": [
+    {
+      "id": "inspected-history",
+      "kind": "cli-transcript",
+      "expectedCommands": ["docker build", "docker history"],
+      "allowExtra": true,
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Construye la imagen y después inspecciónala con `docker history`. Hasta que no veas la salida, esto es teoría.",
+        "en": "Build the image and then inspect it with `docker history`. Until you see the output, this is theory."
+      },
+      "successMessage": {
+        "es": "Has visto el interior de la imagen — incluido lo que no debería estar ahí.",
+        "en": "You've seen inside the image — including what shouldn't be there."
+      },
+      "points": 25
+    },
+    {
+      "id": "no-baked-secret",
+      "kind": "dockerfile-lint",
+      "file": "Dockerfile",
+      "rules": ["no-secrets"],
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Hay una credencial escrita en el Dockerfile. Queda grabada en una capa y `docker history` la enseña a cualquiera que descargue la imagen.",
+        "en": "There's a credential written into the Dockerfile. It's baked into a layer and `docker history` shows it to anyone who pulls the image."
+      },
+      "successMessage": {
+        "es": "Ninguna credencial horneada en la imagen.",
+        "en": "No credential baked into the image."
+      },
+      "points": 40
+    },
+    {
+      "id": "chained-layers",
+      "kind": "dockerfile-lint",
+      "file": "Dockerfile",
+      "rules": ["minimal-layers"],
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Demasiadas instrucciones `RUN` sueltas. Cada una es una capa, y limpiar en una capa posterior no recupera el espacio de la anterior.",
+        "en": "Too many separate `RUN` instructions. Each is a layer, and cleaning up in a later layer doesn't reclaim the earlier one's space."
+      },
+      "points": 35
+    },
+    {
+      "id": "still-pinned",
+      "kind": "dockerfile-lint",
+      "file": "Dockerfile",
+      "rules": ["pinned-base-image"],
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "La imagen base ha perdido la versión fija. Lo aprendido en la lección anterior sigue valiendo aquí.",
+        "en": "The base image lost its pinned version. What you learned in the previous lesson still applies here."
+      },
+      "points": 15
+    },
+    {
+      "id": "slim-base",
+      "kind": "regex-must",
+      "file": "Dockerfile",
+      "pattern": "^\\s*FROM\\s+\\S*alpine",
+      "flags": "im",
+      "phase": "submit",
+      "severity": "warn",
+      "message": {
+        "es": "La base completa arrastra un sistema operativo entero que tu API no usa. Existe una variante mínima de la misma imagen.",
+        "en": "The full base drags in an entire operating system your API never uses. A minimal variant of the same image exists."
+      },
+      "points": 20
+    },
+    {
+      "id": "keeps-cmd",
+      "kind": "regex-must",
+      "file": "Dockerfile",
+      "pattern": "^\\s*CMD\\s+\\[",
+      "flags": "im",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "El `CMD` en forma de lista debe seguir ahí: adelgazar la imagen no puede costarte el arranque.",
+        "en": "The `CMD` in list form must stay: slimming the image can't cost you the startup."
+      },
+      "points": 10
+    }
+  ],
+
+  "steps": [
+    {
+      "id": "step-1-history",
+      "title": {
+        "es": "Mira dentro de la imagen",
+        "en": "Look inside the image"
+      },
+      "body": {
+        "es": "Una imagen no es un archivo opaco: es una **pila de capas**, cada una con los cambios que introdujo una instrucción del Dockerfile. Y son públicas. Cualquiera que descargue la imagen puede recorrerlas una a una.\n\nConstruye y después inspecciona:\n\n```bash\ndocker build -t api .\ndocker history api\n```\n\nLee con calma la salida del segundo comando. La credencial que el Dockerfile declara aparece ahí, en texto plano, como parte de una capa.\n\nY ahora el detalle que convierte esto en un incidente de seguridad de verdad: **las capas son inmutables**. Añadir después una instrucción que borre esa variable no la elimina — crea una capa *nueva* que dice «aquí ya no está». La capa anterior sigue en la pila, intacta y descargable.\n\nEs el mismo modelo mental que un commit de Git: borrar el archivo en el commit siguiente no lo saca del historial.",
+        "en": "An image isn't an opaque file: it's a **stack of layers**, each holding the changes one Dockerfile instruction introduced. And they're public. Anyone who pulls the image can walk through them one by one.\n\nBuild, then inspect:\n\n```bash\ndocker build -t api .\ndocker history api\n```\n\nRead the second command's output carefully. The credential the Dockerfile declares shows up there, in plain text, as part of a layer.\n\nAnd now the detail that turns this into a genuine security incident: **layers are immutable**. Adding a later instruction that deletes that variable doesn't remove it — it creates a *new* layer saying \"this isn't here any more\". The earlier layer stays in the stack, intact and downloadable.\n\nIt's the same mental model as a Git commit: deleting the file in the next commit doesn't take it out of the history."
+      },
+      "task": {
+        "es": "Ejecuta `docker build -t api .` y luego `docker history api`. Localiza la credencial en la salida.",
+        "en": "Run `docker build -t api .` and then `docker history api`. Find the credential in the output."
+      },
+      "focusFile": "Dockerfile",
+      "ruleIds": ["inspected-history"],
+      "xp": 30,
+      "bestPractice": {
+        "es": "**Seguridad (OWASP A02 · Fallos criptográficos):** una credencial que ha estado en una imagen publicada se considera comprometida, punto. No se arregla reconstruyendo: se arregla **rotándola**. Reescribir el Dockerfile solo evita la próxima fuga, no cancela la que ya ocurrió.",
+        "en": "**Security (OWASP A02 · Cryptographic Failures):** a credential that has been in a published image is considered compromised, full stop. It isn't fixed by rebuilding: it's fixed by **rotating it**. Rewriting the Dockerfile only prevents the next leak, it doesn't undo the one that already happened."
+      }
+    },
+    {
+      "id": "step-2-fewer-layers",
+      "title": {
+        "es": "Cada RUN es una capa, y las capas se suman",
+        "en": "Every RUN is a layer, and layers add up"
+      },
+      "body": {
+        "es": "Mira las cuatro instrucciones `RUN` seguidas del Dockerfile. La intención parece razonable: actualizar índices, instalar una herramienta, limpiar. El problema es que cada una es una capa independiente, y **una capa nunca puede reducir el tamaño de la anterior**.\n\nLo que ocurre de verdad:\n\n```\ncapa 3   apt-get update              +40 MB   (índices descargados)\ncapa 4   apt-get install curl        +12 MB\ncapa 5   apt-get clean                 0 MB   ← no recupera nada\ncapa 6   rm -rf /var/lib/apt/lists     0 MB   ← tampoco\n```\n\nLas dos capas de limpieza no borran nada: solo *marcan* archivos como ausentes de ahí en adelante. Los 40 MB de la capa 3 siguen viajando en cada descarga de la imagen.\n\nLa única forma de que la limpieza cuente es que **ocurra dentro de la misma capa** que ensució, encadenando los comandos con `&&` en un solo `RUN`. Así la capa se cierra ya limpia y lo que se borró nunca llegó a existir en el resultado.\n\nY hay una segunda palanca, más grande todavía: **la imagen base**. La base completa incluye un sistema operativo entero —compiladores, gestor de paquetes, utilidades— que tu API no usa jamás. Casi toda imagen oficial publica una variante mínima que hace lo mismo en una fracción del tamaño; en el ecosistema de Node, la que lleva `-alpine` en la etiqueta. Cambiar solo esa palabra suele recortar más peso que todas las demás optimizaciones juntas.\n\nOjo con una cosa al cambiar de base: la variante mínima no trae el mismo gestor de paquetes que la completa. El comando de instalación es otro.",
+        "en": "Look at the four consecutive `RUN` instructions in the Dockerfile. The intent looks reasonable: refresh indexes, install a tool, clean up. The problem is that each one is a separate layer, and **a layer can never shrink the one before it**.\n\nWhat actually happens:\n\n```\nlayer 3   apt-get update              +40 MB   (downloaded indexes)\nlayer 4   apt-get install curl        +12 MB\nlayer 5   apt-get clean                 0 MB   ← reclaims nothing\nlayer 6   rm -rf /var/lib/apt/lists     0 MB   ← neither does this\n```\n\nThe two cleanup layers delete nothing: they merely *mark* files as absent from that point on. The 40 MB from layer 3 still ship with every pull of the image.\n\nThe only way cleanup counts is for it to **happen inside the same layer** that made the mess, chaining the commands with `&&` in a single `RUN`. The layer then closes already clean, and what was deleted never existed in the result.\n\nThere's a second, even bigger lever: **the base image**. The full base includes an entire operating system — compilers, package manager, utilities — that your API never touches. Nearly every official image publishes a minimal variant doing the same job at a fraction of the size; in the Node ecosystem, the one carrying `-alpine` in its tag. Changing that single word usually trims more weight than every other optimization combined.\n\nOne thing to watch when you switch base: the minimal variant doesn't ship the same package manager as the full one. The install command is different."
+      },
+      "task": {
+        "es": "Reduce la imagen: una sola instrucción `RUN` para la herramienta y su limpieza, y la variante mínima de la imagen base. Reconstruye y compara el tamaño con el de antes.",
+        "en": "Slim the image down: a single `RUN` instruction for the tool and its cleanup, and the minimal variant of the base image. Rebuild and compare the size against before."
+      },
+      "focusFile": "Dockerfile",
+      "focusLines": [7, 10],
+      "ruleIds": ["chained-layers", "still-pinned", "slim-base", "keeps-cmd"],
+      "xp": 55,
+      "hints": [
+        {
+          "id": "h-chain",
+          "tier": 1,
+          "text": {
+            "es": "Las cuatro líneas se convierten en una. En la variante mínima el gestor de paquetes se llama `apk`, y admite una opción que evita dejar caché detrás — con ella no hace falta limpiar después.",
+            "en": "The four lines become one. In the minimal variant the package manager is called `apk`, and it takes an option that avoids leaving a cache behind — with it, no cleanup is needed afterwards."
+          },
+          "xpPenalty": 8,
+          "autoOfferAfterSeconds": 120
+        },
+        {
+          "id": "h-full",
+          "tier": 3,
+          "text": {
+            "es": "La instalación queda en `RUN apk add --no-cache curl`, y la base pasa a ser `node:20-alpine`.",
+            "en": "The install becomes `RUN apk add --no-cache curl`, and the base becomes `node:20-alpine`."
+          },
+          "xpPenalty": 25
+        }
+      ],
+      "bestPractice": {
+        "es": "**Estándar de la industria:** el tamaño de la imagen no es cosmética. Se paga en cada `docker pull` de cada réplica en cada despliegue, y en el tiempo de arranque cuando un nodo escala. Una imagen de 900 MB frente a una de 120 MB es la diferencia entre un rollout de minutos y uno de segundos.",
+        "en": "**Industry standard:** image size isn't cosmetic. You pay it on every `docker pull` of every replica on every deploy, and in startup time when a node scales out. A 900 MB image versus a 120 MB one is the difference between a rollout measured in minutes and one measured in seconds."
+      }
+    },
+    {
+      "id": "step-3-secrets",
+      "title": {
+        "es": "Saca la credencial de la receta",
+        "en": "Get the credential out of the recipe"
+      },
+      "body": {
+        "es": "Queda lo importante. La credencial no se arregla borrándola en una capa posterior —ya has visto por qué— ni escondiéndola en un `ARG`: `docker history` muestra los `ARG` igual de bien.\n\nLa regla es que **un secreto no pertenece a la imagen**. La imagen es el artefacto que se publica; el secreto es configuración del entorno donde se ejecuta. Son dos cosas con ciclos de vida distintos, y mezclarlas es el error de raíz.\n\nLas tres vías correctas, de menos a más:\n\n1. **En tiempo de ejecución.** `docker run -e NPM_TOKEN=…`, o el gestor de secretos del orquestador (`Secret` de Kubernetes, parámetros de ECS). La imagen no sabe nada; el contenedor lo recibe al arrancar.\n2. **Montaje de secreto en build**, para credenciales que sí hacen falta *durante* la construcción —un registro privado de paquetes, por ejemplo—: `RUN --mount=type=secret,id=npm_token …`. BuildKit expone el valor solo mientras dura esa instrucción y **no lo guarda en ninguna capa**.\n3. **Un gestor externo** (Vault, Secrets Manager) al que la aplicación pide la credencial al arrancar. Es lo que hace que rotar una clave no obligue a redesplegar nada.\n\nPara esta aplicación basta con la primera: quita la declaración del Dockerfile y deja que llegue del entorno.",
+        "en": "Now the important part. The credential isn't fixed by deleting it in a later layer — you've seen why — nor by hiding it in an `ARG`: `docker history` shows `ARG`s just as clearly.\n\nThe rule is that **a secret does not belong to the image**. The image is the artefact you publish; the secret is configuration of the environment it runs in. They're two things with different lifecycles, and mixing them is the root error.\n\nThe three correct routes, from simplest up:\n\n1. **At runtime.** `docker run -e NPM_TOKEN=…`, or the orchestrator's secret manager (a Kubernetes `Secret`, ECS parameters). The image knows nothing; the container receives it at startup.\n2. **A build secret mount**, for credentials genuinely needed *during* the build — a private package registry, say: `RUN --mount=type=secret,id=npm_token …`. BuildKit exposes the value only for the duration of that instruction and **never stores it in a layer**.\n3. **An external manager** (Vault, Secrets Manager) the application asks for the credential at startup. That's what makes rotating a key not require a redeploy.\n\nFor this application the first is enough: remove the declaration from the Dockerfile and let it arrive from the environment."
+      },
+      "task": {
+        "es": "Elimina la credencial del Dockerfile y vuelve a construir. Comprueba con `docker history` que ya no aparece.",
+        "en": "Remove the credential from the Dockerfile and rebuild. Check with `docker history` that it no longer appears."
+      },
+      "focusFile": "Dockerfile",
+      "focusLines": [5, 5],
+      "ruleIds": ["no-baked-secret"],
+      "xp": 45,
+      "bestPractice": {
+        "es": "**Pregunta de entrevista frecuente:** «¿cómo pasarías una credencial a un build de Docker?» La respuesta que separa a un candidato es distinguir *credencial de build* de *credencial de ejecución*: la segunda nunca toca la imagen, y la primera solo entra por un montaje de secreto de BuildKit. Contestar «con un `ARG`» es la respuesta que se espera que sepas descartar.",
+        "en": "**Common interview question:** \"how would you pass a credential to a Docker build?\" What separates a candidate is distinguishing a *build credential* from a *runtime credential*: the second never touches the image, and the first only enters through a BuildKit secret mount. Answering \"with an `ARG`\" is the answer you're expected to know to reject."
+      }
+    }
+  ],
+
+  "drills": [],
+
+  "reward": {
+    "baseXp": 130,
+    "flawlessBonus": 50,
+    "noHintBonus": 30,
+    "comboMultiplierCap": 3,
+    "achievements": []
+  },
+
+  "solution": {
+    "files": [
+      {
+        "path": "Dockerfile",
+        "content": "FROM node:20-alpine\n\nWORKDIR /app\n\nRUN apk add --no-cache curl\n\nCOPY . .\n\nRUN npm ci\n\nCMD [\"node\", \"src/server.js\"]\n"
+      }
+    ],
+    "explanation": {
+      "es": "Cuatro capas menos, una base una fracción del tamaño y ninguna credencial en la receta. Las tres mejoras vienen de la misma idea: una capa solo puede añadir, nunca quitar — así que lo que no debe estar en la imagen no puede entrar en ella ni por un momento.",
+      "en": "Four fewer layers, a base a fraction of the size, and no credential in the recipe. All three improvements come from one idea: a layer can only add, never remove — so whatever shouldn't be in the image can't enter it even for a moment."
+    }
+  }
+}

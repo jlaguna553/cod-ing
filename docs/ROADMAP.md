@@ -598,10 +598,23 @@ demostrarlo con el Profiler y el INP.
 
 | Lección | Módulo | Tipo / Nivel | Runtime | Qué enseña |
 |---|---|---|---|---|
+| `html-01-first-page` | HTML | concept / novice | `dom` | El esqueleto: doctype, `lang`, charset, viewport |
 | `html-02-semantic-structure` | HTML | concept / novice | `dom` | Landmarks, `div` soup, accesibilidad |
+| `css-03-box-model` | CSS | concept / novice | `dom` | `border-box`, y por qué 300px no miden 300px |
 | `css-05-flexbox-centering` | CSS | drill / apprentice | `dom` | Eje principal vs transversal · **4 drills** |
 | `vue-03-reactivity` | Vue | concept / apprentice | `sandpack` | `ref`/`reactive`, `.value`, `computed` |
+| `docker-03-dockerfile-basics` | Docker | concept / apprentice | `cli-sim` | `RUN` vs `CMD`, `:latest`, contexto de build |
+| `docker-05-images-layers` | Docker | concept / adept | `cli-sim` | Capas inmutables: lo que borras sigue ahí |
 | `docker-07-layer-cache` | Docker | interview / interview | `cli-sim` | Caché de capas, multi-stage, secretos |
+
+Las tres de Docker forman ahora una cadena: `docker-03` escribe la receta, `docker-05`
+la abre por dentro y `docker-07` la exprime. Las tres se apoyan en el **mismo parser**
+(ADR-03), así que la terminal y el evaluador nunca pueden contradecirse.
+
+Las dos lecciones nuevas de Docker no afirman nada que el simulador no muestre: el
+`.dockerignore` de `docker-03` baja la capa de copia de 18 s a 2 s, y el adelgazamiento
+de `docker-05` lleva la imagen de 624 MB a 299 MB y saca el secreto de `docker history`.
+Verificado ejecutando la `Shell` con el código de partida y con la solución.
 
 **Arquetipos cubiertos:** `concept`, `drill`, `challenge`, `interview`. Falta `system-design`.
 
@@ -609,24 +622,23 @@ demostrarlo con el Profiler y el INP.
 `workspace.allowCreate`) y ejercita el ADR-07: el usuario teclea `npm create vite@latest`,
 ve el árbol llenarse y solo entonces escribe React.
 
-### Backlog del currículo — 2 lecciones referenciadas que faltan
+### Backlog del currículo — vacío
 
 `validate-content.ts` construye el grafo de prerequisitos y lista lo que no existe.
 No bloquea el build —durante la construcción del temario es normal referenciar lo que
 viene después— pero lo mantiene visible en lugar de dejarlo como deuda silenciosa.
 Los **ciclos sí son error**: un track sin punto de entrada no se puede empezar.
 
-| Falta | Bloquea a |
-|---|---|
-| `docker-03-dockerfile-basics`, `docker-05-images-layers` | `docker-07-layer-cache` |
+Hoy no queda ninguna referencia rota: **toda lección citada como prerequisito existe**.
 
-**Además, sin empezar:** TypeScript y Next.js (módulos completos), y **el track Backend
-entero**, que hoy se ve vacío en producción. Antes de escribir su contenido hay una
-decisión de motor pendiente: ningún runner actual ejecuta Node ni Python. La vía más
-barata es empezar por **SQL sobre PGlite**, que ya es una dependencia del proyecto.
+**Sin empezar:** TypeScript y Next.js (módulos completos), y **el track Backend entero**,
+que hoy se ve vacío en producción. Antes de escribir su contenido hay una decisión de
+motor pendiente: ningún runner actual ejecuta Node ni Python. La vía más barata es
+empezar por **SQL sobre PGlite**, que ya es una dependencia del proyecto y daría al track
+un primer módulo sin añadir ni un byte de WASM nuevo.
 
-**Módulos cerrados: 5 de 7** (JavaScript, React, Vue, HTML y CSS). Todos con cadena
-completa desde su primera lección; React además con boss de entrevista.
+**Módulos cerrados: 6 de 7** (JavaScript, React, Vue, HTML, CSS y Docker). Todos con
+cadena completa desde su primera lección; React y Docker además con boss de entrevista.
 
 ---
 

@@ -1,0 +1,280 @@
+{
+  "$schema": "../../../schema/lesson.schema.json",
+  "schemaVersion": 1,
+
+  "id": "docker-03-dockerfile-basics",
+  "track": "devops",
+  "module": "docker",
+  "order": 3,
+
+  "kind": "concept",
+  "difficulty": "apprentice",
+  "estimatedMinutes": 22,
+
+  "title": {
+    "es": "El Dockerfile: una receta que se ejecuta igual en todas partes",
+    "en": "The Dockerfile: a recipe that runs the same everywhere"
+  },
+  "summary": {
+    "es": "Cinco instrucciones bastan para empaquetar una aplicación entera. Qué hace cada una, por qué `:latest` es una trampa y qué separa un `RUN` de un `CMD`.",
+    "en": "Five instructions are enough to package a whole application. What each one does, why `:latest` is a trap, and what separates a `RUN` from a `CMD`."
+  },
+  "concepts": ["docker", "dockerfile", "image", "container", "build"],
+  "prerequisites": [],
+
+  "runtime": {
+    "kind": "cli-sim",
+    "cliScenario": "docker/basics",
+    "command": "docker build -t api .",
+    "dependencies": {},
+    "timeoutMs": 15000,
+    "terminal": {
+      "enabled": true,
+      "allowedCommands": ["docker", "ls", "cat", "cd", "pwd", "echo", "clear", "node"]
+    }
+  },
+
+  "workspace": {
+    "entry": "Dockerfile",
+    "allowCreate": true,
+    "allowDelete": false,
+    "protectedPaths": ["package.json", "src/server.js"],
+    "files": [
+      {
+        "path": "Dockerfile",
+        "active": true,
+        "content": "# Una receta a medio escribir: arranca de una imagen base\n# y no hace nada más con ella.\nFROM node\n"
+      },
+      {
+        "path": "package.json",
+        "readOnly": true,
+        "content": "{\n  \"name\": \"api\",\n  \"version\": \"1.0.0\",\n  \"main\": \"src/server.js\",\n  \"scripts\": {\n    \"start\": \"node src/server.js\"\n  },\n  \"dependencies\": {\n    \"express\": \"4.19.2\"\n  }\n}\n"
+      },
+      {
+        "path": "src/server.js",
+        "readOnly": true,
+        "content": "const express = require('express');\n\nconst app = express();\n\napp.get('/health', (_req, res) => res.json({ ok: true }));\n\napp.listen(3000, () => console.log('API escuchando en :3000'));\n"
+      }
+    ]
+  },
+
+  "rules": [
+    {
+      "id": "built-once",
+      "kind": "cli-transcript",
+      "expectedCommands": ["docker build"],
+      "allowExtra": true,
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Construye la imagen desde la terminal con `docker build -t api .` para ver qué hace cada instrucción.",
+        "en": "Build the image from the terminal with `docker build -t api .` to see what each instruction does."
+      },
+      "successMessage": {
+        "es": "Imagen construida: cada línea del Dockerfile ha sido una capa.",
+        "en": "Image built: every line of the Dockerfile became a layer."
+      },
+      "points": 20
+    },
+    {
+      "id": "pinned-image",
+      "kind": "dockerfile-lint",
+      "file": "Dockerfile",
+      "rules": ["pinned-base-image"],
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "La imagen base no tiene versión fija. `node` a secas significa `node:latest`, y esa etiqueta apunta a una versión distinta cada pocas semanas.",
+        "en": "The base image has no pinned version. Bare `node` means `node:latest`, and that tag points at a different version every few weeks."
+      },
+      "successMessage": {
+        "es": "Versión fija: este build dará lo mismo dentro de seis meses.",
+        "en": "Pinned version: this build will produce the same thing six months from now."
+      },
+      "points": 30
+    },
+    {
+      "id": "has-workdir",
+      "kind": "regex-must",
+      "file": "Dockerfile",
+      "pattern": "^\\s*WORKDIR\\s+\\S+",
+      "flags": "im",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Falta `WORKDIR`. Sin él todo aterriza en `/`, mezclado con el sistema de la imagen.",
+        "en": "`WORKDIR` is missing. Without it everything lands in `/`, mixed with the image's own system."
+      },
+      "points": 20
+    },
+    {
+      "id": "installs-dependencies",
+      "kind": "regex-must",
+      "file": "Dockerfile",
+      "pattern": "^\\s*RUN\\s+.*npm\\s+(ci|install)",
+      "flags": "im",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "La imagen no instala dependencias: al arrancar, `require('express')` fallará.",
+        "en": "The image never installs dependencies: at startup, `require('express')` will fail."
+      },
+      "points": 25
+    },
+    {
+      "id": "has-cmd",
+      "kind": "regex-must",
+      "file": "Dockerfile",
+      "pattern": "^\\s*CMD\\s+\\[",
+      "flags": "im",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Falta el `CMD` en forma de lista (`CMD [\"node\", \"...\"]`). Una imagen sin comando de arranque construye bien y no sirve para nada.",
+        "en": "The `CMD` in list form (`CMD [\"node\", \"...\"]`) is missing. An image with no start command builds fine and is useless."
+      },
+      "points": 25
+    },
+    {
+      "id": "no-run-as-start",
+      "kind": "regex-forbid",
+      "file": "Dockerfile",
+      "pattern": "^\\s*RUN\\s+(node|npm start|npm run start)\\b",
+      "flags": "im",
+      "phase": "type",
+      "severity": "damage",
+      "message": {
+        "es": "¡Daño! `RUN` se ejecuta **al construir**, no al arrancar. Arrancar el servidor ahí congela el build para siempre.",
+        "en": "Damage! `RUN` executes **at build time**, not at startup. Starting the server there freezes the build forever."
+      },
+      "points": 10
+    },
+    {
+      "id": "dockerignore",
+      "kind": "dockerfile-lint",
+      "file": "Dockerfile",
+      "rules": ["has-dockerignore"],
+      "phase": "submit",
+      "severity": "warn",
+      "message": {
+        "es": "Sin `.dockerignore`, `COPY . .` mete `node_modules` y `.git` en el contexto de build. Es la causa número uno de builds lentos.",
+        "en": "Without a `.dockerignore`, `COPY . .` drags `node_modules` and `.git` into the build context. It's the number-one cause of slow builds."
+      },
+      "points": 15
+    }
+  ],
+
+  "steps": [
+    {
+      "id": "step-1-anatomy",
+      "title": {
+        "es": "Qué es realmente una imagen",
+        "en": "What an image actually is"
+      },
+      "body": {
+        "es": "El Dockerfile no es un script de instalación: es la **receta de un sistema de archivos**. Cada instrucción produce una capa —un conjunto de cambios sobre la capa anterior— y el conjunto apilado es la imagen.\n\nLas cinco instrucciones que cubren el 90 % de los casos:\n\n| Instrucción | Cuándo ocurre | Qué hace |\n|---|---|---|\n| `FROM` | build | De qué imagen partes |\n| `WORKDIR` | build | Directorio de trabajo dentro del contenedor |\n| `COPY` | build | Trae archivos de tu máquina a la imagen |\n| `RUN` | **build** | Ejecuta un comando y guarda el resultado en una capa |\n| `CMD` | **arranque** | Qué proceso lanza el contenedor al arrancar |\n\nLa distinción entre `RUN` y `CMD` es la que más confusión causa, y es sencilla: **`RUN` pasa una vez, cuando construyes; `CMD` pasa cada vez que alguien arranca un contenedor.** Instalar dependencias es `RUN`. Levantar el servidor es `CMD`.\n\nSi pones `RUN node src/server.js`, Docker esperará a que ese servidor termine —y no termina nunca— con lo que el build se queda colgado.\n\nAbre la terminal y ejecuta `docker build -t api .` con el Dockerfile tal como está. Fíjate en que construye **sin errores**: una imagen que no hace nada sigue siendo una imagen válida.",
+        "en": "A Dockerfile isn't an install script: it's the **recipe for a filesystem**. Each instruction produces a layer — a set of changes on top of the previous one — and the stack of them is the image.\n\nThe five instructions that cover 90% of cases:\n\n| Instruction | When it happens | What it does |\n|---|---|---|\n| `FROM` | build | Which image you start from |\n| `WORKDIR` | build | Working directory inside the container |\n| `COPY` | build | Brings files from your machine into the image |\n| `RUN` | **build** | Runs a command and saves the result as a layer |\n| `CMD` | **startup** | Which process the container launches when it starts |\n\nThe `RUN` vs `CMD` distinction causes the most confusion, and it's simple: **`RUN` happens once, when you build; `CMD` happens every time someone starts a container.** Installing dependencies is `RUN`. Bringing up the server is `CMD`.\n\nIf you write `RUN node src/server.js`, Docker will wait for that server to finish — and it never finishes — so the build hangs forever.\n\nOpen the terminal and run `docker build -t api .` with the Dockerfile as it stands. Notice it builds **without errors**: an image that does nothing is still a valid image."
+      },
+      "task": {
+        "es": "Ejecuta `docker build -t api .` en la terminal y observa la salida capa por capa.",
+        "en": "Run `docker build -t api .` in the terminal and watch the output layer by layer."
+      },
+      "focusFile": "Dockerfile",
+      "ruleIds": ["built-once"],
+      "xp": 25
+    },
+    {
+      "id": "step-2-write-it",
+      "title": {
+        "es": "De una línea a una imagen que arranca",
+        "en": "From one line to an image that starts"
+      },
+      "body": {
+        "es": "Ahora escribe la receta completa. El orden es el que tiene sentido para una aplicación de Node:\n\n1. **Parte de una versión concreta.** `FROM node` significa `node:latest`, y esa etiqueta se mueve: el build que hoy usa Node 22 mañana usa Node 24 y tu aplicación deja de arrancar sin que hayas tocado nada. Fija la versión — `node:20-alpine`, por ejemplo, que además es unas siete veces más pequeña que la imagen completa.\n2. **Declara el directorio de trabajo** con `WORKDIR /app`. Todo lo que venga después será relativo a él.\n3. **Copia el proyecto** con `COPY . .` — el primer punto es el contexto de build (tu carpeta), el segundo es el `WORKDIR`.\n4. **Instala las dependencias** con `RUN npm ci`. `ci` en vez de `install`: es reproducible, respeta el lockfile al pie de la letra y falla si no cuadra, que es justo lo que quieres en un build automático.\n5. **Declara el arranque** con `CMD [\"node\", \"src/server.js\"]`.\n\nSobre el `CMD`: usa siempre la **forma de lista** (*exec form*), con corchetes y comillas. La forma de texto plano —`CMD node src/server.js`— arranca el proceso a través de un shell, y ese shell se come las señales: `docker stop` manda `SIGTERM`, el shell no lo reenvía, y tu aplicación muere de golpe a los diez segundos sin cerrar conexiones ni terminar peticiones en curso.",
+        "en": "Now write the full recipe. The order is the one that makes sense for a Node application:\n\n1. **Start from a concrete version.** `FROM node` means `node:latest`, and that tag moves: the build that uses Node 22 today uses Node 24 tomorrow and your app stops starting without you having touched anything. Pin it — `node:20-alpine`, for instance, which is also about seven times smaller than the full image.\n2. **Declare the working directory** with `WORKDIR /app`. Everything after it is relative to that.\n3. **Copy the project** with `COPY . .` — the first dot is the build context (your folder), the second is the `WORKDIR`.\n4. **Install dependencies** with `RUN npm ci`. `ci` rather than `install`: it's reproducible, honours the lockfile to the letter, and fails if they don't match, which is exactly what you want in an automated build.\n5. **Declare the startup** with `CMD [\"node\", \"src/server.js\"]`.\n\nAbout `CMD`: always use the **list form** (*exec form*), with brackets and quotes. The plain-text form — `CMD node src/server.js` — starts the process through a shell, and that shell swallows signals: `docker stop` sends `SIGTERM`, the shell doesn't forward it, and your app is killed outright ten seconds later without closing connections or finishing in-flight requests."
+      },
+      "task": {
+        "es": "Escribe el Dockerfile completo: imagen base con versión fija, `WORKDIR`, `COPY`, instalación de dependencias y `CMD` en forma de lista. Vuelve a construir para comprobarlo.",
+        "en": "Write the complete Dockerfile: pinned base image, `WORKDIR`, `COPY`, dependency install, and `CMD` in list form. Build again to check it."
+      },
+      "focusFile": "Dockerfile",
+      "focusLines": [3, 3],
+      "ruleIds": ["pinned-image", "has-workdir", "installs-dependencies", "has-cmd", "no-run-as-start"],
+      "xp": 60,
+      "hints": [
+        {
+          "id": "h-order",
+          "tier": 1,
+          "text": {
+            "es": "Cinco líneas, una por instrucción, en el orden del texto: base, directorio, copia, instalación y comando de arranque.",
+            "en": "Five lines, one per instruction, in the order given in the text: base, directory, copy, install, and start command."
+          },
+          "xpPenalty": 5,
+          "autoOfferAfterSeconds": 100
+        },
+        {
+          "id": "h-cmd",
+          "tier": 2,
+          "text": {
+            "es": "El `CMD` lleva corchetes y cada palabra entre comillas dobles, como un array de JSON: el ejecutable primero y sus argumentos después.",
+            "en": "The `CMD` takes brackets with each word in double quotes, like a JSON array: the executable first, its arguments after."
+          },
+          "xpPenalty": 10
+        }
+      ],
+      "bestPractice": {
+        "es": "**Estándar de la industria:** fijar la imagen base no es pedantería, es la diferencia entre un build reproducible y uno que depende del día. Los equipos serios van más lejos y fijan el *digest* (`node:20-alpine@sha256:…`), que es inmutable de verdad: una etiqueta se puede reescribir, un digest no.",
+        "en": "**Industry standard:** pinning the base image isn't pedantry, it's the difference between a reproducible build and one that depends on the day. Serious teams go further and pin the *digest* (`node:20-alpine@sha256:…`), which is genuinely immutable: a tag can be rewritten, a digest cannot."
+      }
+    },
+    {
+      "id": "step-3-context",
+      "title": {
+        "es": "El punto final del comando no es decorativo",
+        "en": "The trailing dot in the command isn't decorative"
+      },
+      "body": {
+        "es": "En `docker build -t api .` ese punto es el **contexto de build**: la carpeta entera que Docker empaqueta y envía al daemon antes de leer siquiera la primera línea del Dockerfile.\n\nEsto sorprende a casi todo el mundo la primera vez, porque tiene una consecuencia cara. Si tu carpeta contiene `node_modules` con 300 MB y un `.git` con el historial completo, **todo eso viaja** aunque el Dockerfile no lo copie nunca. El síntoma es un build que se queda parado en `Sending build context to Docker daemon` durante medio minuto.\n\nLa solución es un archivo `.dockerignore`, con la misma sintaxis que `.gitignore`:\n\n```\nnode_modules\n.git\n*.log\n.env\n```\n\nEse último renglón importa más de lo que parece: sin él, un `COPY . .` mete tus variables de entorno —claves incluidas— dentro de la imagen. Y una imagen se publica.\n\nCrea el archivo desde el árbol de la izquierda —el botón de nuevo archivo— y reconstruye para ver bajar el tiempo de la capa de copia.",
+        "en": "In `docker build -t api .`, that dot is the **build context**: the entire folder Docker packs up and ships to the daemon before it even reads the first line of the Dockerfile.\n\nThis surprises almost everyone the first time, because it has an expensive consequence. If your folder holds a 300 MB `node_modules` and a `.git` with the full history, **all of it travels** even though the Dockerfile never copies it. The symptom is a build that sits at `Sending build context to Docker daemon` for half a minute.\n\nThe fix is a `.dockerignore` file, same syntax as `.gitignore`:\n\n```\nnode_modules\n.git\n*.log\n.env\n```\n\nThat last line matters more than it looks: without it, a `COPY . .` puts your environment variables — keys included — inside the image. And images get published.\n\nCreate the file from the tree on the left — the new-file button — then rebuild to watch the copy layer's time drop."
+      },
+      "task": {
+        "es": "Crea un `.dockerignore` en el árbol de archivos que excluya al menos `node_modules`, y reconstruye.",
+        "en": "Create a `.dockerignore` in the file tree excluding at least `node_modules`, and rebuild."
+      },
+      "focusFile": "Dockerfile",
+      "ruleIds": ["dockerignore"],
+      "xp": 30,
+      "bestPractice": {
+        "es": "**Seguridad (OWASP):** una imagen es un artefacto distribuible. Cualquiera que la descargue puede extraer su sistema de archivos capa por capa, así que un `.env` copiado por accidente es una credencial publicada — y borrarlo en una capa posterior no la elimina, solo la oculta.",
+        "en": "**Security (OWASP):** an image is a distributable artefact. Anyone who pulls it can extract its filesystem layer by layer, so an accidentally copied `.env` is a published credential — and deleting it in a later layer doesn't remove it, it only hides it."
+      }
+    }
+  ],
+
+  "drills": [],
+
+  "reward": {
+    "baseXp": 115,
+    "flawlessBonus": 45,
+    "noHintBonus": 25,
+    "comboMultiplierCap": 3,
+    "achievements": []
+  },
+
+  "solution": {
+    "files": [
+      {
+        "path": "Dockerfile",
+        "content": "FROM node:20-alpine\n\nWORKDIR /app\n\nCOPY . .\n\nRUN npm ci\n\nCMD [\"node\", \"src/server.js\"]\n"
+      },
+      {
+        "path": ".dockerignore",
+        "content": "node_modules\n.git\n*.log\n.env\n"
+      }
+    ],
+    "explanation": {
+      "es": "Siete líneas describen una aplicación entera de forma reproducible: la misma receta da la misma imagen en tu portátil, en el CI y en producción. Fíjate en que `RUN npm ci` va después de `COPY . .` — funciona, pero es el orden que la siguiente lección va a poner en duda.",
+      "en": "Seven lines describe an entire application reproducibly: the same recipe yields the same image on your laptop, in CI, and in production. Note that `RUN npm ci` comes after `COPY . .` — it works, but it's the ordering the next lesson is going to question."
+    }
+  }
+}

@@ -242,9 +242,20 @@ export class Shell {
         .map((line) => line.trim())
         .filter((line) => /^(ENV|ARG)\s+\w*(KEY|TOKEN|SECRET|PASSWORD)/i.test(line));
 
+      // La última capa se toma del Dockerfile real. Inventarla desmiente a la
+      // propia lección: el usuario acaba de escribir su CMD y la salida le
+      // enseñaba otro, que es justo el tipo de detalle que hace desconfiar de
+      // un simulador.
+      const cmd =
+        dockerfile
+          .split('\n')
+          .map((line) => line.trim())
+          .filter((line) => /^CMD\s/i.test(line))
+          .at(-1) ?? 'CMD ["node" "server.js"]';
+
       const base =
         'IMAGE          CREATED         CREATED BY                     SIZE\n' +
-        'a1b2c3d4e5f6   2 minutes ago   CMD ["node" "dist/server.js"]   0B';
+        `a1b2c3d4e5f6   2 minutes ago   ${cmd}   0B`;
 
       // Que el secreto aparezca aquí es el objetivo de simular este subcomando.
       return ok(

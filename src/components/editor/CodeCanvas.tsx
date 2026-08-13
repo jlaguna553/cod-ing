@@ -232,10 +232,19 @@ export function CodeCanvas() {
             )}
             {t('editor.run')}
           </button>
+          {/*
+            Deshabilitado durante la ejecución, igual que «Ejecutar».
+
+            Las reglas que miran el DOM leen un espejo del documento que solo
+            existe cuando la ejecución termina. Validar antes las deja en gris
+            —«pendiente»— sobre un código que en realidad está bien, y el
+            usuario no tiene forma de saber que solo le faltaba esperar.
+          */}
           <button
             type="button"
+            disabled={runnerStatus === 'booting' || runnerStatus === 'running'}
             onClick={() => evaluate()}
-            className="flex items-center gap-1 rounded-md px-2 py-1 text-[10px] font-semibold uppercase transition-opacity hover:opacity-90"
+            className="flex items-center gap-1 rounded-md px-2 py-1 text-[10px] font-semibold uppercase transition-opacity hover:opacity-90 disabled:opacity-40"
             style={{
               backgroundColor: stepPassed ? 'var(--color-success)' : 'var(--color-neon)',
               color: 'var(--color-void)',
