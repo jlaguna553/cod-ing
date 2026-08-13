@@ -507,6 +507,48 @@ recomendar es su trabajo, elegir es del usuario.
 
 ---
 
+### Sandpack: dos fallos silenciosos arreglados y uno abierto
+
+Al ir a escribir lecciones de Vue apareció que **ninguna lección de framework
+funcionaba**, por dos motivos independientes que nadie había visto porque los dos
+fallaban callados.
+
+**1. El bundler no recibía plantilla.** `loadSandpackClient` acepta `template`; sin él
+infiere, y con solo `files` + `dependencies` inferí­a `static`: servía el entry como script
+clásico y todo moría en `Cannot use import statement outside a module`. Ahora se deduce de
+las extensiones del workspace (`.vue` → `vue3-cli`, `.jsx/.tsx` → `create-react-app`) y se
+añade el andamiaje que el bundler espera —`public/index.html` con el nodo de montaje y un
+`package.json`— sin meterlo en el workspace, que es material de la lección y no nuestro.
+
+**2. `dom-assert` nunca se evaluó en React ni en Vue.** Es el mismo caso del ADR-10 en su
+segunda forma: el bundle se sirve desde `*.codesandbox.io`, otro origen, así que
+`iframe.contentDocument` vale `null` y el validador recibía `document: null` → «pendiente».
+Nunca rojo, así que nada chilló desde la Fase 3. La solución es la del ADR-10, ahora
+extraída a `runners/mirror.ts` y compartida por los dos runners: el marco de ejecución
+manda su HTML y el anfitrión lo vuelca en un iframe legible e inerte.
+
+Dos detalles que costaron encontrar. El mensaje va a **`window.top`**, no a `parent`:
+Sandpack anida un iframe dentro de otro, y desde el interior `parent` es la página del
+bundler — el espejo recibía su documento, con browserfs y babel dentro. Y la sonda vive en
+un template literal, así que un backtick en un comentario cierra la cadena y rompe el
+módulo.
+
+**3. Abierto: el render de framework sigue incompleto.** El sandbox ya compila y monta
+—llega un DOM con la app dentro— pero el resultado sale a medias y aparece la
+superposición de error de CodeSandbox. En Vue es más grave y está acotado: el bundler
+compila el `<script>` del SFC y **no la plantilla**, así que Vue avisa por consola
+(«Component is missing template or render function») y renderiza un comentario vacío. Se
+probaron las seis plantillas del bundler contra un SFC mínimo de Vue 3 y ninguna renderiza;
+`2.19.8` es la última versión publicada del cliente, así que no hay salida por actualizar.
+
+Queda documentado en `e2e/sandpack.spec.ts`, marcado `fixme`: describe el comportamiento
+que debe haber y falla por el motivo correcto. La salida probable es compilar los SFC en
+nuestra aplicación con `@vue/compiler-sfc` antes de entregárselos al bundler — es
+~1 MB más de dependencia, cargada solo en lecciones de framework, y es una decisión de
+producto además de técnica.
+
+---
+
 ## 5. Modelo de datos de progreso (servidor)
 
 ```
