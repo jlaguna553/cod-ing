@@ -107,3 +107,76 @@ test('⭐ restablecer devuelve la disposición de fábrica', async ({ page }) =>
   await page.getByRole('button', { name: /restablecer/i }).click();
   await expect(zona(page, 'left').locator('[data-widget="files"]')).toHaveCount(1);
 });
+
+test('⭐ soltar una tarjeta sobre otra las intercambia, y no se solapan', async ({ page }) => {
+  await page.goto(LECCION);
+  await waitForEditor(page);
+  await page.getByRole('button', { name: /personalizar/i }).click();
+
+  const izquierda = zona(page, 'left');
+  const idsDe = () =>
+    izquierda.locator('[data-widget]').evaluateAll((n) => n.map((x) => x.getAttribute('data-widget')));
+
+  const antes = await idsDe();
+  await izquierda
+    .locator(`[data-widget="${antes[0]}"] [aria-label*="Arrastrar"]`)
+    .dragTo(izquierda.locator(`[data-widget="${antes[2]}"]`));
+
+  const despues = await idsDe();
+  // Se cambian de sitio las dos; el resto se queda donde estaba.
+  expect(despues[0]).toBe(antes[2]);
+  expect(despues[2]).toBe(antes[0]);
+  expect(despues[1]).toBe(antes[1]);
+  expect(despues).toHaveLength(antes.length);
+
+  // Y lo que motivó el cambio: ninguna tarjeta pisa a la siguiente.
+  const cajas = await izquierda
+    .locator('[data-widget]')
+    .evaluateAll((nodes) =>
+      nodes.map((node) => {
+        const r = node.getBoundingClientRect();
+        return { top: Math.round(r.top), bottom: Math.round(r.bottom) };
+      }),
+    );
+  for (let i = 1; i < cajas.length; i += 1) {
+    expect(cajas[i].top, 'una tarjeta se dibuja encima de la siguiente').toBeGreaterThanOrEqual(
+      cajas[i - 1].bottom - 1,
+    );
+  }
+});
+
+test('⭐ cada tarjeta se redimensiona de alto, y el alto persiste', async ({ page }) => {
+  await page.goto(LECCION);
+  await waitForEditor(page);
+
+  const tarjeta = zona(page, 'left').locator('[data-widget="files"]');
+  const alto = () => tarjeta.evaluate((node) => Math.round(node.getBoundingClientRect().height));
+  const inicial = await alto();
+
+  // Con el teclado, igual que las columnas.
+  await page.getByRole('separator', { name: /alto de archivos/i }).focus();
+  for (let i = 0; i < 4; i += 1) await page.keyboard.press('ArrowDown');
+
+  await expect.poll(alto).not.toBe(inicial);
+  const ajustado = await alto();
+
+  await page.reload();
+  await waitForEditor(page);
+  await expect.poll(alto).toBe(ajustado);
+});
+
+test('⭐ la franja fija de la derecha también se redimensiona', async ({ page }) => {
+  await page.goto(LECCION);
+  await waitForEditor(page);
+
+  const franja = () =>
+    zona(page, 'dock').evaluate((node) =>
+      Math.round(node.parentElement!.getBoundingClientRect().height),
+    );
+  const inicial = await franja();
+
+  await page.getByRole('separator', { name: /alto de la franja fija/i }).focus();
+  for (let i = 0; i < 3; i += 1) await page.keyboard.press('ArrowUp');
+
+  await expect.poll(franja).toBeGreaterThan(inicial);
+});

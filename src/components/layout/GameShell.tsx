@@ -44,8 +44,23 @@ export function GameShell({
   const t = useTranslations();
   const columns = useLayoutStore((s) => s.columns);
   const editorRatio = useLayoutStore((s) => s.editorRatio);
+  const dockHeight = useLayoutStore((s) => s.dockHeight);
   const setColumn = useLayoutStore((s) => s.setColumn);
   const setEditorRatio = useLayoutStore((s) => s.setEditorRatio);
+  const setDockHeight = useLayoutStore((s) => s.setDockHeight);
+
+  /*
+   * Arrastrar hacia arriba agranda la franja, así que el delta se resta. Y sin
+   * alto fijado se parte del que tiene ahora, medido del DOM: con un valor por
+   * defecto, el primer paso la encogía de golpe en vez de moverla.
+   */
+  const ajustarFranja = (delta: number) => {
+    const actual =
+      dockHeight ??
+      document.querySelector('[data-zone="dock"]')?.parentElement?.getBoundingClientRect().height ??
+      240;
+    setDockHeight(actual - delta);
+  };
 
   return (
     <div className="flex h-dvh flex-col gap-3 p-3">
@@ -99,12 +114,27 @@ export function GameShell({
         </div>
 
         <aside
-          className="grid min-h-0 grid-rows-[minmax(0,1fr)_auto] gap-3 lg:overflow-hidden"
+          className="flex min-h-0 flex-col lg:overflow-hidden"
           style={{ width: columns.right, flex: '0 0 auto' }}
         >
-          <WidgetZone zone="guide" className="flex min-h-0 flex-col gap-3 overflow-y-auto pr-1" />
+          <WidgetZone
+            zone="guide"
+            className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto pr-1"
+          />
 
-          <div className="flex flex-col gap-3">
+          {/* El reparto entre lo que se desplaza y lo que se queja fijo también
+              lo decide el usuario. Sin alto fijado, la franja pide el suyo. */}
+          <Splitter
+            orientation="horizontal"
+            label={t('layout.resizeDock')}
+            onDelta={ajustarFranja}
+            onKeyStep={ajustarFranja}
+          />
+
+          <div
+            className={'flex shrink-0 flex-col gap-3 ' + (dockHeight ? 'overflow-y-auto' : '')}
+            style={dockHeight ? { height: dockHeight } : undefined}
+          >
             {complete}
             <WidgetZone zone="dock" className="flex flex-col gap-3" />
           </div>

@@ -67,17 +67,31 @@ export const DEFAULT_LAYOUT: Record<WidgetId, WidgetLayout> = {
 export const DEFAULT_COLUMNS = { left: 260, right: 400 };
 /** Reparto vertical de la columna central: cuánto se lleva el editor. */
 export const DEFAULT_EDITOR_RATIO = 0.6;
+/** Alto de la franja fija de la derecha. `null` = el que pida su contenido. */
+export const DEFAULT_DOCK_HEIGHT: number | null = null;
 
 const LIMITS = {
-  left: { min: 180, max: 480 },
-  right: { min: 280, max: 640 },
+  left: { min: 180, max: 640 },
+  right: { min: 280, max: 780 },
   editorRatio: { min: 0.2, max: 0.85 },
+  /** Alto de una tarjeta suelta y de la franja fija. */
+  card: { min: 64, max: 1200 },
 };
 
 interface LayoutState {
   widgets: Record<WidgetId, WidgetLayout>;
   columns: { left: number; right: number };
   editorRatio: number;
+  /**
+   * Alto fijado a mano por tarjeta, en píxeles.
+   *
+   * Ausente = el alto que pida su contenido, que es lo correcto por defecto:
+   * fijar de antemano el alto de todas obligaría a repartir a mano un espacio
+   * que el navegador ya reparte bien.
+   */
+  heights: Partial<Record<WidgetId, number>>;
+  /** Alto de la franja fija de la derecha. `null` = automático. */
+  dockHeight: number | null;
   /** En modo edición aparecen los controles de mover, ocultar y reordenar. */
   editing: boolean;
 
@@ -89,6 +103,10 @@ interface LayoutState {
   nudge: (id: WidgetId, direction: -1 | 1) => void;
   setColumn: (side: 'left' | 'right', px: number) => void;
   setEditorRatio: (ratio: number) => void;
+  setHeight: (id: WidgetId, px: number | null) => void;
+  setDockHeight: (px: number | null) => void;
+  /** Intercambia dos tarjetas de sitio, aunque estén en columnas distintas. */
+  swap: (a: WidgetId, b: WidgetId) => void;
   reset: () => void;
 }
 
@@ -122,6 +140,8 @@ export const useLayoutStore = create<LayoutState>()(
       widgets: DEFAULT_LAYOUT,
       columns: DEFAULT_COLUMNS,
       editorRatio: DEFAULT_EDITOR_RATIO,
+      heights: {},
+      dockHeight: DEFAULT_DOCK_HEIGHT,
       editing: false,
 
       toggleEditing: () => set((state) => ({ editing: !state.editing })),
@@ -164,18 +184,61 @@ export const useLayoutStore = create<LayoutState>()(
 
       setEditorRatio: (ratio) => set({ editorRatio: clamp(ratio, LIMITS.editorRatio) }),
 
+      setHeight: (id, px) =>
+        set((state) => {
+          const heights = { ...state.heights };
+          if (px === null) delete heights[id];
+          else heights[id] = clamp(px, LIMITS.card);
+          return { heights };
+        }),
+
+      setDockHeight: (px) =>
+        set({ dockHeight: px === null ? null : clamp(px, LIMITS.card) }),
+
+      /*
+       * Intercambio, no inserción.
+       *
+       * Soltar una tarjeta encima de otra cambia las dos de sitio: la que
+       * estaba ahí se va a donde estaba la que llega. Insertar desplazaba a
+       * todas las de abajo una posición, y con columnas de distinta longitud
+       * eso descoloca más de lo que coloca — el usuario apunta a un hueco
+       * concreto, no a «empujar la lista».
+       */
+      swap: (a, b) =>
+        set((state) => {
+          if (a === b) return state;
+          const uno = state.widgets[a];
+          const otro = state.widgets[b];
+
+          return {
+            widgets: renumber({
+              ...state.widgets,
+              [a]: { ...uno, zone: otro.zone, order: otro.order },
+              [b]: { ...otro, zone: uno.zone, order: uno.order },
+            }),
+          };
+        }),
+
       reset: () =>
         set({
           widgets: DEFAULT_LAYOUT,
           columns: DEFAULT_COLUMNS,
           editorRatio: DEFAULT_EDITOR_RATIO,
+          heights: {},
+          dockHeight: DEFAULT_DOCK_HEIGHT,
         }),
     }),
     {
       name: 'codequest.layout',
       // `editing` no se persiste: al volver, la pantalla está para jugar.
-      partialize: ({ widgets, columns, editorRatio }) => ({ widgets, columns, editorRatio }),
-      version: 1,
+      partialize: ({ widgets, columns, editorRatio, heights, dockHeight }) => ({
+        widgets,
+        columns,
+        editorRatio,
+        heights,
+        dockHeight,
+      }),
+      version: 2,
     },
   ),
 );

@@ -183,7 +183,10 @@
     "emptyZone": "Suelta aquí una tarjeta",
     "resizeLeft": "Ancho de la columna izquierda",
     "resizeRight": "Ancho de la columna derecha",
-    "resizeEditor": "Alto del editor"
+    "resizeEditor": "Alto del editor",
+    "resizeCard": "Alto de {widget}",
+    "resizeDock": "Alto de la franja fija",
+    "autoHeight": "Alto automático para {widget}"
   },
   "widgets": {
     "lessonInfo": "Ficha de la lección",

@@ -698,6 +698,26 @@ trampa distinta y peor.
 la pantalla: `setColumn` aplica mínimos y máximos. Una preferencia que permite romper la
 pantalla no es una preferencia, es un bug con permiso.
 
+**Qué se redimensiona.** Las dos columnas laterales (y con ellas el ancho del centro, que
+es lo que sobra), el reparto editor/salida, el reparto entre la zona con scroll y la fija,
+y **el alto de cada tarjeta**. El alto por tarjeta arranca sin fijar: el navegador reparte
+bien por defecto, y obligar a repartir a mano desde el principio sería trabajo sin motivo.
+La primera vez que se arrastra se toma el alto que la tarjeta tiene **medido del DOM**, no
+un valor por defecto — con uno inventado, el primer paso encogía de golpe una tarjeta de
+489 px a 256 en vez de moverla.
+
+**Soltar encima intercambia, no inserta.** El usuario apunta a un hueco concreto y espera
+ocuparlo; insertar desplazaba una posición a todas las de abajo, y con columnas de distinta
+longitud eso descoloca más de lo que coloca. Soltar en el hueco vacío de una zona sí añade
+al final, que es la otra intención posible y no se confunde con la primera.
+
+**El solape era un bug real, no una cuestión de orden.** El contenedor de cada tarjeta
+estaba en una columna flex sin `shrink-0`, así que se comprimía por debajo del alto de su
+contenido y la tarjeta se dibujaba encima de la siguiente. Es exactamente el mismo fallo
+que ya se había arreglado en `Panel`, reaparecido un nivel más arriba al envolver las
+tarjetas: **en una columna flex, todo lo que no recorta su contenido tiene que declarar que
+no se encoge**.
+
 **Qué se persiste y qué no.** Zona, orden, visibilidad y tamaños van a `localStorage`; el
 modo edición no. Es preferencia de interfaz, no progreso, así que no viaja al servidor:
 entrar desde otro dispositivo empieza por defecto, que es lo que se espera de un ajuste de

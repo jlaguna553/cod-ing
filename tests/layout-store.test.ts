@@ -90,7 +90,7 @@ test('⭐ los anchos se recortan a un rango usable', () => {
   assert.ok(useLayoutStore.getState().columns.left >= 180, 'no se puede dejar invisible');
 
   useLayoutStore.getState().setColumn('left', 5000);
-  assert.ok(useLayoutStore.getState().columns.left <= 480, 'no se puede comer la pantalla');
+  assert.ok(useLayoutStore.getState().columns.left <= 640, 'no se puede comer la pantalla');
 
   useLayoutStore.getState().setEditorRatio(0.99);
   assert.ok(useLayoutStore.getState().editorRatio <= 0.85, 'la salida no puede desaparecer');
@@ -105,4 +105,57 @@ test('restablecer devuelve todo, incluida una tarjeta oculta', () => {
   useLayoutStore.getState().reset();
   assert.deepEqual(useLayoutStore.getState().widgets, DEFAULT_LAYOUT);
   assert.equal(useLayoutStore.getState().columns.right, 400);
+});
+
+test('⭐ soltar una tarjeta sobre otra las intercambia, no empuja la lista', () => {
+  reset();
+  const antes = orden('left');
+
+  useLayoutStore.getState().swap('session', 'files');
+
+  // `session` y `files` cambian de sitio; las demás no se mueven.
+  assert.deepEqual(orden('left'), ['files', 'lesson-info', 'session', 'achievements', 'locale']);
+  assert.equal(orden('left').length, antes.length);
+});
+
+test('⭐ el intercambio funciona entre columnas distintas', () => {
+  reset();
+  useLayoutStore.getState().swap('files', 'tests');
+
+  assert.ok(orden('left').includes('tests'), 'tests baja a la izquierda');
+  assert.ok(orden('dock').includes('files'), 'files sube a la franja fija');
+  // Y cada una ocupa el sitio exacto de la otra, sin desplazar a nadie.
+  assert.deepEqual(orden('left'), ['session', 'lesson-info', 'tests', 'achievements', 'locale']);
+  assert.deepEqual(orden('dock'), ['task', 'nav', 'files']);
+});
+
+test('intercambiar una tarjeta consigo misma no hace nada', () => {
+  reset();
+  const antes = orden('left');
+  useLayoutStore.getState().swap('files', 'files');
+  assert.deepEqual(orden('left'), antes);
+});
+
+test('⭐ el alto por tarjeta se guarda, se recorta y se puede devolver a automático', () => {
+  reset();
+  assert.equal(useLayoutStore.getState().heights.files, undefined, 'por defecto, automático');
+
+  useLayoutStore.getState().setHeight('files', 320);
+  assert.equal(useLayoutStore.getState().heights.files, 320);
+
+  useLayoutStore.getState().setHeight('files', 5);
+  assert.ok(useLayoutStore.getState().heights.files! >= 64, 'no se puede dejar invisible');
+
+  useLayoutStore.getState().setHeight('files', null);
+  assert.equal(useLayoutStore.getState().heights.files, undefined, 'vuelve a automático');
+});
+
+test('restablecer también borra los altos y la franja fija', () => {
+  reset();
+  useLayoutStore.getState().setHeight('guide', 300);
+  useLayoutStore.getState().setDockHeight(420);
+
+  useLayoutStore.getState().reset();
+  assert.deepEqual(useLayoutStore.getState().heights, {});
+  assert.equal(useLayoutStore.getState().dockHeight, null);
 });

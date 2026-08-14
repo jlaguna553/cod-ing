@@ -20,8 +20,8 @@ export function Splitter({
   label,
 }: {
   orientation: 'vertical' | 'horizontal';
-  /** Píxeles movidos desde el último evento. */
-  onDelta: (delta: number) => void;
+  /** Píxeles movidos desde el último evento. Se pasa el evento para poder medir. */
+  onDelta: (delta: number, event: React.PointerEvent<HTMLDivElement>) => void;
   /** Paso al usar las flechas del teclado. */
   onKeyStep: (delta: number) => void;
   label: string;
@@ -38,7 +38,7 @@ export function Splitter({
     (event: React.PointerEvent<HTMLDivElement>) => {
       if (last.current === null) return;
       const position = vertical ? event.clientX : event.clientY;
-      onDelta(position - last.current);
+      onDelta(position - last.current, event);
       last.current = position;
     },
     [onDelta, vertical],

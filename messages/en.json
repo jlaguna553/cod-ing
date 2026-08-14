@@ -183,7 +183,10 @@
     "emptyZone": "Drop a card here",
     "resizeLeft": "Left column width",
     "resizeRight": "Right column width",
-    "resizeEditor": "Editor height"
+    "resizeEditor": "Editor height",
+    "resizeCard": "{widget} height",
+    "resizeDock": "Fixed strip height",
+    "autoHeight": "Automatic height for {widget}"
   },
   "widgets": {
     "lessonInfo": "Lesson details",
