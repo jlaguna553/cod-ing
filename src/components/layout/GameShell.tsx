@@ -1,46 +1,115 @@
+'use client';
+
 import type { ReactNode } from 'react';
+import { useLayoutStore } from '@/stores/useLayoutStore';
+import { useTranslations } from 'next-intl';
+import { LayoutBar } from './LayoutBar';
+import { Splitter } from './Splitter';
+import { WidgetZone } from './WidgetZone';
 
 /**
  * Layout de la pantalla de juego.
  *
- *   ┌──────────┬───────────────────────────┬──────────┐
- *   │ Left     │   CodeCanvas (hero)       │ Reto     │  fijo
- *   │ FileTree │                           ├──────────┤
- *   │ XP/Nivel ├───────────────────────────┤ Guía     │  scroll
- *   │ Energía  │   OutputDock              ├──────────┤
- *   │ Idioma   │   (preview | terminal)    │ Pruebas  │  fijo
- *   └──────────┴───────────────────────────┴──────────┘
+ *   ┌─────────────────── barra: volver · personalizar ───────────────────┐
+ *   ├──────────┬───────────────────────────┬──────────────────────────────┤
+ *   │ zona     │   CodeCanvas (hero)       │ zona `guide`  (scroll)       │
+ *   │ `left`   ├───────────────────────────┤                              │
+ *   │          │   OutputDock              │ zona `dock`   (fija)         │
+ *   └──────────┴───────────────────────────┴──────────────────────────────┘
  *
- * Grid de altura fija (100dvh) y `min-h-0` en las celdas: es lo que permite
- * que Monaco y Xterm midan su propio alto y hagan scroll interno en vez de
- * empujar la página. Sin `min-h-0` el editor crece sin límite y rompe el layout.
+ * Las tres columnas se redimensionan y las tarjetas se mueven entre zonas, así
+ * que este componente ya no sabe **qué** hay en cada sitio: solo reparte el
+ * espacio y deja que `WidgetZone` componga con lo que el usuario haya decidido.
  *
- * La columna derecha es `overflow-hidden` a partir de `lg`: el scroll lo pone
- * ella por dentro, solo sobre el texto de la guía (ver `RightPanel`). Por
- * debajo de ese ancho no hay altura que repartir, así que se deja crecer y
- * scrollar la página entera.
+ * Lo que no cambia es la mecánica de alturas: grid de 100dvh y `min-h-0` en las
+ * celdas, que es lo que permite que Monaco y Xterm midan su propio alto y hagan
+ * scroll interno en vez de empujar la página.
+ *
+ * Los anchos van en `style` y no en clases de Tailwind a propósito: son un
+ * número que cambia en cada arrastre, y generar clases dinámicas no funciona
+ * con un compilador que las extrae del código fuente.
  */
 export function GameShell({
-  left,
-  right,
   editor,
   output,
+  complete,
+  track,
 }: {
-  left: ReactNode;
-  right: ReactNode;
   editor: ReactNode;
   output: ReactNode;
+  /** Cierre de lección: solo existe al terminar, y manda sobre el resto. */
+  complete: ReactNode;
+  track: string;
 }) {
+  const t = useTranslations();
+  const columns = useLayoutStore((s) => s.columns);
+  const editorRatio = useLayoutStore((s) => s.editorRatio);
+  const setColumn = useLayoutStore((s) => s.setColumn);
+  const setEditorRatio = useLayoutStore((s) => s.setEditorRatio);
+
   return (
-    <div className="grid h-dvh grid-cols-[minmax(0,1fr)] grid-rows-[1fr_auto] gap-3 p-3 lg:grid-cols-[260px_minmax(0,1fr)_400px] lg:grid-rows-1 xl:grid-cols-[280px_minmax(0,1fr)_440px]">
-      <aside className="hidden min-h-0 flex-col gap-3 overflow-y-auto lg:flex">{left}</aside>
+    <div className="flex h-dvh flex-col gap-3 p-3">
+      <LayoutBar track={track} />
 
-      <main className="grid min-h-0 grid-rows-[minmax(0,3fr)_minmax(0,2fr)] gap-3">
-        <section className="min-h-0">{editor}</section>
-        <section className="min-h-0">{output}</section>
-      </main>
+      <div className="flex min-h-0 flex-1 flex-col gap-3 lg:flex-row lg:gap-0">
+        <aside
+          className="hidden min-h-0 flex-col gap-3 overflow-y-auto lg:flex"
+          style={{ width: columns.left, flex: '0 0 auto' }}
+        >
+          <WidgetZone zone="left" className="flex flex-col gap-3" />
+        </aside>
 
-      <aside className="min-h-0 lg:overflow-hidden">{right}</aside>
+        <div className="hidden lg:block">
+          <Splitter
+            orientation="vertical"
+            label={t('layout.resizeLeft')}
+            onDelta={(delta) => setColumn('left', columns.left + delta)}
+            onKeyStep={(delta) => setColumn('left', columns.left + delta)}
+          />
+        </div>
+
+        <main className="flex min-h-0 flex-1 flex-col">
+          <section className="min-h-0" style={{ flex: `${editorRatio} 1 0%` }}>
+            {editor}
+          </section>
+
+          <Splitter
+            orientation="horizontal"
+            label={t('layout.resizeEditor')}
+            onDelta={(delta) => {
+              // El delta se convierte a proporción con el alto de la columna.
+              const alto = window.innerHeight;
+              setEditorRatio(editorRatio + delta / alto);
+            }}
+            onKeyStep={(delta) => setEditorRatio(editorRatio + delta / window.innerHeight)}
+          />
+
+          <section className="min-h-0" style={{ flex: `${1 - editorRatio} 1 0%` }}>
+            {output}
+          </section>
+        </main>
+
+        <div className="hidden lg:block">
+          <Splitter
+            orientation="vertical"
+            label={t('layout.resizeRight')}
+            onDelta={(delta) => setColumn('right', columns.right - delta)}
+            onKeyStep={(delta) => setColumn('right', columns.right - delta)}
+          />
+        </div>
+
+        <aside
+          className="grid min-h-0 grid-rows-[minmax(0,1fr)_auto] gap-3 lg:overflow-hidden"
+          style={{ width: columns.right, flex: '0 0 auto' }}
+        >
+          <WidgetZone zone="guide" className="flex min-h-0 flex-col gap-3 overflow-y-auto pr-1" />
+
+          <div className="flex flex-col gap-3">
+            {complete}
+            <WidgetZone zone="dock" className="flex flex-col gap-3" />
+          </div>
+        </aside>
+      </div>
     </div>
   );
 }

@@ -8,7 +8,8 @@
     "tracks": "Tracks",
     "profile": "Profile",
     "language": "Language",
-    "switchTo": "Switch to {locale}"
+    "switchTo": "Switch to {locale}",
+    "backToTrack": "Back to track"
   },
   "locale": {
     "es": "Spanish",
@@ -169,5 +170,23 @@
     "rowCount": "{count} row(s)",
     "affected": "{count} row(s) affected",
     "results": "Result"
+  },
+  "layout": {
+    "customize": "Customise",
+    "done": "Done",
+    "reset": "Reset",
+    "hiddenTray": "Hidden",
+    "hide": "Hide {widget}",
+    "up": "Move {widget} up",
+    "down": "Move {widget} down",
+    "drag": "Drag {widget}",
+    "emptyZone": "Drop a card here",
+    "resizeLeft": "Left column width",
+    "resizeRight": "Right column width",
+    "resizeEditor": "Editor height"
+  },
+  "widgets": {
+    "lessonInfo": "Lesson details",
+    "stepNav": "Navigation"
   }
 }

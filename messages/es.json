@@ -8,7 +8,8 @@
     "tracks": "Rutas",
     "profile": "Perfil",
     "language": "Idioma",
-    "switchTo": "Cambiar a {locale}"
+    "switchTo": "Cambiar a {locale}",
+    "backToTrack": "Volver a la ruta"
   },
   "locale": {
     "es": "Español",
@@ -169,5 +170,23 @@
     "rowCount": "{count} fila(s)",
     "affected": "{count} fila(s) afectadas",
     "results": "Resultado"
+  },
+  "layout": {
+    "customize": "Personalizar",
+    "done": "Listo",
+    "reset": "Restablecer",
+    "hiddenTray": "Ocultas",
+    "hide": "Ocultar {widget}",
+    "up": "Subir {widget}",
+    "down": "Bajar {widget}",
+    "drag": "Arrastrar {widget}",
+    "emptyZone": "Suelta aquí una tarjeta",
+    "resizeLeft": "Ancho de la columna izquierda",
+    "resizeRight": "Ancho de la columna derecha",
+    "resizeEditor": "Alto del editor"
+  },
+  "widgets": {
+    "lessonInfo": "Ficha de la lección",
+    "stepNav": "Navegación"
   }
 }

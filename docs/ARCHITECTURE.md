@@ -663,6 +663,55 @@ en rojo.
 
 ---
 
+### ADR-15 · La pantalla la compone el usuario
+
+**Contexto.** El layout era fijo: tres columnas con anchos de Tailwind y una lista de
+tarjetas escrita a mano en `LeftPanel` y `RightPanel`. Cambiar dónde iba algo era editar
+JSX. Y se podía entrar en una lección sin ninguna salida visible al mapa — solo el botón
+atrás del navegador o editar la URL.
+
+**Decisión.** Las tarjetas dejan de estar escritas en el layout y pasan a ser **datos**:
+un registro (`widgets.tsx`) declara cada una una sola vez, y `useLayoutStore` guarda de
+cada una su zona, su orden y si se ve. `GameShell` ya no sabe qué hay en cada sitio —
+reparte espacio y deja que `WidgetZone` componga.
+
+**Tres zonas, no dos.** `left`, `guide` (con scroll) y `dock` (fija abajo a la derecha).
+La distinción entre «con scroll» y «fijo» sobrevive porque la decisión que la creó sigue
+siendo buena: el reto y las pruebas se consultan *mientras* se escribe código. Lo que
+cambia es que ahora el usuario elige qué va en cada una.
+
+**El editor y la salida no se mueven.** Se redimensionan y nada más. Una pantalla sin
+editor no es una pantalla personalizada, es una pantalla rota, y ofrecer la posibilidad de
+llegar ahí no es libertad — es una trampa.
+
+**Arrastrar y los botones hacen lo mismo, a propósito.** El arrastre nativo (`dataTransfer`
+con un tipo propio) es lo que la gente espera y permite soltar en otra columna sin que las
+zonas se conozcan entre ellas. Los botones de subir/bajar/ocultar son la única vía con
+teclado y la que funciona en móvil. Que una funcionalidad dependa de un solo gesto es
+justo lo que deja fuera a quien no puede hacerlo.
+
+**Ocultar tiene vuelta.** Las tarjetas ocultas aparecen en una bandeja en la barra
+superior, a un clic de volver. Esconder algo sin una forma evidente de recuperarlo es una
+trampa distinta y peor.
+
+**Los anchos se recortan a un rango.** No se puede dejar una columna invisible ni comerse
+la pantalla: `setColumn` aplica mínimos y máximos. Una preferencia que permite romper la
+pantalla no es una preferencia, es un bug con permiso.
+
+**Qué se persiste y qué no.** Zona, orden, visibilidad y tamaños van a `localStorage`; el
+modo edición no. Es preferencia de interfaz, no progreso, así que no viaja al servidor:
+entrar desde otro dispositivo empieza por defecto, que es lo que se espera de un ajuste de
+ventana. Y vive fuera del árbol de React por el mismo motivo del ADR-01 — cambiar de
+idioma remonta el subárbol y la disposición no debe enterarse.
+
+**Guardia.** `tests/layout-store.test.ts` prueba la aritmética del orden —insertar entre
+dos vecinos, no dejar huecos, mover entre zonas— porque es lo que puede romperse en
+silencio. `e2e/personalizar.spec.ts` comprueba lo que de verdad se promete: que ocultar,
+mover, reordenar y redimensionar **sobrevivan a una recarga**. Una preferencia que se
+olvida es peor que no ofrecerla.
+
+---
+
 ## 5. Modelo de datos de progreso (servidor)
 
 ```

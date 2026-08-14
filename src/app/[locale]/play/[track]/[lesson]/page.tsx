@@ -2,8 +2,7 @@ import { notFound } from 'next/navigation';
 import { setRequestLocale } from 'next-intl/server';
 import { hasLocale } from 'next-intl';
 import { GameShell } from '@/components/layout/GameShell';
-import { LeftPanel } from '@/components/layout/LeftPanel';
-import { RightPanel } from '@/components/layout/RightPanel';
+import { LessonComplete } from '@/components/lesson/LessonComplete';
 import { OutputDock } from '@/components/layout/OutputDock';
 import { CodeCanvas } from '@/components/editor/CodeCanvas';
 import { LessonBoot } from '@/components/lesson/LessonBoot';
@@ -53,10 +52,10 @@ export default async function PlayPage({ params }: PlayParams) {
       <AchievementWatcher catalog={getAchievements()} />
       <ProgressSync />
       <GameShell
-        left={<LeftPanel />}
-        right={<RightPanel nextLessonId={getNextLessonId(lessonId)} track={track} />}
+        track={track}
         editor={<CodeCanvas />}
         output={<OutputDock runtimeKind={lesson.runtime.kind} />}
+        complete={<LessonComplete nextLessonId={getNextLessonId(lessonId)} track={track} />}
       />
     </>
   );
