@@ -74,7 +74,7 @@ export function GameShell({
           <WidgetZone zone="left" className="flex flex-col gap-3" />
         </aside>
 
-        <div className="hidden lg:block">
+        <div className="hidden self-stretch lg:block">
           <Splitter
             orientation="vertical"
             label={t('layout.resizeLeft')}
@@ -104,7 +104,7 @@ export function GameShell({
           </section>
         </main>
 
-        <div className="hidden lg:block">
+        <div className="hidden self-stretch lg:block">
           <Splitter
             orientation="vertical"
             label={t('layout.resizeRight')}

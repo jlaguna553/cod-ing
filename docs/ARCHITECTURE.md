@@ -724,6 +724,17 @@ entrar desde otro dispositivo empieza por defecto, que es lo que se espera de un
 ventana. Y vive fuera del árbol de React por el mismo motivo del ADR-01 — cambiar de
 idioma remonta el subárbol y la disposición no debe enterarse.
 
+**El divisor invisible, y por qué el test no lo vio.** Los divisores verticales no
+declaraban altura. Su única marca visible es un `<span>` absoluto, que no aporta ninguna, así
+que medían **cero de alto**: se podían enfocar con Tab y mover con las flechas —por eso las
+pruebas pasaban— pero con el ratón no había nada donde pinchar. Redimensionar a lo ancho no
+existía en la práctica y ninguna comprobación se quejó.
+
+La lección de método: **un test que solo ejerce el camino de teclado no prueba que la
+interfaz exista**. Ahora se mide la caja de cada divisor y se exige que tenga superficie que
+agarrar, y hay una prueba que arrastra con el ratón de verdad. `focus()` demuestra que el
+elemento está en el DOM; solo el rectángulo demuestra que está en la pantalla.
+
 **Guardia.** `tests/layout-store.test.ts` prueba la aritmética del orden —insertar entre
 dos vecinos, no dejar huecos, mover entre zonas— porque es lo que puede romperse en
 silencio. `e2e/personalizar.spec.ts` comprueba lo que de verdad se promete: que ocultar,

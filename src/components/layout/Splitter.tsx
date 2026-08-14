@@ -65,17 +65,30 @@ export function Splitter({
         else return;
         event.preventDefault();
       }}
+      /*
+       * El divisor vertical necesita `h-full` explícito.
+       *
+       * Sin él medía **cero de alto**: su única marca visible es un `<span>`
+       * absoluto, que no aporta altura, así que el elemento quedaba invisible y
+       * sin superficie que agarrar. Se podía enfocar con Tab y mover con las
+       * flechas —por eso el test pasaba— pero con el ratón no había nada donde
+       * pinchar. Redimensionar dejó de existir en la práctica sin que ninguna
+       * comprobación se quejara.
+       */
       className={
         'group relative shrink-0 touch-none transition-colors ' +
         'hover:bg-[var(--color-neon)]/30 focus-visible:bg-[var(--color-neon)]/50 ' +
-        (vertical ? 'w-1.5 cursor-col-resize' : 'h-1.5 cursor-row-resize')
+        (vertical ? 'h-full w-2 cursor-col-resize' : 'h-2 w-full cursor-row-resize')
       }
     >
       {/* El asa visible es fina; el área que responde al puntero, no tanto. */}
+      {/* Marca visible: fina en reposo, evidente al pasar por encima. */}
       <span
         className={
-          'absolute rounded-full bg-[var(--color-border)] group-hover:bg-[var(--color-neon)] ' +
-          (vertical ? 'inset-y-0 left-1/2 w-px -translate-x-1/2' : 'inset-x-0 top-1/2 h-px -translate-y-1/2')
+          'absolute rounded-full bg-[var(--color-border)] transition-colors group-hover:bg-[var(--color-neon)] ' +
+          (vertical
+            ? 'inset-y-0 left-1/2 w-0.5 -translate-x-1/2'
+            : 'inset-x-0 top-1/2 h-0.5 -translate-y-1/2')
         }
       />
     </div>

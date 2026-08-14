@@ -180,3 +180,49 @@ test('⭐ la franja fija de la derecha también se redimensiona', async ({ page 
 
   await expect.poll(franja).toBeGreaterThan(inicial);
 });
+
+test('⭐ todos los divisores se pueden ver y agarrar con el ratón', async ({ page }) => {
+  /*
+   * La comprobación que faltaba.
+   *
+   * Los tests de redimensionar usaban `focus()` y flechas, así que pasaban con
+   * un divisor de CERO píxeles: se podía enfocar con Tab y no había nada donde
+   * pinchar. Medir la caja es lo único que distingue «existe en el DOM» de
+   * «existe en la pantalla».
+   */
+  await page.goto(LECCION);
+  await waitForEditor(page);
+
+  const divisores = page.getByRole('separator');
+  const total = await divisores.count();
+  expect(total, 'debería haber divisores de columna, de editor y de tarjeta').toBeGreaterThan(3);
+
+  for (let i = 0; i < total; i += 1) {
+    const divisor = divisores.nth(i);
+    const etiqueta = (await divisor.getAttribute('aria-label')) ?? `#${i}`;
+    const caja = await divisor.boundingBox();
+
+    expect(caja, `«${etiqueta}» no se renderiza`).not.toBeNull();
+    expect(caja!.width, `«${etiqueta}» no tiene ancho que agarrar`).toBeGreaterThanOrEqual(2);
+    expect(caja!.height, `«${etiqueta}» no tiene alto que agarrar`).toBeGreaterThanOrEqual(2);
+  }
+});
+
+test('⭐ el ancho se cambia arrastrando, no solo con el teclado', async ({ page }) => {
+  await page.goto(LECCION);
+  await waitForEditor(page);
+
+  const columna = page.locator('[data-zone="left"]').locator('xpath=..');
+  const ancho = () => columna.evaluate((node) => Math.round(node.getBoundingClientRect().width));
+  const inicial = await ancho();
+
+  const divisor = page.getByRole('separator', { name: /ancho de la columna izquierda/i });
+  const caja = (await divisor.boundingBox())!;
+
+  await page.mouse.move(caja.x + caja.width / 2, caja.y + caja.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(caja.x + caja.width / 2 + 90, caja.y + caja.height / 2, { steps: 10 });
+  await page.mouse.up();
+
+  await expect.poll(ancho).toBeGreaterThan(inicial + 40);
+});
