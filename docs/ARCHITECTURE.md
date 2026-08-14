@@ -724,6 +724,14 @@ entrar desde otro dispositivo empieza por defecto, que es lo que se espera de un
 ventana. Y vive fuera del árbol de React por el mismo motivo del ADR-01 — cambiar de
 idioma remonta el subárbol y la disposición no debe enterarse.
 
+**Y el centro tiene que poder encoger.** Un elemento flex trae `min-width: auto`: no baja
+del ancho mínimo de su contenido, y aquí el contenido es Monaco, que pide mucho. Sin
+`min-w-0` en la columna central, ensanchar la derecha subía su ancho de verdad —el store
+pasaba de 400 a 550— pero el centro se negaba a ceder y la columna se salía por el borde.
+El síntoma era desconcertante: hacia la derecha encogía y hacia la izquierda no pasaba
+nada. Por eso el test mide **las dos** columnas: que una crezca sin que la otra encoja no
+es redimensionar, es desbordar.
+
 **El divisor invisible, y por qué el test no lo vio.** Los divisores verticales no
 declaraban altura. Su única marca visible es un `<span>` absoluto, que no aporta ninguna, así
 que medían **cero de alto**: se podían enfocar con Tab y mover con las flechas —por eso las

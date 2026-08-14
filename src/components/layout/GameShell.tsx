@@ -83,7 +83,17 @@ export function GameShell({
           />
         </div>
 
-        <main className="flex min-h-0 flex-1 flex-col">
+        {/*
+          `min-w-0` es lo que permite que las columnas laterales crezcan.
+
+          Un elemento flex tiene `min-width: auto`, es decir: no encoge por
+          debajo del ancho mínimo de su contenido. Y aquí el contenido es
+          Monaco, que pide mucho. Sin esto, ensanchar la columna derecha
+          aumentaba su ancho de verdad —el store subía de 400 a 550— pero el
+          centro se negaba a ceder y la columna se salía por el borde: hacia la
+          derecha se veía encoger, hacia la izquierda no pasaba nada.
+        */}
+        <main className="flex min-h-0 min-w-0 flex-1 flex-col">
           <section className="min-h-0" style={{ flex: `${editorRatio} 1 0%` }}>
             {editor}
           </section>

@@ -226,3 +226,47 @@ test('⭐ el ancho se cambia arrastrando, no solo con el teclado', async ({ page
 
   await expect.poll(ancho).toBeGreaterThan(inicial + 40);
 });
+
+test('⭐ la columna derecha crece hacia la izquierda, quitándole sitio al centro', async ({
+  page,
+}) => {
+  /*
+   * El síntoma era desconcertante: hacia la derecha encogía y hacia la
+   * izquierda no pasaba nada. El ancho SÍ crecía en el store —de 400 a 550—
+   * pero el centro se negaba a ceder por su `min-width: auto`, así que la
+   * columna se salía por el borde en vez de ensancharse.
+   *
+   * Por eso el test mide las dos: que una crezca sin que la otra encoja no es
+   * redimensionar, es desbordar.
+   */
+  await page.goto(LECCION);
+  await waitForEditor(page);
+
+  const medir = () =>
+    page.evaluate(() => {
+      const derecha = document.querySelector('[data-zone="dock"]')!.closest('aside')!;
+      const centro = document.querySelector('main')!;
+      return {
+        derecha: Math.round(derecha.getBoundingClientRect().width),
+        centro: Math.round(centro.getBoundingClientRect().width),
+      };
+    });
+
+  const antes = await medir();
+
+  const divisor = (await page
+    .getByRole('separator', { name: /ancho de la columna derecha/i })
+    .boundingBox())!;
+  await page.mouse.move(divisor.x + divisor.width / 2, divisor.y + divisor.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(divisor.x + divisor.width / 2 - 120, divisor.y + divisor.height / 2, {
+    steps: 12,
+  });
+  await page.mouse.up();
+
+  const despues = await medir();
+  expect(despues.derecha, 'la derecha no se ensanchó').toBeGreaterThan(antes.derecha + 60);
+  expect(despues.centro, 'el centro no cedió sitio: se está desbordando').toBeLessThan(
+    antes.centro - 60,
+  );
+});
