@@ -1,0 +1,299 @@
+{
+  "$schema": "../../../schema/lesson.schema.json",
+  "schemaVersion": 1,
+
+  "id": "html-03-forms",
+  "track": "frontend",
+  "module": "html",
+  "order": 3,
+
+  "kind": "challenge",
+  "difficulty": "apprentice",
+  "estimatedMinutes": 22,
+
+  "title": {
+    "es": "Formularios: el placeholder no es una etiqueta",
+    "en": "Forms: a placeholder is not a label"
+  },
+  "summary": {
+    "es": "Un formulario que se ve bien y no se puede usar con teclado, ni con lector de pantalla, ni cuando el usuario ya ha empezado a escribir.",
+    "en": "A form that looks fine and can't be used with a keyboard, or a screen reader, or once the user has started typing."
+  },
+  "concepts": ["html", "formularios", "accesibilidad", "label", "validacion"],
+  "prerequisites": ["html-02-semantic-structure"],
+
+  "runtime": {
+    "kind": "dom",
+    "dependencies": {},
+    "timeoutMs": 5000
+  },
+
+  "workspace": {
+    "entry": "index.html",
+    "allowCreate": false,
+    "allowDelete": false,
+    "protectedPaths": [],
+    "files": [
+      {
+        "path": "index.html",
+        "active": true,
+        "content": "<!doctype html>\n<html lang=\"es\">\n  <head>\n    <meta charset=\"utf-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />\n    <title>Alta de jugador</title>\n  </head>\n  <body>\n    <main>\n      <h1>Únete a la partida</h1>\n\n      <form>\n        <!-- TODO 1: cada campo necesita su <label> asociada -->\n        <input placeholder=\"Correo\" />\n        <input placeholder=\"Contraseña\" />\n\n        <!-- TODO 3: esto parece un botón y no lo es -->\n        <div class=\"boton\" onclick=\"enviar()\">Crear cuenta</div>\n      </form>\n    </main>\n  </body>\n</html>\n"
+      }
+    ]
+  },
+
+  "rules": [
+    {
+      "id": "label-exists",
+      "kind": "dom-assert",
+      "selector": "label[for='correo']",
+      "assert": "exists",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Falta una `<label for=\"correo\">`. El `for` debe apuntar al `id` del campo, y ese `id` tiene que existir.",
+        "en": "A `<label for=\"correo\">` is missing. The `for` must point at the field's `id`, and that `id` has to exist."
+      },
+      "successMessage": {
+        "es": "Etiqueta asociada: pulsar en el texto ya enfoca el campo.",
+        "en": "Label associated: clicking the text now focuses the field."
+      },
+      "points": 30
+    },
+    {
+      "id": "input-has-id",
+      "kind": "dom-assert",
+      "selector": "input#correo",
+      "assert": "exists",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "El campo de correo necesita `id=\"correo\"` para que la etiqueta pueda apuntarle.",
+        "en": "The email field needs `id=\"correo\"` so the label can point at it."
+      },
+      "points": 20
+    },
+    {
+      "id": "two-labels",
+      "kind": "dom-assert",
+      "selector": "label",
+      "assert": "countEquals",
+      "count": 2,
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Los dos campos necesitan etiqueta, no solo el primero.",
+        "en": "Both fields need a label, not just the first one."
+      },
+      "points": 20
+    },
+    {
+      "id": "email-type",
+      "kind": "dom-assert",
+      "selector": "#correo",
+      "assert": "attrEquals",
+      "attribute": "type",
+      "expected": "email",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "El campo de correo debe ser `type=\"email\"`. Sin él, el móvil ofrece el teclado equivocado.",
+        "en": "The email field must be `type=\"email\"`. Without it, phones offer the wrong keyboard."
+      },
+      "points": 25
+    },
+    {
+      "id": "password-type",
+      "kind": "dom-assert",
+      "selector": "#clave",
+      "assert": "attrEquals",
+      "attribute": "type",
+      "expected": "password",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "La contraseña debe ser `type=\"password\"`: si no, se ve en pantalla y el gestor de contraseñas no la reconoce.",
+        "en": "The password must be `type=\"password\"`: otherwise it shows on screen and the password manager doesn't recognise it."
+      },
+      "points": 25
+    },
+    {
+      "id": "required-fields",
+      "kind": "regex-must",
+      "file": "index.html",
+      "pattern": "required",
+      "flags": "m",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Marca como `required` los campos obligatorios: el navegador avisa antes de enviar y el lector de pantalla lo anuncia.",
+        "en": "Mark mandatory fields as `required`: the browser warns before submitting and the screen reader announces it."
+      },
+      "points": 20
+    },
+    {
+      "id": "real-button",
+      "kind": "dom-assert",
+      "selector": "button[type='submit']",
+      "assert": "exists",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Hace falta un `<button type=\"submit\">` de verdad. Un `<div>` no recibe foco ni responde al teclado.",
+        "en": "A real `<button type=\"submit\">` is needed. A `<div>` takes no focus and doesn't respond to the keyboard."
+      },
+      "successMessage": {
+        "es": "Un botón de verdad: enfocable, pulsable con Enter y anunciado como botón.",
+        "en": "A real button: focusable, activated with Enter, and announced as a button."
+      },
+      "points": 35
+    },
+    {
+      "id": "no-div-button",
+      "kind": "regex-forbid",
+      "file": "index.html",
+      "pattern": "<div[^>]*onclick",
+      "flags": "im",
+      "phase": "type",
+      "severity": "damage",
+      "message": {
+        "es": "¡Daño! Un `<div onclick>` no es un botón: no se enfoca con Tab, no se activa con Enter ni Espacio, y un lector de pantalla lo lee como texto suelto.",
+        "en": "Damage! A `<div onclick>` isn't a button: no Tab focus, no Enter or Space activation, and a screen reader reads it as loose text."
+      },
+      "points": 15
+    },
+    {
+      "id": "placeholder-not-label",
+      "kind": "regex-forbid",
+      "file": "index.html",
+      "pattern": "<input(?![^>]*\\bid=)[^>]*placeholder",
+      "flags": "im",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Un `placeholder` sin etiqueta asociada no vale como nombre del campo: desaparece al escribir y muchos lectores no lo anuncian.",
+        "en": "A `placeholder` with no associated label doesn't count as the field's name: it vanishes on typing and many readers don't announce it."
+      },
+      "points": 20
+    }
+  ],
+
+  "steps": [
+    {
+      "id": "step-1-labels",
+      "title": {
+        "es": "El texto que desaparece justo cuando hace falta",
+        "en": "The text that vanishes exactly when it's needed"
+      },
+      "body": {
+        "es": "El formulario de partida se ve perfectamente y tiene tres problemas graves. Empecemos por el más común de toda la web: **usar el `placeholder` como si fuera la etiqueta del campo**.\n\nEs cómodo —ahorra una línea y queda limpio— y falla en cuatro sitios:\n\n- **Desaparece al escribir.** En un formulario largo, a mitad de rellenarlo ya no sabes qué pedía cada casilla. Y si te equivocas y vuelves, el campo lleno no dice qué es.\n- **No lo anuncia el lector de pantalla de forma fiable.** El `placeholder` es una *pista*, no el nombre accesible; algunos lectores lo leen, otros no, y en ninguno sustituye a la etiqueta.\n- **Contraste bajo por diseño.** Se pinta gris claro para parecer un hueco, justo por debajo del mínimo legible que exige la norma.\n- **Al traducir o autocompletar** se pierde: el navegador rellena el campo y el texto de ayuda ya no está.\n\nLa etiqueta se asocia con dos atributos que tienen que coincidir:\n\n```html\n<label for=\"nombre\">Nombre</label>\n<input id=\"nombre\" />\n```\n\nY hay una ventaja que se nota aunque no uses lector de pantalla: **pulsar en el texto enfoca el campo**. Eso agranda el área de clic, que en un móvil es la diferencia entre acertar y volver a intentarlo. Nadie lo pide, todo el mundo lo agradece.\n\nPonle etiqueta a los dos campos, con `id` `correo` y `clave`.",
+        "en": "The starting form looks perfectly fine and has three serious problems. Let's start with the most common on the whole web: **using the `placeholder` as if it were the field's label**.\n\nIt's convenient — saves a line and looks clean — and it fails in four places:\n\n- **It vanishes on typing.** In a long form, halfway through you no longer know what each box asked for. And if you make a mistake and come back, the filled field doesn't say what it is.\n- **Screen readers don't announce it reliably.** A `placeholder` is a *hint*, not the accessible name; some readers read it, others don't, and in none does it replace the label.\n- **Low contrast by design.** It's painted light grey to look like an empty slot, just below the legible minimum the standard requires.\n- **On translation or autofill** it's lost: the browser fills the field and the helper text is gone.\n\nA label is associated by two attributes that must match:\n\n```html\n<label for=\"name\">Name</label>\n<input id=\"name\" />\n```\n\nAnd there's a benefit you notice even without a screen reader: **clicking the text focuses the field**. That enlarges the click target, which on a phone is the difference between hitting it and trying again. Nobody asks for it; everybody appreciates it.\n\nGive both fields a label, with ids `correo` and `clave`."
+      },
+      "task": {
+        "es": "Asocia una `<label>` a cada campo con `for`/`id` (`correo` y `clave`), sin dejar el `placeholder` como único nombre.",
+        "en": "Associate a `<label>` with each field via `for`/`id` (`correo` and `clave`), without leaving the `placeholder` as the only name."
+      },
+      "focusFile": "index.html",
+      "focusLines": [13, 15],
+      "ruleIds": ["label-exists", "input-has-id", "two-labels", "placeholder-not-label"],
+      "xp": 40,
+      "hints": [
+        {
+          "id": "h-pair",
+          "tier": 1,
+          "text": {
+            "es": "El valor de `for` y el del `id` tienen que ser idénticos. El `placeholder` puede quedarse como ejemplo del formato («tucorreo@ejemplo.com»), pero ya no es quien nombra el campo.",
+            "en": "The `for` value and the `id` must be identical. The `placeholder` can stay as a format example (\"you@example.com\"), but it no longer names the field."
+          },
+          "xpPenalty": 6,
+          "autoOfferAfterSeconds": 80
+        }
+      ],
+      "solution": [
+        {
+          "path": "index.html",
+          "content": "<!doctype html>\n<html lang=\"es\">\n  <head>\n    <meta charset=\"utf-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />\n    <title>Alta de jugador</title>\n  </head>\n  <body>\n    <main>\n      <h1>Únete a la partida</h1>\n\n      <form>\n        <label for=\"correo\">Correo</label>\n        <input id=\"correo\" placeholder=\"tucorreo@ejemplo.com\" />\n\n        <label for=\"clave\">Contraseña</label>\n        <input id=\"clave\" />\n\n        <!-- TODO 3: esto parece un botón y no lo es -->\n        <div class=\"boton\" onclick=\"enviar()\">Crear cuenta</div>\n      </form>\n    </main>\n  </body>\n</html>\n"
+        }
+      ]
+    },
+    {
+      "id": "step-2-types",
+      "title": {
+        "es": "El tipo del campo trabaja gratis",
+        "en": "The field's type works for free"
+      },
+      "body": {
+        "es": "Los dos campos son `<input>` sin `type`, así que el navegador asume `text`. Eso desperdicia una cantidad sorprendente de trabajo que la plataforma ya hace por ti.\n\nCon `type=\"email\"` ganas, sin escribir una línea de JavaScript:\n\n- **El teclado correcto en móvil**, con la `@` y el punto a mano. Solo eso ya reduce errores de tecleo.\n- **Validación de formato** antes de enviar, con mensaje traducido al idioma del navegador.\n- **Autocompletado** del correo que el usuario ya tiene guardado.\n\nCon `type=\"password\"`:\n\n- El texto **no se ve en pantalla**, que es lo obvio.\n- Y lo que no es obvio: **el gestor de contraseñas reconoce el campo**. Sin ese tipo no ofrece guardarla ni rellenarla, y el usuario acaba escribiendo algo más corto y repetido — un problema de seguridad causado por una etiqueta mal puesta.\n\nAñade también `required` a los dos. El navegador bloquea el envío y señala el campo vacío, otra vez sin código.\n\n**Y aquí la advertencia que importa:** toda esta validación es **comodidad, no seguridad**. Vive en el cliente, así que cualquiera la salta con las herramientas de desarrollo o mandando la petición a mano. El servidor tiene que validar exactamente lo mismo, siempre, sin excepción. La validación del navegador existe para que el usuario no pierda el tiempo; la del servidor, para que el sistema no se rompa.",
+        "en": "Both fields are `<input>` with no `type`, so the browser assumes `text`. That wastes a surprising amount of work the platform already does for you.\n\nWith `type=\"email\"` you get, without writing a line of JavaScript:\n\n- **The right keyboard on mobile**, with `@` and the dot at hand. That alone reduces typing errors.\n- **Format validation** before submitting, with a message translated into the browser's language.\n- **Autofill** of the email the user already has saved.\n\nWith `type=\"password\"`:\n\n- The text **doesn't show on screen**, which is the obvious part.\n- And the non-obvious part: **the password manager recognises the field**. Without that type it won't offer to save or fill it, and the user ends up typing something shorter and reused — a security problem caused by a wrong attribute.\n\nAdd `required` to both as well. The browser blocks submission and points at the empty field, again with no code.\n\n**And here's the warning that matters:** all this validation is **convenience, not security**. It lives on the client, so anyone bypasses it with devtools or by sending the request by hand. The server has to validate exactly the same things, always, no exceptions. Browser validation exists so the user doesn't waste time; server validation, so the system doesn't break."
+      },
+      "task": {
+        "es": "Pon `type=\"email\"` y `type=\"password\"` en sus campos, y marca los dos como `required`.",
+        "en": "Set `type=\"email\"` and `type=\"password\"` on their fields, and mark both as `required`."
+      },
+      "focusFile": "index.html",
+      "ruleIds": ["email-type", "password-type", "required-fields", "two-labels"],
+      "xp": 40,
+      "solution": [
+        {
+          "path": "index.html",
+          "content": "<!doctype html>\n<html lang=\"es\">\n  <head>\n    <meta charset=\"utf-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />\n    <title>Alta de jugador</title>\n  </head>\n  <body>\n    <main>\n      <h1>Únete a la partida</h1>\n\n      <form>\n        <label for=\"correo\">Correo</label>\n        <input id=\"correo\" type=\"email\" placeholder=\"tucorreo@ejemplo.com\" required />\n\n        <label for=\"clave\">Contraseña</label>\n        <input id=\"clave\" type=\"password\" required />\n\n        <!-- TODO 3: esto parece un botón y no lo es -->\n        <div class=\"boton\" onclick=\"enviar()\">Crear cuenta</div>\n      </form>\n    </main>\n  </body>\n</html>\n"
+        }
+      ],
+      "bestPractice": {
+        "es": "**Seguridad (OWASP A04 · Diseño inseguro):** confiar en la validación del cliente es uno de los fallos de diseño más repetidos. La regla es sencilla: todo dato que llega del navegador es **entrada no confiable**, venga de un `type=\"email\"` con `required` o de un `curl` escrito a mano. El navegador no es tu servidor.",
+        "en": "**Security (OWASP A04 · Insecure Design):** trusting client-side validation is one of the most repeated design flaws. The rule is simple: any data arriving from the browser is **untrusted input**, whether it came from a `type=\"email\"` with `required` or from a hand-written `curl`. The browser is not your server."
+      }
+    },
+    {
+      "id": "step-3-button",
+      "title": {
+        "es": "Un div con onclick no es un botón",
+        "en": "A div with onclick is not a button"
+      },
+      "body": {
+        "es": "Queda el tercer problema, y es el que más gente reproduce sin darse cuenta de lo que rompe:\n\n```html\n<div class=\"boton\" onclick=\"enviar()\">Crear cuenta</div>\n```\n\nCon el ratón funciona. Con cualquier otra cosa, no:\n\n- **No se enfoca con Tab.** Quien navega con teclado —por costumbre, por una lesión, o porque el ratón se ha quedado sin pilas— no puede llegar a él.\n- **No responde a Enter ni a Espacio.** Un botón real activa con las dos teclas; un `div` con nada.\n- **Un lector de pantalla lo lee como texto suelto.** No dice «botón», así que no hay forma de saber que se puede pulsar, ni aparece en la lista de controles.\n- **No envía el formulario.** El `<button>` dentro de un `<form>` lo hace **por defecto**, y con él llega gratis enviar pulsando Enter desde cualquier campo — un gesto que todo el mundo usa sin pensarlo.\n\nSe puede parchear un `div` hasta que casi funcione: `tabindex=\"0\"`, `role=\"button\"`, manejadores de teclado para Enter y Espacio, y estados de foco visibles. Son cuatro cosas que hay que acordarse de poner, mantener y probar, para acabar reimplementando peor lo que la etiqueta correcta trae de fábrica.\n\nUn detalle del `type`, porque muerde: dentro de un `<form>`, un `<button>` **sin `type` es `submit`**. Es lo que quieres aquí y hay que escribirlo igual, porque el día que ese botón sea de otra cosa —«Cancelar», «Añadir fila»— tendrá que ser `type=\"button\"` para no enviar el formulario sin querer.",
+        "en": "The third problem is left, and it's the one most people reproduce without realising what it breaks:\n\n```html\n<div class=\"boton\" onclick=\"submit()\">Create account</div>\n```\n\nWith a mouse it works. With anything else, it doesn't:\n\n- **No Tab focus.** Whoever navigates by keyboard — by habit, by injury, or because the mouse ran out of battery — can't reach it.\n- **No response to Enter or Space.** A real button activates with both keys; a `div` with neither.\n- **A screen reader reads it as loose text.** It doesn't say \"button\", so there's no way to know it's clickable, and it doesn't appear in the controls list.\n- **It doesn't submit the form.** A `<button>` inside a `<form>` does it **by default**, and with it comes free submission by pressing Enter from any field — a gesture everyone uses without thinking.\n\nYou can patch a `div` until it almost works: `tabindex=\"0\"`, `role=\"button\"`, keyboard handlers for Enter and Space, and visible focus states. That's four things to remember, maintain, and test, only to end up reimplementing worse what the right element ships with.\n\nOne detail about `type`, because it bites: inside a `<form>`, a `<button>` **with no `type` is `submit`**. That's what you want here, and you should write it anyway, because the day that button does something else — \"Cancel\", \"Add row\" — it'll need `type=\"button\"` so it doesn't submit the form by accident."
+      },
+      "task": {
+        "es": "Sustituye el `<div onclick>` por un `<button type=\"submit\">` de verdad.",
+        "en": "Replace the `<div onclick>` with a real `<button type=\"submit\">`."
+      },
+      "focusFile": "index.html",
+      "ruleIds": ["real-button", "no-div-button", "two-labels", "email-type"],
+      "xp": 45,
+      "solution": [
+        {
+          "path": "index.html",
+          "content": "<!doctype html>\n<html lang=\"es\">\n  <head>\n    <meta charset=\"utf-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />\n    <title>Alta de jugador</title>\n  </head>\n  <body>\n    <main>\n      <h1>Únete a la partida</h1>\n\n      <form>\n        <label for=\"correo\">Correo</label>\n        <input id=\"correo\" type=\"email\" placeholder=\"tucorreo@ejemplo.com\" required />\n\n        <label for=\"clave\">Contraseña</label>\n        <input id=\"clave\" type=\"password\" required />\n\n        <button type=\"submit\">Crear cuenta</button>\n      </form>\n    </main>\n  </body>\n</html>\n"
+        }
+      ],
+      "bestPractice": {
+        "es": "**Pregunta de entrevista frecuente:** «¿por qué usar `<button>` y no un `<div>` estilado?» La respuesta que distingue no enumera atributos: es que **la etiqueta correcta trae un contrato completo** —foco, teclado, semántica, comportamiento por defecto en formularios— y reproducirlo a mano significa mantener y probar cuatro cosas que nadie recuerda revisar cuando cambia el diseño.",
+        "en": "**Common interview question:** \"why use `<button>` instead of a styled `<div>`?\" The answer that sets you apart doesn't list attributes: it's that **the right element ships a complete contract** — focus, keyboard, semantics, default form behaviour — and reproducing it by hand means maintaining and testing four things nobody remembers to check when the design changes."
+      }
+    }
+  ],
+
+  "drills": [],
+
+  "reward": {
+    "baseXp": 120,
+    "flawlessBonus": 45,
+    "noHintBonus": 25,
+    "comboMultiplierCap": 3,
+    "achievements": []
+  },
+
+  "solution": {
+    "files": [
+      {
+        "path": "index.html",
+        "content": "<!doctype html>\n<html lang=\"es\">\n  <head>\n    <meta charset=\"utf-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />\n    <title>Alta de jugador</title>\n  </head>\n  <body>\n    <main>\n      <h1>Únete a la partida</h1>\n\n      <form>\n        <label for=\"correo\">Correo</label>\n        <input id=\"correo\" type=\"email\" placeholder=\"tucorreo@ejemplo.com\" required />\n\n        <label for=\"clave\">Contraseña</label>\n        <input id=\"clave\" type=\"password\" required />\n\n        <button type=\"submit\">Crear cuenta</button>\n      </form>\n    </main>\n  </body>\n</html>\n"
+      }
+    ],
+    "explanation": {
+      "es": "El formulario se ve igual que al empezar y ahora se puede usar: con teclado, con lector de pantalla, con el gestor de contraseñas y con el campo ya relleno. Ninguno de los tres arreglos añadió JavaScript — los tres consistieron en usar la etiqueta y el atributo que ya existían. Y la validación del navegador que has puesto es comodidad: el servidor tiene que repetirla entera.",
+      "en": "The form looks the same as when you started and is now usable: with a keyboard, a screen reader, a password manager, and with the field already filled. None of the three fixes added JavaScript — all three came down to using the element and attribute that already existed. And the browser validation you added is convenience: the server has to repeat all of it."
+    }
+  }
+}

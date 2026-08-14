@@ -663,6 +663,28 @@ bug latente: sigue habiendo dos fuentes, ahora con un vigilante.
 Comparar las dos lecciones lado a lado es, de hecho, la mejor forma de ver qué es del
 problema y qué es del framework.
 
+### HTML y CSS — engordando la puerta de entrada
+
+Eran los dos módulos más flacos (2 lecciones cada uno) y son lo primero que ve alguien que
+empieza de cero, así que iban antes que abrir nada nuevo.
+
+| Lección | Lo que enseña de verdad |
+|---|---|
+| `css-01-selectors` | Por qué tu CSS «no se aplica»: especificidad por columnas, y que un `id` no se vence — se retira |
+| `html-03-forms` | Que un `placeholder` no es una etiqueta y un `<div onclick>` no es un botón |
+
+`css-01` va deliberadamente **antes** del modelo de caja: la primera frustración de quien
+aprende CSS no es que la caja mida de más, es que su regla correcta no hace nada. El paso 1
+pide escribir la regla y **comprobar que no funciona**, que es el descubrimiento entero.
+
+`html-03` es la lección más cargada de accesibilidad del temario, y ninguno de sus tres
+arreglos añade JavaScript: los tres consisten en usar la etiqueta y el atributo que ya
+existían. Cierra con la advertencia que importa — la validación del navegador es comodidad,
+y el servidor tiene que repetirla entera (OWASP A04).
+
+Los colores computados y el DOM que prometen se comprueban en el navegador contra las
+soluciones reales del JSON, paso a paso.
+
 ### C# — módulo cerrado con evaluador simulado (ADR-14)
 
 | Lección | Origen | Lo que enseña de verdad |

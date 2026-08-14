@@ -1,0 +1,296 @@
+{
+  "$schema": "../../../schema/lesson.schema.json",
+  "schemaVersion": 1,
+
+  "id": "css-01-selectors",
+  "track": "frontend",
+  "module": "css",
+  "order": 1,
+
+  "kind": "concept",
+  "difficulty": "novice",
+  "estimatedMinutes": 20,
+
+  "title": {
+    "es": "Por qué no se aplica tu CSS: especificidad y orden",
+    "en": "Why your CSS isn't applying: specificity and order"
+  },
+  "summary": {
+    "es": "La regla que escribes es correcta y el color no cambia. No es un bug del navegador: es que otra regla gana, y hay dos motivos por los que puede ganar.",
+    "en": "The rule you wrote is correct and the colour doesn't change. It isn't a browser bug: another rule wins, and there are two reasons it can."
+  },
+  "concepts": ["css", "selectores", "especificidad", "cascada"],
+  "prerequisites": ["html-01-first-page"],
+
+  "runtime": {
+    "kind": "dom",
+    "dependencies": {},
+    "timeoutMs": 5000
+  },
+
+  "workspace": {
+    "entry": "index.html",
+    "allowCreate": false,
+    "allowDelete": false,
+    "protectedPaths": ["index.html"],
+    "files": [
+      {
+        "path": "index.html",
+        "readOnly": true,
+        "content": "<!doctype html>\n<html lang=\"es\">\n  <head>\n    <meta charset=\"utf-8\" />\n    <title>Menú</title>\n    <link rel=\"stylesheet\" href=\"styles.css\" />\n  </head>\n  <body>\n    <nav id=\"menu\" class=\"menu\">\n      <a class=\"link inicio\" href=\"#\">Inicio</a>\n      <a class=\"link destacado oferta\" href=\"#\">Oferta</a>\n      <a class=\"link destacado apagado ayuda\" href=\"#\">Ayuda</a>\n    </nav>\n  </body>\n</html>\n"
+      },
+      {
+        "path": "styles.css",
+        "active": true,
+        "content": "body {\n  margin: 0;\n  font-family: system-ui, sans-serif;\n  background: #0b1220;\n}\n\n.menu {\n  display: flex;\n  gap: 16px;\n  padding: 16px;\n}\n\n/* Alguien escribió esto hace meses y no se ha vuelto a tocar. */\n#menu a {\n  color: #38bdf8;\n  text-decoration: none;\n}\n\n/* TODO 1: dale a todos los enlaces el gris #94a3b8 */\n"
+      }
+    ]
+  },
+
+  "rules": [
+    {
+      "id": "link-rule-exists",
+      "kind": "regex-must",
+      "file": "styles.css",
+      "pattern": "\\.link\\s*\\{[^}]*color:\\s*#94a3b8",
+      "flags": "s",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Falta la regla base: `.link` con `color: #94a3b8`.",
+        "en": "The base rule is missing: `.link` with `color: #94a3b8`."
+      },
+      "points": 20
+    },
+    {
+      "id": "base-color-applies",
+      "kind": "dom-assert",
+      "selector": ".inicio",
+      "assert": "styleEquals",
+      "attribute": "color",
+      "expected": "rgb(148, 163, 184)",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "El primer enlace sigue sin ser gris. Tu regla está escrita, pero otra le gana: el paso 2 explica cuál y por qué.",
+        "en": "The first link still isn't grey. Your rule is written, but another one beats it: step 2 explains which and why."
+      },
+      "successMessage": {
+        "es": "Gris aplicado: tu regla ya gana.",
+        "en": "Grey applied: your rule wins now."
+      },
+      "points": 35
+    },
+    {
+      "id": "no-id-selector",
+      "kind": "regex-forbid",
+      "file": "styles.css",
+      "pattern": "#menu",
+      "flags": "m",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Quita el selector de `id`. Es lo que hace inganable la regla, y su sitio es el CSS, no tu hoja nueva.",
+        "en": "Drop the `id` selector. It's what makes the rule unbeatable, and the place to fix it is the CSS, not your new sheet."
+      },
+      "points": 30
+    },
+    {
+      "id": "highlight-applies",
+      "kind": "dom-assert",
+      "selector": ".oferta",
+      "assert": "styleEquals",
+      "attribute": "color",
+      "expected": "rgb(245, 158, 11)",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "El enlace de oferta debe salir ámbar (`#f59e0b`) con la clase `.destacado`.",
+        "en": "The offer link must come out amber (`#f59e0b`) via the `.destacado` class."
+      },
+      "successMessage": {
+        "es": "Ámbar: una clase le gana a otra clase por orden, no por fuerza.",
+        "en": "Amber: one class beats another by order, not by force."
+      },
+      "points": 35
+    },
+    {
+      "id": "muted-wins",
+      "kind": "dom-assert",
+      "selector": ".ayuda",
+      "assert": "styleEquals",
+      "attribute": "color",
+      "expected": "rgb(71, 85, 105)",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "El tercer enlace lleva `destacado` y `apagado` a la vez, y debe ganar `apagado` (`#475569`). Recuerda: el orden del atributo `class` no decide nada.",
+        "en": "The third link carries both `destacado` and `apagado`, and `apagado` (`#475569`) must win. Remember: the order in the `class` attribute decides nothing."
+      },
+      "successMessage": {
+        "es": "Gana la última declarada en la hoja, que es como se rompen los empates.",
+        "en": "The last one declared in the sheet wins, which is how ties are broken."
+      },
+      "points": 40
+    },
+    {
+      "id": "no-important",
+      "kind": "regex-forbid",
+      "file": "styles.css",
+      "pattern": "!important",
+      "flags": "m",
+      "phase": "type",
+      "severity": "damage",
+      "message": {
+        "es": "¡Daño! `!important` no resuelve el conflicto: lo gana a gritos. El siguiente que necesite ganarte tendrá que gritar más, y así hasta que nadie entienda la hoja.",
+        "en": "Damage! `!important` doesn't resolve the conflict: it shouts it down. The next person who needs to beat you will have to shout louder, and so on until nobody understands the sheet."
+      },
+      "points": 15
+    },
+    {
+      "id": "no-specificity-escalation",
+      "kind": "regex-forbid",
+      "file": "styles.css",
+      "pattern": "\\.(menu|link)\\s+a\\.|a\\.apagado|\\.link\\.apagado",
+      "flags": "m",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "No subas la especificidad para ganar: eso empieza la misma carrera que el `!important`. Con dos clases empatadas, el empate se rompe con el orden.",
+        "en": "Don't raise specificity to win: that starts the same race as `!important`. With two classes tied, the tie is broken by order."
+      },
+      "points": 25
+    }
+  ],
+
+  "steps": [
+    {
+      "id": "step-1-base",
+      "title": {
+        "es": "La regla correcta que no hace nada",
+        "en": "The correct rule that does nothing"
+      },
+      "body": {
+        "es": "Los tres enlaces del menú deben ser grises. Escribe la regla más obvia del mundo al final de la hoja:\n\n```css\n.link {\n  color: #94a3b8;\n}\n```\n\nEjecuta. **Siguen azules.**\n\nNo hay error, no hay aviso, y la regla es sintácticamente perfecta. Esto es, con diferencia, la primera frustración de todo el que aprende CSS: *«mi estilo no se aplica»*. Y casi nunca es un fallo del navegador — es que **otra regla gana**.\n\nCuando dos reglas quieren pintar la misma propiedad del mismo elemento, el navegador decide con un procedimiento fijo. Simplificando lo que importa a diario, mira en este orden:\n\n1. **`!important`** (el arma nuclear; ya hablaremos).\n2. **Especificidad**: cuánto de concreto es el selector.\n3. **Orden**: si empatan en lo anterior, gana la última declarada.\n\nLa especificidad se cuenta en tres cifras, de más a menos fuerte:\n\n```\nids   clases   elementos\n 1  ,   0    ,    0        #menu\n 0  ,   1    ,    0        .link\n 0  ,   1    ,    1        #menu a  →  ojo: esto es (1,0,1)\n 0  ,   0    ,    1        a\n```\n\nY es una comparación **por columnas, no una suma**: un solo `id` gana a cualquier cantidad de clases. Mil clases no alcanzan a un id.\n\nAhí está tu respuesta: la hoja ya trae `#menu a`, que vale (1,0,1). Tu `.link` vale (0,1,0). No hay color que valga — pierdes antes de empezar.\n\nEscribe la regla igualmente: el paso siguiente la hace ganar.",
+        "en": "The three menu links should be grey. Write the most obvious rule in the world at the end of the sheet:\n\n```css\n.link {\n  color: #94a3b8;\n}\n```\n\nRun it. **They're still blue.**\n\nNo error, no warning, and the rule is syntactically perfect. This is, by a distance, the first frustration of everyone learning CSS: *\"my style isn't applying\"*. And it's almost never a browser bug — it's that **another rule wins**.\n\nWhen two rules want to paint the same property of the same element, the browser decides by a fixed procedure. Simplifying to what matters day to day, it looks at, in order:\n\n1. **`!important`** (the nuclear option; we'll get there).\n2. **Specificity**: how concrete the selector is.\n3. **Order**: if those tie, the last one declared wins.\n\nSpecificity is counted in three figures, strongest first:\n\n```\nids   classes   elements\n 1  ,    0    ,    0        #menu\n 0  ,    1    ,    0        .link\n 0  ,    1    ,    1        #menu a  →  careful: this is (1,0,1)\n 0  ,    0    ,    1        a\n```\n\nAnd it's compared **column by column, not summed**: a single `id` beats any number of classes. A thousand classes don't reach one id.\n\nThere's your answer: the sheet already carries `#menu a`, worth (1,0,1). Your `.link` is worth (0,1,0). No colour is going to help — you lost before you started.\n\nWrite the rule anyway: the next step makes it win."
+      },
+      "task": {
+        "es": "Añade `.link { color: #94a3b8; }` al final de la hoja y ejecuta. Comprueba que los enlaces siguen azules.",
+        "en": "Add `.link { color: #94a3b8; }` at the end of the sheet and run. Check the links are still blue."
+      },
+      "focusFile": "styles.css",
+      "ruleIds": ["link-rule-exists"],
+      "xp": 30,
+      "solution": [
+        {
+          "path": "styles.css",
+          "content": "body {\n  margin: 0;\n  font-family: system-ui, sans-serif;\n  background: #0b1220;\n}\n\n.menu {\n  display: flex;\n  gap: 16px;\n  padding: 16px;\n}\n\n/* Alguien escribió esto hace meses y no se ha vuelto a tocar. */\n#menu a {\n  color: #38bdf8;\n  text-decoration: none;\n}\n\n.link {\n  color: #94a3b8;\n}\n"
+        }
+      ]
+    },
+    {
+      "id": "step-2-lower",
+      "title": {
+        "es": "Ganar bajando al otro, no subiendo tú",
+        "en": "Winning by lowering the other, not raising yourself"
+      },
+      "body": {
+        "es": "Hay tres formas de hacer que tu regla gane, y solo una es la buena.\n\n**La mala:** `!important`. No resuelve el conflicto, lo gana a gritos. El siguiente que necesite ganarte tendrá que gritar más —`!important` sobre `!important`— y la hoja acaba siendo una discusión que nadie puede seguir.\n\n**La regular:** subir tu especificidad hasta pasarle por encima (`#menu a.link`, o repetir la clase). Funciona hoy y empieza la misma carrera: cada regla nueva tiene que ser más específica que la anterior, y en seis meses el selector más corto de la hoja tiene cuatro niveles.\n\n**La buena:** bajar la regla que estorba. `#menu a` es específica sin necesidad — el `id` no aporta nada que la clase `.menu` no diga ya. Convertirla en un selector plano la devuelve a la liga donde se puede competir.\n\nEse es el motivo real por el que **los ids no se usan para estilar**. No es una superstición: un `id` es tan fuerte que solo se le puede ganar con otro `id` o con `!important`, así que una sola línea con `#algo` obliga a todo el resto de la hoja a escalar. Los ids son para anclas, `label for` y JavaScript.\n\nDespués de bajarla, tu `.link` y la regla vieja quedan en la misma liga, y ahí decide el orden: gana la última que aparece en la hoja.\n\nY con eso ya puedes añadir la clase de énfasis: `.destacado` con `#f59e0b` para el enlace de oferta.",
+        "en": "There are three ways to make your rule win, and only one is good.\n\n**The bad one:** `!important`. It doesn't resolve the conflict, it shouts it down. The next person who needs to beat you will have to shout louder — `!important` over `!important` — and the sheet becomes an argument nobody can follow.\n\n**The mediocre one:** raise your specificity until it clears the other (`#menu a.link`, or repeating the class). It works today and starts the same race: every new rule must be more specific than the last, and in six months the shortest selector in the sheet has four levels.\n\n**The good one:** lower the rule that's in the way. `#menu a` is specific without needing to be — the `id` adds nothing the `.menu` class doesn't already say. Turning it into a flat selector returns it to a league where you can compete.\n\nThat's the real reason **ids aren't used for styling**. It isn't superstition: an `id` is so strong that only another `id` or `!important` can beat it, so a single line with `#something` forces the whole rest of the sheet to escalate. Ids are for anchors, `label for`, and JavaScript.\n\nOnce lowered, your `.link` and the old rule are in the same league, and there order decides: the last one in the sheet wins.\n\nAnd with that you can add the emphasis class: `.destacado` with `#f59e0b` for the offer link."
+      },
+      "task": {
+        "es": "Baja `#menu a` a un selector sin `id`, deja los enlaces grises, y añade `.destacado { color: #f59e0b; }` para el de oferta.",
+        "en": "Lower `#menu a` to a selector without an `id`, keep the links grey, and add `.destacado { color: #f59e0b; }` for the offer one."
+      },
+      "focusFile": "styles.css",
+      "focusLines": [14, 17],
+      "ruleIds": ["no-id-selector", "base-color-applies", "highlight-applies", "no-important"],
+      "xp": 50,
+      "hints": [
+        {
+          "id": "h-flat",
+          "tier": 1,
+          "text": {
+            "es": "`#menu a` puede pasar a ser solo `a`: (0,0,1), por debajo de cualquier clase. Y `.destacado` tiene que ir después de `.link` en la hoja para romper el empate a su favor.",
+            "en": "`#menu a` can become just `a`: (0,0,1), below any class. And `.destacado` has to come after `.link` in the sheet to break the tie in its favour."
+          },
+          "xpPenalty": 8,
+          "autoOfferAfterSeconds": 100
+        }
+      ],
+      "solution": [
+        {
+          "path": "styles.css",
+          "content": "body {\n  margin: 0;\n  font-family: system-ui, sans-serif;\n  background: #0b1220;\n}\n\n.menu {\n  display: flex;\n  gap: 16px;\n  padding: 16px;\n}\n\na {\n  text-decoration: none;\n}\n\n.link {\n  color: #94a3b8;\n}\n\n.destacado {\n  color: #f59e0b;\n}\n"
+        }
+      ],
+      "bestPractice": {
+        "es": "**Estándar de la industria:** las metodologías que verás en proyectos grandes —BEM, utilidades tipo Tailwind, CSS Modules— tienen enfoques muy distintos y coinciden en una cosa: **mantener toda la hoja en el mismo nivel de especificidad**, normalmente una sola clase. Cuando todas las reglas empatan, el único criterio que queda es el orden, y el orden se puede leer.",
+        "en": "**Industry standard:** the methodologies you'll meet in large projects — BEM, Tailwind-style utilities, CSS Modules — take very different approaches and agree on one thing: **keep the whole sheet at the same specificity level**, usually a single class. When every rule ties, the only remaining criterion is order, and order can be read."
+      }
+    },
+    {
+      "id": "step-3-order",
+      "title": {
+        "es": "El empate lo rompe la hoja, no el atributo",
+        "en": "The tie is broken by the sheet, not the attribute"
+      },
+      "body": {
+        "es": "El tercer enlace lleva las dos clases:\n\n```html\n<a class=\"link destacado apagado ayuda\">Ayuda</a>\n```\n\nY queremos que se vea apagado (`#475569`), no ámbar. Aquí está la creencia falsa más extendida sobre CSS: **el orden del atributo `class` no influye en nada**. Da igual que escribas `destacado apagado` o `apagado destacado`; el navegador no lo mira para decidir colores.\n\nLas dos clases valen (0,1,0): empate perfecto. Y cuando hay empate de especificidad, decide **el orden en la hoja de estilos**: gana la última declarada.\n\nAsí que el sitio donde se resuelve esto no es el HTML, es el CSS — y basta con colocar `.apagado` después de `.destacado`. Sin `!important`, sin `.link.apagado` para forzar la mano.\n\nEsto tiene una consecuencia práctica que conviene tener presente: **en una hoja donde todo empata, el orden de tus reglas es tu API**. Por eso los frameworks de utilidades imponen un orden fijo al generar el CSS, y por eso mover un bloque de sitio al «ordenar» un archivo puede cambiar cómo se ve la página sin que ninguna regla haya cambiado.\n\nY la última pieza del procedimiento, para cerrar el tema: **si nada de esto decide, gana la declaración más específica en el propio elemento**. Un `style=\"...\"` en el HTML pesa más que cualquier hoja (por eso también se evita), y solo un `!important` lo supera. Es la escalera completa, y el objetivo profesional es no subir de su primer escalón.",
+        "en": "The third link carries both classes:\n\n```html\n<a class=\"link destacado apagado ayuda\">Ayuda</a>\n```\n\nAnd we want it muted (`#475569`), not amber. Here's the most widespread false belief about CSS: **the order in the `class` attribute influences nothing**. It makes no difference whether you write `destacado apagado` or `apagado destacado`; the browser doesn't consult it to decide colours.\n\nBoth classes are worth (0,1,0): a perfect tie. And when specificity ties, **the order in the stylesheet** decides: the last one declared wins.\n\nSo the place this gets resolved isn't the HTML, it's the CSS — and it's enough to put `.apagado` after `.destacado`. No `!important`, no `.link.apagado` to force the issue.\n\nThis has a practical consequence worth keeping in mind: **in a sheet where everything ties, the order of your rules is your API**. That's why utility frameworks impose a fixed order when generating CSS, and why moving a block while \"tidying up\" a file can change how the page looks without a single rule changing.\n\nAnd the last piece of the procedure, to close the topic: **if none of this decides, the most specific declaration on the element itself wins**. A `style=\"...\"` in the HTML outweighs any sheet (which is why that's avoided too), and only `!important` beats it. That's the full ladder, and the professional goal is never to climb past its first rung."
+      },
+      "task": {
+        "es": "Haz que el enlace de ayuda salga `#475569` añadiendo `.apagado`, sin `!important` y sin subir la especificidad.",
+        "en": "Make the help link come out `#475569` by adding `.apagado`, with no `!important` and without raising specificity."
+      },
+      "focusFile": "styles.css",
+      "ruleIds": ["muted-wins", "highlight-applies", "no-specificity-escalation", "no-important"],
+      "xp": 45,
+      "hints": [
+        {
+          "id": "h-order",
+          "tier": 1,
+          "text": {
+            "es": "La regla nueva es idéntica en forma a `.destacado` — una sola clase — y solo tiene que estar más abajo en el archivo.",
+            "en": "The new rule is identical in shape to `.destacado` — a single class — and only needs to sit lower in the file."
+          },
+          "xpPenalty": 8,
+          "autoOfferAfterSeconds": 80
+        }
+      ],
+      "solution": [
+        {
+          "path": "styles.css",
+          "content": "body {\n  margin: 0;\n  font-family: system-ui, sans-serif;\n  background: #0b1220;\n}\n\n.menu {\n  display: flex;\n  gap: 16px;\n  padding: 16px;\n}\n\na {\n  text-decoration: none;\n}\n\n.link {\n  color: #94a3b8;\n}\n\n.destacado {\n  color: #f59e0b;\n}\n\n.apagado {\n  color: #475569;\n}\n"
+        }
+      ],
+      "bestPractice": {
+        "es": "**Pregunta de entrevista frecuente:** «¿por qué no deberías usar `!important`?» La respuesta que distingue no es «porque es mala práctica»: es que **rompe el único mecanismo que permite razonar sobre una hoja**. Mientras todo empata, para saber qué gana basta leer de arriba abajo. Un `!important` convierte esa lectura en una búsqueda por todo el proyecto.",
+        "en": "**Common interview question:** \"why shouldn't you use `!important`?\" The answer that sets you apart isn't \"because it's bad practice\": it's that **it breaks the only mechanism that lets you reason about a sheet**. While everything ties, knowing what wins is a top-to-bottom read. One `!important` turns that read into a project-wide search."
+      }
+    }
+  ],
+
+  "drills": [],
+
+  "reward": {
+    "baseXp": 115,
+    "flawlessBonus": 45,
+    "noHintBonus": 25,
+    "comboMultiplierCap": 3,
+    "achievements": []
+  },
+
+  "solution": {
+    "files": [
+      {
+        "path": "styles.css",
+        "content": "body {\n  margin: 0;\n  font-family: system-ui, sans-serif;\n  background: #0b1220;\n}\n\n.menu {\n  display: flex;\n  gap: 16px;\n  padding: 16px;\n}\n\na {\n  text-decoration: none;\n}\n\n.link {\n  color: #94a3b8;\n}\n\n.destacado {\n  color: #f59e0b;\n}\n\n.apagado {\n  color: #475569;\n}\n"
+      }
+    ],
+    "explanation": {
+      "es": "Cuatro reglas y ninguna con más de una clase. Al quedar todas en la misma liga, lo único que decide es el orden del archivo — y eso se puede leer de arriba abajo sin buscar nada. El `id` no se venció: se retiró, que es la única jugada que no obliga a la siguiente regla a escalar.",
+      "en": "Four rules and none with more than one class. With everything in the same league, the only thing deciding is the file's order — and that can be read top to bottom without searching. The `id` wasn't beaten: it was withdrawn, which is the only move that doesn't force the next rule to escalate."
+    }
+  }
+}
