@@ -4,7 +4,6 @@ import { LessonComplete } from '@/components/lesson/LessonComplete';
 import { TaskCard } from '@/components/lesson/TaskCard';
 import { StepCard } from '@/components/lesson/StepCard';
 import { StepNav } from '@/components/lesson/StepNav';
-import { HintCard } from '@/components/lesson/HintCard';
 import { InterviewBrief } from '@/components/lesson/InterviewBrief';
 import { TestResultList } from '@/components/lesson/TestResultList';
 
@@ -12,9 +11,10 @@ import { TestResultList } from '@/components/lesson/TestResultList';
  * Panel de lección en tres zonas, con un solo punto de scroll.
  *
  *   ┌────────────────────────────┐
- *   │ SCROLL  guía · pistas      │  ← lo único que se desplaza
+ *   │ SCROLL  guía               │  ← lo único que se desplaza
  *   ├────────────────────────────┤
  *   │ FIJO    reto + progreso    │  ← qué hay que hacer, nunca se va
+ *   │           └ pistas         │     la ayuda, donde ya estás mirando
  *   │         navegación         │
  *   │         pruebas            │  ← en qué se está fallando, siempre visible
  *   └────────────────────────────┘
@@ -54,7 +54,6 @@ export function RightPanel({
       <div className="flex min-h-0 flex-col gap-3 overflow-y-auto pr-1">
         <InterviewBrief />
         <StepCard />
-        <HintCard />
       </div>
 
       <div className="flex flex-col gap-3">

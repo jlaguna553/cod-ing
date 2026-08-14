@@ -173,3 +173,28 @@ test('⭐ los paneles de la guía no se solapan entre sí', async ({ page }) => 
     ).toBeGreaterThanOrEqual(ordenados[i - 1].bottom - 1);
   }
 });
+
+test('⭐ las pistas viven dentro del reto, no en un panel aparte', async ({ page }) => {
+  await page.goto('/es/play/frontend/vue-01-template-syntax');
+  await waitForEditor(page);
+
+  const reto = page.getByRole('region', { name: /tu turno/i });
+  const abrir = reto.getByRole('button', { name: /pistas/i });
+
+  // Arrancan plegadas: pegadas al enunciado, desplegadas serían ruido fijo.
+  await expect(abrir).toBeVisible();
+  await expect(reto.getByRole('button', { name: /revelar pista/i })).toHaveCount(0);
+
+  await abrir.click();
+  const revelar = reto.getByRole('button', { name: /revelar pista/i }).first();
+  await expect(revelar).toBeVisible();
+
+  // Y se piden sin moverse del reto: el enunciado sigue delante después.
+  const enunciado = (await reto.innerText()).slice(0, 120);
+  await revelar.click();
+
+  // El contador la marca como gastada y el texto aparece aquí mismo.
+  await expect(reto).toContainText(/1 de \d+ usadas/, { timeout: 15_000 });
+  await expect(reto).toContainText('★');
+  expect(await reto.innerText()).toContain(enunciado);
+});

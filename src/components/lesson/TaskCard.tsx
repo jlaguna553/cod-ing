@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl';
 import { CheckCircle2, Target } from 'lucide-react';
 import { useCurrentStep, useLessonStore } from '@/stores/useLessonStore';
 import { useEvaluationStore } from '@/stores/useEvaluationStore';
+import { HintCard } from './HintCard';
 
 /**
  * Qué hay que hacer. Ancla fija del panel: nunca se va con el scroll.
@@ -16,6 +17,10 @@ import { useEvaluationStore } from '@/stores/useEvaluationStore';
  *
  * Lleva también el progreso por pasos, que estaba en la guía y se perdía al
  * bajar: saber cuánto queda es información de cabecera, no de cuerpo.
+ *
+ * Y las pistas, que vivían al final de la guía. Pedir ayuda obligaba a dejar de
+ * mirar el enunciado y bajar a buscarlas — justo cuando estás atascado. Ahora
+ * se abren donde ya estás mirando.
  */
 export function TaskCard() {
   const t = useTranslations();
@@ -84,6 +89,8 @@ export function TaskCard() {
           {t('steps.done')}
         </p>
       )}
+
+      <HintCard />
     </section>
   );
 }
