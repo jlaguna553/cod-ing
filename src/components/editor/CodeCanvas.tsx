@@ -4,11 +4,12 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import Editor, { type Monaco, type OnMount } from '@monaco-editor/react';
 import type { editor } from 'monaco-editor';
-import { CheckCircle2, Loader2, Play, RotateCcw } from 'lucide-react';
+import { Loader2, Play, RotateCcw } from 'lucide-react';
 import { useLessonStore } from '@/stores/useLessonStore';
 import { useGameStore } from '@/stores/useGameStore';
 import { useRunnerStore } from '@/stores/useRunnerStore';
 import { useEvaluationStore } from '@/stores/useEvaluationStore';
+import { runAndEvaluate } from '@/lib/game/attempt';
 import { Panel } from '@/components/layout/GameShell';
 import { PowerModeFX } from './PowerModeFX';
 import { defineMonacoTheme, languageOf, THEME_NAME } from './monaco-theme';
@@ -43,12 +44,9 @@ export function CodeCanvas() {
   const comboMultiplier = useGameStore((s) => s.combo.multiplier);
 
   const runnerStatus = useRunnerStore((s) => s.status);
-  const execute = useRunnerStore((s) => s.execute);
   const syncFile = useRunnerStore((s) => s.syncFile);
 
-  const evaluate = useEvaluationStore((s) => s.evaluate);
   const scheduleTypeCheck = useEvaluationStore((s) => s.scheduleTypeCheck);
-  const stepPassed = useEvaluationStore((s) => s.stepPassed);
   const results = useEvaluationStore((s) => s.results);
 
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
@@ -201,15 +199,9 @@ export function CodeCanvas() {
     if (monacoRef.current) defineMonacoTheme(monacoRef.current);
   }, [theme]);
 
-  const handleRun = async () => {
-    const current = useLessonStore.getState().files;
-    await Promise.all(
-      Object.entries(current).map(([path, content]) => syncFile(path, content)),
-    );
-
-    await execute();
-    evaluate('run');
-  };
+  // Ejecutar solo juzga lo que depende de haber ejecutado; el veredicto del
+  // paso lo pide la tarjeta del reto, que evalúa todas las fases.
+  const handleRun = () => runAndEvaluate('run');
 
   if (!activeFile) {
     return (
@@ -247,26 +239,14 @@ export function CodeCanvas() {
             {t('editor.run')}
           </button>
           {/*
-            Deshabilitado durante la ejecución, igual que «Ejecutar».
+            Aquí ya no hay «Validar paso».
 
-            Las reglas que miran el DOM leen un espejo del documento que solo
-            existe cuando la ejecución termina. Validar antes las deja en gris
-            —«pendiente»— sobre un código que en realidad está bien, y el
-            usuario no tiene forma de saber que solo le faltaba esperar.
+            Eran dos botones para una sola decisión —ejecutar y juzgar— en dos
+            sitios distintos de la pantalla, y el veredicto aparecía lejos del
+            que lo pedía. La evaluación vive ahora en la tarjeta del reto, junto
+            a las comprobaciones que devuelve y al botón que lleva al paso
+            siguiente. Este panel se queda con lo suyo: escribir y ejecutar.
           */}
-          <button
-            type="button"
-            disabled={runnerStatus === 'booting' || runnerStatus === 'running'}
-            onClick={() => evaluate()}
-            className="flex items-center gap-1 rounded-md px-2 py-1 text-[10px] font-semibold uppercase transition-opacity hover:opacity-90 disabled:opacity-40"
-            style={{
-              backgroundColor: stepPassed ? 'var(--color-success)' : 'var(--color-neon)',
-              color: 'var(--color-void)',
-            }}
-          >
-            {stepPassed ? <CheckCircle2 size={11} /> : <Play size={11} className="rotate-90" />}
-            {t('editor.submit')}
-          </button>
         </div>
       }
     >

@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { resolverPaso } from './pasos';
 
 /**
  * E2E sobre el build de producción.
@@ -91,7 +92,7 @@ test('el runner de DOM ejecuta el código y evalúa las reglas', async ({ page }
 
   await typeInEditor(page, 'const prices = [10, 25, 40, 5];\nconst withTax = prices.map((p) => p * 1.21);\nconsole.log(withTax);');
 
-  await page.getByRole('button', { name: /validar paso/i }).click();
+  await page.getByRole('button', { name: /^evaluar$/i }).click();
 
   // `uses-map` es una regla AST: debe pasar a verde con el código correcto.
   await expect(page.getByText('.map() devuelve un array nuevo')).toBeVisible({ timeout: 15_000 });
@@ -370,7 +371,7 @@ test('⭐ una comprobación superada no muestra el mensaje de fallo en verde', a
     page,
     "const playerName = 'Ada';\nlet score = 0;\nscore = score + 10;\nconst team = 'cyan';\nconsole.log(playerName, score, team);",
   );
-  await page.getByRole('button', { name: /validar paso/i }).click();
+  await page.getByRole('button', { name: /^evaluar$/i }).click();
   await page.waitForTimeout(1500);
 
   // La regla `no-var` pasa; su mensaje ("¡Daño! `var` es la forma antigua…")
@@ -382,15 +383,17 @@ test('⭐ una comprobación superada no muestra el mensaje de fallo en verde', a
   }
 });
 
-test('⭐ validar sin ejecutar deja las pruebas de salida pendientes, no en rojo', async ({ page }) => {
+test('⭐ antes de tocar nada, las pruebas de salida están pendientes, no en rojo', async ({
+  page,
+}) => {
   await page.goto('/es/play/frontend/js-01-variables');
   await waitForEditor(page);
 
-  // Se valida SIN pulsar Ejecutar: la comprobación de stdout no puede
-  // marcarse en rojo por una salida que nadie ha producido todavía.
-  await page.getByRole('button', { name: /validar paso/i }).click();
-  await page.waitForTimeout(1500);
-
+  /*
+   * Nada más abrir: la comprobación de stdout no puede marcarse en rojo por
+   * una salida que nadie ha producido todavía. Pintar de rojo lo que aún no se
+   * ha podido juzgar es la forma más rápida de que se deje de mirar el panel.
+   */
   const outputCheck = page.getByText('La salida esperada es', { exact: false }).first();
   await expect(outputCheck).toBeVisible();
 
@@ -404,7 +407,7 @@ test('⭐ un error de sintaxis se explica en vez de dejar todo en gris', async (
 
   // El error exacto que produce cambiar `var` por `let` en una reasignación.
   await typeInEditor(page, "const playerName = 'Ada';\nlet score = 0;\nlet = score + 10;");
-  await page.getByRole('button', { name: /validar paso/i }).click();
+  await page.getByRole('button', { name: /^evaluar$/i }).click();
 
   await expect(page.getByText(/no compila/i)).toBeVisible({ timeout: 10_000 });
 });
@@ -443,7 +446,7 @@ test('⭐ el flujo completo de js-01 termina con las comprobaciones en verde', a
   // hacía validar antes de que el código hubiera llegado a ejecutarse.
   await expect(page.getByRole('log', { name: /consola/i })).toContainText('Ada 10 cyan', { timeout: 20_000 });
 
-  await page.getByRole('button', { name: /validar paso/i }).click();
+  await page.getByRole('button', { name: /^evaluar$/i }).click();
   await expect(page.getByText(/todas las pruebas superadas/i)).toBeVisible({ timeout: 20_000 });
 });
 
@@ -469,7 +472,7 @@ test('⭐ la salida evaluada solo contiene la ejecución actual', async ({ page 
   await page.getByRole('button', { name: /ejecutar/i }).click();
   await page.getByRole('button', { name: /ejecutar/i }).click();
 
-  await page.getByRole('button', { name: /validar paso/i }).click();
+  await page.getByRole('button', { name: /^evaluar$/i }).click();
   const outputCheck = page.getByText('La salida esperada es exactamente', { exact: false });
   const row = outputCheck.locator('xpath=ancestor::div[contains(@class,"rounded-md")][1]');
   await expect(row.locator('svg.lucide-x')).toHaveCount(0, { timeout: 15_000 });
@@ -491,25 +494,21 @@ test('⭐ al terminar la lección hay salida: XP y enlace a la siguiente', async
     timeout: 20_000,
   });
 
-  await page.getByRole('button', { name: /validar paso/i }).click();
+  await page.getByRole('button', { name: /^evaluar$/i }).click();
   await expect(page.getByText(/todas las pruebas superadas/i)).toBeVisible({ timeout: 20_000 });
 
   // Segundo paso: también hay que resolverlo. Ya no queda ningún paso que se
   // supere solo por leerlo — el editor está para escribir en él.
-  await page.getByRole('button', { name: /siguiente/i }).click();
+  await page.getByRole('button', { name: /^siguiente$/i }).click();
   await insertInEditor(
     page,
     "const equipo = ['Ada'];\nequipo.push('Linus');\nconsole.log(equipo);\n\ntry {\n  equipo = ['otro'];\n} catch (error) {\n  console.log(error.message);\n}\n",
   );
-  await page.getByRole('button', { name: /ejecutar/i }).click();
-  await expect(page.getByRole('log', { name: /consola/i })).toContainText(
-    'Assignment to constant variable',
-    { timeout: 20_000 },
-  );
 
-  const finish = page.getByRole('button', { name: /terminar lección/i });
-  await expect(finish).toBeVisible({ timeout: 10_000 });
-  await finish.click();
+  // En el último paso no hay «Siguiente» que ofrecer: evaluar cierra la
+  // lección, y el botón se queda diciendo que está superada.
+  await page.getByRole('button', { name: /^evaluar$/i }).click();
+  await expect(page.getByText(/lección superada/i)).toBeVisible({ timeout: 20_000 });
 
   // La salida que faltaba: saber que acabaste y por dónde seguir.
   await expect(page.getByText(/lección completada/i)).toBeVisible({ timeout: 20_000 });
@@ -534,7 +533,8 @@ test('⭐ css-03: el reset de border-box cambia lo que el navegador dibuja', asy
   const console_ = page.getByRole('log', { name: /consola/i });
   await expect(console_).toContainText('ocupa 356px', { timeout: 20_000 });
 
-  await page.getByRole('button', { name: /siguiente/i }).click();
+  // El paso 1 se resuelve de verdad: ya no hay forma de saltárselo.
+  await resolverPaso(page, 'css-03-box-model', 0);
 
   // Paso 2: el reset universal, sin tocar una sola anchura ni el padding.
   await insertInEditor(
@@ -551,7 +551,7 @@ test('⭐ css-03: el reset de border-box cambia lo que el navegador dibuja', asy
   // deja la comprobación de la insignia sin salida que leer.
   await expect(console_).toContainText('ocupa 120px', { timeout: 20_000 });
 
-  await page.getByRole('button', { name: /validar paso/i }).click();
+  await page.getByRole('button', { name: /^evaluar$/i }).click();
   await expect(page.getByText(/todas las pruebas superadas/i)).toBeVisible({ timeout: 20_000 });
 });
 
@@ -559,7 +559,7 @@ test('⭐ html-01: el esqueleto completo se valida sin cambiar lo que se ve', as
   await page.goto('/es/play/frontend/html-01-first-page');
   await waitForEditor(page);
 
-  await page.getByRole('button', { name: /siguiente/i }).click();
+  await resolverPaso(page, 'html-01-first-page', 0);
   await insertInEditor(
     page,
     '<!doctype html>\n<html lang="es">\n<head>\n' +
@@ -576,7 +576,7 @@ test('⭐ html-01: el esqueleto completo se valida sin cambiar lo que se ve', as
     timeout: 20_000,
   });
 
-  await page.getByRole('button', { name: /validar paso/i }).click();
+  await page.getByRole('button', { name: /^evaluar$/i }).click();
   await expect(page.getByText(/todas las pruebas superadas/i)).toBeVisible({ timeout: 20_000 });
 });
 
@@ -595,7 +595,7 @@ test('⭐ docker-03: la terminal construye la imagen y la lección lo registra',
 
   // La regla del paso 1 es una transcripción: exige haber ejecutado el
   // comando de verdad, no escribir el Dockerfile correcto de memoria.
-  await page.getByRole('button', { name: /validar paso/i }).click();
+  await page.getByRole('button', { name: /^evaluar$/i }).click();
   await expect(page.getByText(/todas las pruebas superadas/i)).toBeVisible({ timeout: 20_000 });
 });
 
@@ -612,7 +612,7 @@ test('⭐ ejecutar varias veces no acumula la salida en la evaluación', async (
   await typeInEditor(page, 'const greet = (name) => `Hola, ${name}`;\nconsole.log(greet("Ada"));');
   await page.getByRole('button', { name: /ejecutar/i }).click();
   await page.waitForTimeout(2500);
-  await page.getByRole('button', { name: /validar paso/i }).click();
+  await page.getByRole('button', { name: /^evaluar$/i }).click();
 
   // Sin acotar la salida a la última ejecución, el stdout traía las dos
   // pegadas y la comprobación fallaba con la solución correcta delante.

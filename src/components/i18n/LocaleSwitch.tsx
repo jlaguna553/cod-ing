@@ -15,8 +15,12 @@ import { usePathname, useRouter } from '@/i18n/navigation';
  * en `/en/play/devops/docker-07-layer-cache` y no en la home.
  *
  * `replace` (no `push`) evita llenar el historial de saltos de idioma.
+ *
+ * `compact` quita la etiqueta y deja solo los dos botones: en la barra superior
+ * de la pantalla de juego el espacio es horizontal y «ES / EN» ya se explica
+ * solo. El grupo conserva su `aria-label`, que es lo que de verdad lo nombra.
  */
-export function LocaleSwitch() {
+export function LocaleSwitch({ compact = false }: { compact?: boolean } = {}) {
   const t = useTranslations();
   const active = useLocale();
   const router = useRouter();
@@ -24,11 +28,13 @@ export function LocaleSwitch() {
   const params = useParams();
 
   return (
-    <div className="flex flex-col gap-2">
-      <span className="flex items-center gap-2 text-xs uppercase tracking-widest text-[var(--color-ink-faint)]">
-        <Languages size={13} />
-        {t('nav.language')}
-      </span>
+    <div className={compact ? 'flex items-center' : 'flex flex-col gap-2'}>
+      {!compact && (
+        <span className="flex items-center gap-2 text-xs uppercase tracking-widest text-[var(--color-ink-faint)]">
+          <Languages size={13} />
+          {t('nav.language')}
+        </span>
+      )}
 
       <div
         role="radiogroup"
@@ -52,7 +58,8 @@ export function LocaleSwitch() {
                 )
               }
               className={
-                'flex-1 rounded-md px-3 py-1.5 text-xs font-semibold uppercase transition-colors ' +
+                'flex-1 rounded-md text-xs font-semibold uppercase transition-colors ' +
+                (compact ? 'px-2 py-1 ' : 'px-3 py-1.5 ') +
                 (isActive
                   ? 'bg-[var(--color-neon)] text-[var(--color-void)]'
                   : 'text-[var(--color-ink-dim)] hover:bg-[var(--color-raised)] hover:text-[var(--color-ink)]')

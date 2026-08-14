@@ -77,7 +77,6 @@
   "editor": {
     "run": "Run",
     "reset": "Reset",
-    "submit": "Check step",
     "performanceMode": "Performance mode",
     "performanceModeHint": "Turns off particles and screen shake"
   },
@@ -88,8 +87,8 @@
     "task": "Your turn",
     "bestPractice": "Industry standard",
     "editFile": "Edit {file}",
-    "done": "Step cleared. Hit Next.",
-    "finish": "Finish lesson"
+    "finish": "Lesson cleared",
+    "evaluate": "Check"
   },
   "hints": {
     "reveal": "Reveal hint",
@@ -107,10 +106,7 @@
     "actual": "got",
     "checking": "Checking…",
     "syntaxError": "The code does not compile (line {line})",
-    "syntaxHint": "While there is a syntax error, the checks cannot be evaluated.",
-    "collapse": "Collapse tests",
-    "expand": "Show tests",
-    "firstFailure": "Failing: {message}"
+    "syntaxHint": "While there is a syntax error, the checks cannot be evaluated."
   },
   "achievements": {
     "unlocked": "Achievement unlocked!",
@@ -187,10 +183,6 @@
     "resizeCard": "{widget} height",
     "resizeDock": "Fixed strip height",
     "autoHeight": "Automatic height for {widget}"
-  },
-  "widgets": {
-    "lessonInfo": "Lesson details",
-    "stepNav": "Navigation"
   },
   "theme": {
     "label": "Theme",

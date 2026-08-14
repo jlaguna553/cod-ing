@@ -77,7 +77,6 @@
   "editor": {
     "run": "Ejecutar",
     "reset": "Reiniciar",
-    "submit": "Validar paso",
     "performanceMode": "Modo rendimiento",
     "performanceModeHint": "Desactiva partículas y sacudidas"
   },
@@ -88,8 +87,8 @@
     "task": "Tu turno",
     "bestPractice": "Estándar de la industria",
     "editFile": "Edita {file}",
-    "done": "Paso superado. Pulsa Siguiente.",
-    "finish": "Terminar lección"
+    "finish": "Lección superada",
+    "evaluate": "Evaluar"
   },
   "hints": {
     "reveal": "Revelar pista",
@@ -107,10 +106,7 @@
     "actual": "obtenido",
     "checking": "Comprobando…",
     "syntaxError": "El código no compila (línea {line})",
-    "syntaxHint": "Mientras haya un error de sintaxis, las comprobaciones no pueden evaluarse.",
-    "collapse": "Contraer pruebas",
-    "expand": "Ver pruebas",
-    "firstFailure": "Falla: {message}"
+    "syntaxHint": "Mientras haya un error de sintaxis, las comprobaciones no pueden evaluarse."
   },
   "achievements": {
     "unlocked": "¡Logro desbloqueado!",
@@ -187,10 +183,6 @@
     "resizeCard": "Alto de {widget}",
     "resizeDock": "Alto de la franja fija",
     "autoHeight": "Alto automático para {widget}"
-  },
-  "widgets": {
-    "lessonInfo": "Ficha de la lección",
-    "stepNav": "Navegación"
   },
   "theme": {
     "label": "Tema",

@@ -50,13 +50,21 @@ test('⭐ la solución correcta pasa los seis casos y valida el paso', async ({ 
   await page.goto('/es/play/backend/csharp-01-leap-year');
   await waitForEditor(page);
 
-  await page.getByRole('button', { name: /siguiente/i }).click();
+  /*
+   * El paso 1 no se resuelve escribiendo: pide ejecutar `dotnet test` y leer
+   * qué casos fallan. Se cumple de verdad y se evalúa, que es la única forma
+   * de que aparezca «Siguiente».
+   */
+  await runTests(page);
+  await page.getByRole('button', { name: /^evaluar$/i }).click();
+  await page.getByRole('button', { name: /^siguiente$/i }).click();
+
   await writeMethod(page, 'year % 4 == 0 && (year % 100 != 0 || year % 400 == 0)');
   await runTests(page);
 
   await expect(page.locator('.xterm-rows')).toContainText('Con error: 0', { timeout: 20_000 });
 
-  await page.getByRole('button', { name: /validar paso/i }).click();
+  await page.getByRole('button', { name: /^evaluar$/i }).click();
   await expect(page.getByText(/todas las pruebas superadas/i)).toBeVisible({ timeout: 20_000 });
 });
 

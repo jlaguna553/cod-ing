@@ -65,7 +65,7 @@ test('⭐ una lección de React compila y su regla dom-assert se evalúa', async
   await expect.poll(() => mirrorText(page), { timeout: 90_000 }).toContain('Bienvenida');
 
   // Y `renders-text` deja de estar pendiente: se pone verde.
-  await page.getByRole('button', { name: /validar paso/i }).click();
+  await page.getByRole('button', { name: /^evaluar$/i }).click();
   await expect(page.getByText(/todas las pruebas superadas/i)).toBeVisible({ timeout: 30_000 });
 });
 

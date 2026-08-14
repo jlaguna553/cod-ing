@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { resolverPaso } from './pasos';
 
 /**
  * El track de Backend, contra PostgreSQL de verdad en el navegador (ADR-11).
@@ -42,13 +43,14 @@ test('⭐ el flujo completo de sql-01 termina en verde', async ({ page }) => {
   await page.goto('/es/play/backend/sql-01-select');
   await waitForEditor(page);
 
-  await page.getByRole('button', { name: /siguiente/i }).click();
+  // Hay que resolver el paso 1 para llegar al 2: ya no se puede saltar.
+  await resolverPaso(page, 'sql-01-select', 0);
   await writeQuery(page, 'SELECT nombre, precio\nFROM productos\nWHERE precio > 80;\n');
 
   await page.getByRole('button', { name: /ejecutar/i }).click();
   await expect(page.locator('table')).toContainText('Monitor 27', { timeout: BOOT });
 
-  await page.getByRole('button', { name: /validar paso/i }).click();
+  await page.getByRole('button', { name: /^evaluar$/i }).click();
   await expect(page.getByText(/todas las pruebas superadas/i)).toBeVisible({ timeout: 20_000 });
 });
 
@@ -96,7 +98,7 @@ test('⭐ sql-03: el LEFT JOIN devuelve las categorías vacías', async ({ page 
   await expect(grid).toContainText('audio', { timeout: BOOT });
   await expect(grid).not.toContainText('cables');
 
-  await page.getByRole('button', { name: /siguiente/i }).click();
+  await resolverPaso(page, 'sql-03-joins', 0);
   await writeQuery(
     page,
     'SELECT    c.nombre AS categoria, COUNT(p.id) AS productos\n' +
@@ -109,7 +111,7 @@ test('⭐ sql-03: el LEFT JOIN devuelve las categorías vacías', async ({ page 
   await page.getByRole('button', { name: /ejecutar/i }).click();
   await expect(grid).toContainText('cables', { timeout: BOOT });
 
-  await page.getByRole('button', { name: /validar paso/i }).click();
+  await page.getByRole('button', { name: /^evaluar$/i }).click();
   await expect(page.getByText(/todas las pruebas superadas/i)).toBeVisible({ timeout: 20_000 });
 });
 

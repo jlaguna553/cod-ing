@@ -4,6 +4,8 @@ import { useTranslations } from 'next-intl';
 import { ArrowLeft, Eye, LayoutGrid, RotateCcw } from 'lucide-react';
 import { Link } from '@/i18n/navigation';
 import { useLayoutStore, WIDGETS } from '@/stores/useLayoutStore';
+import { LocaleSwitch } from '@/components/i18n/LocaleSwitch';
+import { LessonHeading } from '@/components/lesson/LessonHeading';
 import { ThemePicker } from './ThemePicker';
 import { useAvailableWidgets, useWidgetLabels } from './widgets';
 
@@ -17,6 +19,11 @@ import { useAvailableWidgets, useWidgetLabels } from './widgets';
  *    sin salida visible es un callejón, por bonita que sea.
  * 2. **El modo personalizar**, con las tarjetas ocultas a un clic de volver.
  *    Ocultar algo sin una forma evidente de recuperarlo es una trampa.
+ *
+ * Y lleva lo que no debería gastar una tarjeta: el **título de la lección**,
+ * que solo dice dónde estás, y el **idioma**, que se cambia una vez y no se
+ * vuelve a tocar. Las dos eran tarjetas movibles y ocupaban altura de las que
+ * sí se usan mientras se programa.
  */
 export function LayoutBar({ track }: { track: string }) {
   const t = useTranslations();
@@ -31,16 +38,19 @@ export function LayoutBar({ track }: { track: string }) {
   const hidden = WIDGETS.filter((id) => !widgets[id].visible && disponibles.has(id));
 
   return (
-    <header className="flex shrink-0 flex-wrap items-center gap-2">
+    <header className="flex shrink-0 items-center gap-3">
       <Link
         href={`/tracks/${track}`}
         className="flex items-center gap-1.5 rounded-md border border-[var(--color-border)] px-2.5 py-1.5 text-xs text-[var(--color-ink-dim)] transition-colors hover:border-[var(--color-border-glow)] hover:text-[var(--color-ink)]"
       >
         <ArrowLeft size={13} />
-        {t('nav.backToTrack')}
+        <span className="hidden sm:inline">{t('nav.backToTrack')}</span>
       </Link>
 
+      <LessonHeading />
+
       <div className="ml-auto flex flex-wrap items-center gap-2">
+        <LocaleSwitch compact />
         <ThemePicker />
 
         {editing && hidden.length > 0 && (

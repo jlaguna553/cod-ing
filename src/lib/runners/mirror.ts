@@ -53,20 +53,35 @@ export class DomMirror {
       this.frame = frame;
 
       let done = false;
-      const finish = () => {
-        if (done) return;
+      /**
+       * Montado significa **con el documento dentro**, no «ha llegado un load».
+       *
+       * Insertar un iframe dispara un primer `load` por su `about:blank`
+       * inicial, antes de que el `srcdoc` se haya cargado. Aceptándolo, la
+       * promesa se resolvía con un documento vacío y el espejo anterior ya
+       * retirado: el evaluador leía **cero elementos** sobre un código
+       * correcto. Se veía como un fallo intermitente e imposible —la copia en
+       * pantalla tenía el contenido a la vista— porque quien miraba el DOM a
+       * mano siempre llegaba tarde a la carrera.
+       */
+      const cargado = () => (frame.contentDocument?.URL ?? 'about:blank') !== 'about:blank';
+
+      const finish = (forzado = false) => {
+        if (done || (!forzado && !cargado())) return;
         done = true;
         previous?.remove();
         resolve();
       };
 
-      frame.addEventListener('load', finish, { once: true });
+      frame.addEventListener('load', () => finish());
       // Sin red de seguridad, un `load` que no llegue dejaría colgada la
       // promesa de la ejecución entera.
-      window.setTimeout(finish, 1500);
+      window.setTimeout(() => finish(true), 1500);
 
-      this.mount.appendChild(frame);
+      // El `srcdoc` va antes de insertarlo: así el navegador tiene qué cargar
+      // desde el principio en vez de pasar por `about:blank`.
       frame.srcdoc = html;
+      this.mount.appendChild(frame);
     });
   }
 

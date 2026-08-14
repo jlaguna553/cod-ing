@@ -17,18 +17,7 @@ import { persist } from 'zustand/middleware';
  */
 
 /** Tarjetas que el usuario puede mover. El editor y la salida no: son el escenario. */
-export const WIDGETS = [
-  'session',
-  'lesson-info',
-  'files',
-  'achievements',
-  'locale',
-  'brief',
-  'guide',
-  'task',
-  'nav',
-  'tests',
-] as const;
+export const WIDGETS = ['session', 'files', 'achievements', 'brief', 'guide', 'challenge'] as const;
 
 export type WidgetId = (typeof WIDGETS)[number];
 
@@ -52,15 +41,11 @@ export interface WidgetLayout {
 /** La disposición de siempre, y a la que devuelve el botón de restablecer. */
 export const DEFAULT_LAYOUT: Record<WidgetId, WidgetLayout> = {
   session: { zone: 'left', order: 0, visible: true },
-  'lesson-info': { zone: 'left', order: 1, visible: true },
-  files: { zone: 'left', order: 2, visible: true },
-  achievements: { zone: 'left', order: 3, visible: true },
-  locale: { zone: 'left', order: 4, visible: true },
+  files: { zone: 'left', order: 1, visible: true },
+  achievements: { zone: 'left', order: 2, visible: true },
   brief: { zone: 'guide', order: 0, visible: true },
   guide: { zone: 'guide', order: 1, visible: true },
-  task: { zone: 'dock', order: 0, visible: true },
-  nav: { zone: 'dock', order: 1, visible: true },
-  tests: { zone: 'dock', order: 2, visible: true },
+  challenge: { zone: 'dock', order: 0, visible: true },
 };
 
 /**
@@ -143,6 +128,40 @@ function renumber(widgets: Record<WidgetId, WidgetLayout>): Record<WidgetId, Wid
     });
   }
   return next;
+}
+
+/**
+ * v3 → v4: tres tarjetas se fundieron en una.
+ *
+ * «Reto», «pruebas» y «anterior/siguiente» son ahora `challenge`, y el título
+ * de la lección y el idioma se fueron a la barra superior. Sin migración, una
+ * disposición ya guardada traería ids que no existen y `widgets[id]` daría
+ * `undefined` al pintar — pantalla en blanco para quien ya venía usando esto.
+ *
+ * Se conserva lo que sigue teniendo sentido, y `challenge` hereda el sitio y el
+ * alto que tenía «reto», que es donde el usuario espera encontrarlo.
+ */
+export function migrateLayout(persisted: unknown, version: number) {
+  const estado = persisted as (Partial<LayoutState> & Record<string, unknown>) | undefined;
+  if (!estado || version >= 4) return estado;
+
+  const equivalente = (id: WidgetId) => (id === 'challenge' ? 'task' : id);
+
+  const viejos = estado.widgets as Record<string, WidgetLayout> | undefined;
+  const widgets = { ...DEFAULT_LAYOUT };
+  for (const id of WIDGETS) {
+    const previo = viejos?.[equivalente(id)];
+    if (previo) widgets[id] = { ...previo };
+  }
+
+  const alturasViejas = estado.heights as Record<string, number> | undefined;
+  const heights: Partial<Record<WidgetId, number>> = {};
+  for (const id of WIDGETS) {
+    const px = alturasViejas?.[equivalente(id)];
+    if (px !== undefined) heights[id] = px;
+  }
+
+  return { ...estado, widgets: renumber(widgets), heights };
 }
 
 export const useLayoutStore = create<LayoutState>()(
@@ -253,7 +272,20 @@ export const useLayoutStore = create<LayoutState>()(
         heights,
         dockHeight,
       }),
-      version: 3,
+      version: 4,
+      /*
+       * v3 → v4: tres tarjetas se fundieron en una.
+       *
+       * «Reto», «pruebas» y «anterior/siguiente» son ahora `challenge`, y el
+       * título de la lección y el idioma se fueron a la barra superior. Sin
+       * migración, una disposición guardada traería ids que ya no existen y
+       * `widgets[id]` daría `undefined` al pintar — pantalla en blanco para
+       * quien ya venía usando la aplicación.
+       *
+       * Se conserva lo que sigue teniendo sentido y `challenge` hereda el sitio
+       * que ocupaba «reto», que es donde el usuario espera encontrarlo.
+       */
+      migrate: migrateLayout as never,
     },
   ),
 );

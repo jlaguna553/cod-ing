@@ -843,6 +843,57 @@ absorba. `e2e/cuenta.spec.ts` (5) hace el recorrido entero en el navegador, incl
 que da nombre a todo esto: completar una lección, **borrar las cookies** y comprobar que
 al entrar el XP sigue ahí.
 
+### ADR-18 · Un reto, una tarjeta, y no se avanza sin resolverlo
+
+**Contexto.** El paso vivía repartido en tres tarjetas —«reto», «pruebas» y
+«anterior/siguiente»— cada una con su marco y su título, hablando las tres del mismo
+asunto. Y «Siguiente» estaba disponible desde el primer segundo: se podía recorrer una
+lección entera sin escribir una línea, que es exactamente lo contrario de para lo que
+existe el editor.
+
+**Decisión.** Las tres se funden en `challenge`, que se lee de arriba abajo: **lo que se
+pide, en qué se está fallando, y cómo se sigue**. Esa era ya la secuencia mental; ahora es
+también la del recuadro.
+
+**Un botón con dos vidas.** Empieza siendo «Evaluar» y **se convierte** en «Siguiente»,
+verde, cuando las comprobaciones pasan. No es un «Siguiente» deshabilitado con un candado:
+es el mismo sitio y el mismo dedo, y el estado del paso se lee en el botón que se iba a
+pulsar de todos modos. En el último paso no hay siguiente que ofrecer, así que dice que la
+lección está superada y deja hablar a la tarjeta de cierre, que aparece justo debajo.
+
+**«Validar paso» desaparece del editor.** Eran dos botones para una sola decisión —ejecutar
+y juzgar— en dos esquinas distintas de la pantalla, y el veredicto salía lejos de quien lo
+había pedido. Evaluar **ejecuta primero** (`runAndEvaluate`): saltarse ese paso deja en
+gris toda regla que mire la salida o el DOM, y el usuario no tiene forma de saber que solo
+le faltaba pulsar otro botón. El editor se queda con lo suyo: escribir y ejecutar.
+
+**El título y el idioma suben a la barra.** Eran tarjetas movibles y no se usaban para
+nada: una dice dónde estás y la otra se toca una vez. Ocupando altura se la quitaban a las
+que sí se consultan mientras se programa.
+
+**Migración obligatoria, no opcional.** La disposición guardada es del usuario y trae ids
+que ya no existen; sin `migrate`, `widgets[id]` daría `undefined` al pintar — pantalla en
+blanco justo para quien más ha usado la aplicación. `challenge` hereda el sitio y el alto
+que tenía «reto», y lo que el usuario había decidido sobre lo que sigue existiendo se
+respeta.
+
+**El bug que esto destapó, que llevaba escondido desde el ADR-10.** Al evaluar
+inmediatamente después de ejecutar, las reglas de DOM empezaron a fallar sobre código
+correcto: «esperado 2 × p, obtenido 0» mientras el espejo, a la vista, tenía los dos
+párrafos. Insertar un iframe dispara un primer `load` por su `about:blank` inicial, antes
+de que el `srcdoc` cargue; el espejo se daba por montado con ese, resolvía la promesa con
+un documento **vacío** y retiraba el anterior. Antes no se notaba porque entre «Ejecutar» y
+«Validar paso» pasaban siempre unos segundos: la carrera la ganaba el usuario. Ahora el
+`srcdoc` se asigna antes de insertar el marco y un `load` solo cuenta si el documento ya no
+es `about:blank`.
+
+**Guardia.** `tests/layout-store.test.ts` prueba la migración con una disposición v3 real,
+incluida una tarjeta movida a mano. En E2E, los tests que antes saltaban al paso 2 pulsando
+«Siguiente» ahora **lo resuelven**, con la solución leída del propio contenido
+(`steps[].solution`, ver `e2e/pasos.ts`) en vez de copiada al test: duplicarla dejaría el
+test verde contra un enunciado que ya no existe. Un paso que no se resuelve escribiendo
+—`dotnet test` en la terminal— se cumple como pide la lección.
+
 ---
 
 ## 5. Modelo de datos de progreso (servidor)

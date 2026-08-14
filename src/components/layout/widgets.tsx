@@ -5,15 +5,11 @@ import { useTranslations } from 'next-intl';
 import { ChevronDown, ChevronUp, Files, Trophy, Zap } from 'lucide-react';
 import type { WidgetId } from '@/stores/useLayoutStore';
 import { Panel } from './GameShell';
-import { LocaleSwitch } from '@/components/i18n/LocaleSwitch';
 import { SessionMeter } from '@/components/gamification/SessionMeter';
 import { FileTree } from '@/components/editor/FileTree';
-import { LessonBadges } from '@/components/lesson/LessonBadges';
 import { InterviewBrief } from '@/components/lesson/InterviewBrief';
 import { StepCard } from '@/components/lesson/StepCard';
-import { StepNav } from '@/components/lesson/StepNav';
-import { TaskCard } from '@/components/lesson/TaskCard';
-import { TestResultList } from '@/components/lesson/TestResultList';
+import { ChallengeCard } from '@/components/lesson/ChallengeCard';
 import { useLessonStore, useVisibleFiles } from '@/stores/useLessonStore';
 
 /**
@@ -39,16 +35,7 @@ import { useLessonStore, useVisibleFiles } from '@/stores/useLessonStore';
 export function useAvailableWidgets(): Set<WidgetId> {
   const lesson = useLessonStore((s) => s.lesson);
 
-  const disponibles = new Set<WidgetId>([
-    'session',
-    'lesson-info',
-    'files',
-    'locale',
-    'guide',
-    'task',
-    'nav',
-    'tests',
-  ]);
+  const disponibles = new Set<WidgetId>(['session', 'files', 'guide', 'challenge']);
 
   if (lesson?.interview) disponibles.add('brief');
   if ((lesson?.reward.achievements.length ?? 0) > 0) disponibles.add('achievements');
@@ -60,15 +47,11 @@ export function useWidgetLabels(): Record<WidgetId, string> {
   const t = useTranslations();
   return {
     session: t('meta.appName'),
-    'lesson-info': t('widgets.lessonInfo'),
     files: t('panels.files'),
     achievements: t('panels.achievements'),
-    locale: t('nav.language'),
     brief: t('interview.brief'),
     guide: t('panels.guide'),
-    task: t('steps.task'),
-    nav: t('widgets.stepNav'),
-    tests: t('panels.tests'),
+    challenge: t('steps.task'),
   };
 }
 
@@ -77,28 +60,16 @@ export function Widget({ id }: { id: WidgetId }) {
   switch (id) {
     case 'session':
       return <SessionWidget />;
-    case 'lesson-info':
-      return <LessonBadges />;
     case 'files':
       return <FilesWidget />;
     case 'achievements':
       return <AchievementsWidget />;
-    case 'locale':
-      return (
-        <div className="rounded-[var(--radius-panel)] border border-[var(--color-border)] bg-[var(--color-panel)] p-3">
-          <LocaleSwitch />
-        </div>
-      );
     case 'brief':
       return <InterviewBrief />;
     case 'guide':
       return <StepCard />;
-    case 'task':
-      return <TaskCard />;
-    case 'nav':
-      return <StepNav />;
-    case 'tests':
-      return <TestResultList />;
+    case 'challenge':
+      return <ChallengeCard />;
     default:
       return null;
   }
