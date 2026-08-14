@@ -201,5 +201,45 @@
       "matrix": "Matrix",
       "paper": "Papel"
     }
+  },
+  "account": {
+    "anonymousTitle": "Estás jugando sin cuenta",
+    "anonymousHint": "Tu progreso vive en este navegador. Si borras sus datos o cambias de dispositivo, empieza de cero. Guárdalo con un correo y una contraseña.",
+    "signedIn": "Sesión iniciada como {email}",
+    "signedInHint": "Tu progreso está guardado en el servidor. Puedes entrar desde cualquier dispositivo.",
+    "claim": "Guardar mi progreso",
+    "signIn": "Ya tengo cuenta",
+    "signOut": "Cerrar sesión",
+    "email": "Correo",
+    "password": "Contraseña",
+    "code": "Código de recuperación",
+    "passwordHint": "Mínimo 10 caracteres.",
+    "forgot": "He olvidado la contraseña",
+    "merged": "Lecciones traídas de esta sesión: {count}.",
+    "continue": "Continuar",
+    "copy": "Copiar",
+    "copied": "Copiado",
+    "recoveryTitle": "Guarda este código ahora",
+    "recoveryHint": "No enviamos correos, así que este código es la única forma de recuperar tu cuenta si olvidas la contraseña. Solo se enseña una vez.",
+    "recoverySaved": "Lo he guardado en un sitio seguro",
+    "intro": {
+      "claim": "El correo solo sirve para volver a entrar: no lo verificamos, no lo usamos para nada más y no recibirás ningún mensaje.",
+      "login": "Al entrar, lo que hayas jugado en este navegador sin cuenta se añade a la tuya.",
+      "recover": "Escribe el código que guardaste al crear la cuenta. Te daremos uno nuevo."
+    },
+    "submit": {
+      "claim": "Crear cuenta",
+      "login": "Entrar",
+      "recover": "Cambiar contraseña"
+    },
+    "errors": {
+      "invalid-request": "Revisa los datos.",
+      "invalid-email": "Ese correo no parece válido.",
+      "weak-password": "La contraseña necesita al menos 10 caracteres.",
+      "email-taken": "Ya hay una cuenta con ese correo. Entra con ella.",
+      "not-anonymous": "Esta sesión ya tiene cuenta.",
+      "bad-credentials": "No coinciden. Revisa los datos.",
+      "too-many-attempts": "Demasiados intentos. Espera unos minutos."
+    }
   }
 }

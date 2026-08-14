@@ -4,6 +4,8 @@ import { Link } from '@/i18n/navigation';
 import { LocaleSwitch } from '@/components/i18n/LocaleSwitch';
 import { getAllLessons } from '@/lib/content/loader';
 import { getUserId } from '@/lib/auth/session';
+import { getAccount } from '@/lib/auth/account';
+import { AccountCard } from '@/components/account/AccountCard';
 import { getDb } from '@/lib/db/client';
 import { getStats, getTrackProgress } from '@/lib/db/queries';
 import type { Locale, Track } from '@/lib/content/types';
@@ -24,12 +26,13 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   // Sin sesión la home se ve igual, solo sin progreso: nadie debe encontrarse
   // una pantalla vacía por no haber jugado todavía.
   const userId = await getUserId();
-  const [progress, stats] = userId
+  const [progress, stats, account] = userId
     ? await Promise.all([
         getTrackProgress(await getDb(), userId),
         getStats(await getDb(), userId),
+        getAccount(await getDb(), userId),
       ])
-    : [[], null];
+    : [[], null, null];
 
   const completedByTrack = new Map<string, number>();
   for (const row of progress) {
@@ -67,6 +70,8 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
           <LocaleSwitch />
         </div>
       </header>
+
+      <AccountCard email={account?.email ?? null} />
 
       <div className="grid gap-4 md:grid-cols-3">
         {TRACKS.map(({ id, icon: Icon, color }) => {

@@ -784,12 +784,71 @@ antes de esperar a nada (la prueba del destello), que el fondo del editor siga a
 y que en las cinco el contraste texto/fondo llegue a **4,5:1**, el mínimo de WCAG para
 texto normal. Una paleta que no se puede leer no es una opción, es un adorno.
 
+### ADR-17 · La cuenta se reclama, no se pide
+
+**Contexto.** La identidad era una cookie firmada y nada más. Funcionaba para no
+interrumpir a nadie con un registro antes de escribir la primera línea, pero dejaba una
+única forma real de perder el trabajo hecho: borrar los datos del navegador, cambiar de
+ordenador o abrir el móvil. Y era una pérdida **silenciosa** — la pantalla no avisaba de
+nada, simplemente aparecía vacía.
+
+**Decisión.** Reclamar la cuenta anónima con correo y contraseña, **conservando el mismo
+`id`**. No se copia ni se migra nada: la fila de `users` cambia de anónima a reclamada y el
+progreso ni se entera. `users.email` nació opcional exactamente para esto.
+
+**Sin enviar un solo correo, y a propósito.** Mandar correo obliga a contratar un
+proveedor, y el requisito de la casa es que esto no cueste dinero. La consecuencia se
+asume entera en vez de disimularla: el email es un **identificador para volver a entrar**,
+no un canal verificado, y así se le dice al usuario en el formulario. Como no hay «te
+enviamos un enlace», al reclamar se entrega un **código de recuperación** que se enseña una
+sola vez, con casilla de confirmación, y es la única vía de reset. Prometer una
+recuperación por correo que nunca llegará habría sido peor que no ofrecer ninguna.
+
+**scrypt de `node:crypto`.** bcrypt y argon2 son buenos y son dependencias nativas que hay
+que compilar; scrypt viene en la plataforma. Los parámetros de coste van **dentro del
+hash**, así que subirlos el día que compense no caduca lo ya guardado.
+
+**Lo que se calla, se calla del todo.** Un correo desconocido devuelve el mismo error que
+una contraseña equivocada —si no, el formulario es un buscador de qué correos están dados
+de alta aquí— y se calcula un hash igualmente cuando el usuario no existe, porque
+responder en 1 ms en vez de en 50 ms cuenta lo mismo aunque el texto sea idéntico.
+
+**El freno tiene un límite y se dice cuál.** El contador de intentos vive en memoria del
+proceso: en serverless cada instancia lleva el suyo y quien reparta los intentos consigue
+más de los que pone el número. Corta el caso real —alguien probando contraseñas desde una
+pestaña— sin añadir Redis ni ningún servicio de pago. Contra el ataque paciente lo que
+protege de verdad es el coste de scrypt.
+
+**Entrar no tira lo jugado.** Si en ese navegador había una cuenta anónima con progreso, se
+funde con la que inicia sesión antes de mover la cookie: por lección se queda la mejor de
+las dos (terminada gana a en curso), los contadores se quedan con el máximo y el XP se
+**recalcula** sumando el de las lecciones — sumar los dos totales pagaría dos veces lo
+hecho en ambas. Después la cuenta anónima se borra, porque su única llave era la cookie que
+acaba de cambiar de dueño y sus filas ya no las alcanza nadie.
+
+**Un cliente de base de datos por capa, y el fallo que destapó.** Next compila las páginas y
+las rutas de API en capas distintas: un módulo importado desde las dos **se instancia una
+vez por capa** aunque el proceso sea el mismo. El singleton del cliente vivía en un `let` de
+módulo, así que existían dos. Con Postgres eso es una conexión de más; con PGlite en
+memoria son **dos bases distintas**, y el síntoma costaba creerlo — `POST
+/api/progress/complete` respondía 200 concediendo 185 XP y la portada, renderizada en el
+servidor, seguía enseñando 0 lecciones y 0 XP. La instancia pasa a `globalThis`. No era un
+problema de los tests: es el modo en que se desarrolla sin Postgres delante.
+
+**Guardia.** `tests/account.test.ts` (16) prueba contra Postgres de verdad lo que se
+promete: que reclamar conserve el id y con él el XP, que el correo no se pueda duplicar,
+que el código de recuperación funcione tecleado a mano y se gaste al usarlo, que fusionar
+no pague dos veces ni degrade una lección terminada, y que una cuenta con dueño no se
+absorba. `e2e/cuenta.spec.ts` (5) hace el recorrido entero en el navegador, incluido el
+que da nombre a todo esto: completar una lección, **borrar las cookies** y comprobar que
+al entrar el XP sigue ahí.
+
 ---
 
 ## 5. Modelo de datos de progreso (servidor)
 
 ```
-users(id, email, locale, created_at)
+users(id, email, password_hash, recovery_hash, anonymous, locale, created_at)
 user_stats(user_id, total_xp, level, total_keystrokes, best_combo, streak_days)
 lesson_progress(user_id, lesson_id, status, step_index, xp_earned,
                 hints_used, attempts, best_time_ms, code_snapshot, updated_at)

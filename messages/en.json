@@ -201,5 +201,45 @@
       "matrix": "Matrix",
       "paper": "Paper"
     }
+  },
+  "account": {
+    "anonymousTitle": "You're playing without an account",
+    "anonymousHint": "Your progress lives in this browser. Clear its data or switch devices and you start over. Save it with an email and a password.",
+    "signedIn": "Signed in as {email}",
+    "signedInHint": "Your progress is saved on the server. You can sign in from any device.",
+    "claim": "Save my progress",
+    "signIn": "I already have an account",
+    "signOut": "Sign out",
+    "email": "Email",
+    "password": "Password",
+    "code": "Recovery code",
+    "passwordHint": "At least 10 characters.",
+    "forgot": "I forgot my password",
+    "merged": "Lessons brought over from this session: {count}.",
+    "continue": "Continue",
+    "copy": "Copy",
+    "copied": "Copied",
+    "recoveryTitle": "Save this code now",
+    "recoveryHint": "We don't send emails, so this code is the only way to recover your account if you forget the password. It's shown once.",
+    "recoverySaved": "I've saved it somewhere safe",
+    "intro": {
+      "claim": "The email is only how you get back in: we don't verify it, we don't use it for anything else, and you won't receive any messages.",
+      "login": "When you sign in, whatever you played in this browser without an account is added to yours.",
+      "recover": "Enter the code you saved when you created the account. We'll give you a new one."
+    },
+    "submit": {
+      "claim": "Create account",
+      "login": "Sign in",
+      "recover": "Change password"
+    },
+    "errors": {
+      "invalid-request": "Check the details.",
+      "invalid-email": "That email doesn't look valid.",
+      "weak-password": "The password needs at least 10 characters.",
+      "email-taken": "There's already an account with that email. Sign in instead.",
+      "not-anonymous": "This session already has an account.",
+      "bad-credentials": "That doesn't match. Check the details.",
+      "too-many-attempts": "Too many attempts. Wait a few minutes."
+    }
   }
 }

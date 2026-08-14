@@ -32,6 +32,17 @@ export const users = pgTable(
   {
     id: text('id').primaryKey(),
     email: text('email'),
+    /** scrypt con sus parámetros dentro. Null mientras la cuenta sea anónima. */
+    passwordHash: text('password_hash'),
+    /**
+     * Hash del código de recuperación.
+     *
+     * Es la **única** vía de reset: no se envía correo a nadie, así que sin
+     * este código una contraseña olvidada es una cuenta perdida. Se guarda
+     * hasheado por el mismo motivo que la contraseña — quien lea la base no
+     * debe poder entrar con lo que lee.
+     */
+    recoveryHash: text('recovery_hash'),
     displayName: text('display_name'),
     locale: text('locale').notNull().default('es'),
     /** true mientras no haya reclamado la cuenta con un email. */

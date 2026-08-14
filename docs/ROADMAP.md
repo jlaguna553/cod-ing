@@ -491,6 +491,11 @@ Verificado en navegador: se escribe, se recarga la página, y el código sigue a
 > Pendientes conocidos: la racha diaria corta a medianoche **UTC** (para un usuario en
 > UTC-6 el día "termina" a las 18:00); el mapa de mundos con progreso por track sigue sin
 > construirse; y no hay flujo para reclamar la cuenta anónima con un email.
+>
+> *(El mapa de mundos se construyó en la Fase 8. Reclamar la cuenta se cerró después: ver
+> ADR-17 en `ARCHITECTURE.md` — correo y contraseña conservando el mismo `id`, código de
+> recuperación en vez de correo de reset, y fusión del progreso anónimo al entrar. La
+> racha en UTC sigue abierta.)*
 
 ### ✅ Fase 8 — Mapa de mundos, autoría y CI (COMPLETADA)
 

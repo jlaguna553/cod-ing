@@ -2,6 +2,7 @@ import { defineConfig, devices } from '@playwright/test';
 
 const PORT = 3210;
 
+
 export default defineConfig({
   testDir: './e2e',
   timeout: 60_000,
@@ -31,7 +32,9 @@ export default defineConfig({
       // `DATABASE_URL` debe seguir siendo un error.
       ALLOW_PGLITE_IN_PRODUCTION: '1',
       // Base en memoria: cada arranque parte limpio y los tests no dependen
-      // del estado que dejó la ejecución anterior.
+      // del estado que dejó la ejecución anterior. Que la compartan el
+      // renderizado de páginas y las rutas de API lo garantiza el cliente,
+      // que guarda su instancia en `globalThis` — ver `db/client.ts`.
       PGLITE_DATA_DIR: '',
     },
     port: PORT,

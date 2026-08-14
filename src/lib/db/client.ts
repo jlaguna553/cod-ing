@@ -20,8 +20,23 @@ import * as schema from './schema';
 // para las consultas que usa la aplicación.
 export type Database = ReturnType<typeof drizzlePglite<typeof schema>>;
 
-let instance: Database | null = null;
-let ready: Promise<Database> | null = null;
+/**
+ * La instancia vive en `globalThis`, no en el módulo.
+ *
+ * Next compila las páginas y las rutas de API en **capas distintas**, y un
+ * módulo importado desde las dos se instancia una vez por capa aunque el
+ * proceso sea el mismo. Con un `let` de módulo había, por tanto, dos clientes.
+ *
+ * Con Postgres eso solo significa una conexión de más. Con PGlite en memoria
+ * significa **dos bases distintas**, y el síntoma es de los que cuesta creer:
+ * `POST /api/progress/complete` concedía 185 XP, respondía 200, y la portada
+ * renderizada en el servidor seguía enseñando 0 lecciones y 0 XP. Cada una
+ * miraba su propia base vacía. Es el modo en que se desarrolla sin Postgres
+ * delante, así que no era un problema solo de los tests.
+ */
+const CLAVE = Symbol.for('codequest.db');
+const global = globalThis as { [CLAVE]?: { instance: Database | null; ready: Promise<Database> | null } };
+const cache = (global[CLAVE] ??= { instance: null, ready: null });
 
 /**
  * DDL en crudo.
@@ -35,6 +50,8 @@ export const DDL = `
 CREATE TABLE IF NOT EXISTS users (
   id TEXT PRIMARY KEY,
   email TEXT,
+  password_hash TEXT,
+  recovery_hash TEXT,
   display_name TEXT,
   locale TEXT NOT NULL DEFAULT 'es',
   anonymous BOOLEAN NOT NULL DEFAULT TRUE,
@@ -42,6 +59,12 @@ CREATE TABLE IF NOT EXISTS users (
   last_seen_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 CREATE UNIQUE INDEX IF NOT EXISTS users_email_idx ON users (email);
+
+-- Para las bases que ya existían: CREATE TABLE IF NOT EXISTS no añade columnas
+-- a una tabla creada antes, así que las nuevas se declaran también aquí.
+-- IF NOT EXISTS las hace idempotentes y sin efecto donde ya están.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS recovery_hash TEXT;
 
 CREATE TABLE IF NOT EXISTS user_stats (
   user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
@@ -179,12 +202,12 @@ async function create(): Promise<Database> {
 
 /** Instancia única, creada de forma perezosa y compartida por el proceso. */
 export async function getDb(): Promise<Database> {
-  if (instance) return instance;
-  ready ??= create().then((db) => {
-    instance = db;
+  if (cache.instance) return cache.instance;
+  cache.ready ??= create().then((db) => {
+    cache.instance = db;
     return db;
   });
-  return ready;
+  return cache.ready;
 }
 
 /** Solo para tests: base limpia en memoria. */

@@ -85,6 +85,12 @@ Es seguro porque el DDL es idempotente (`CREATE TABLE IF NOT EXISTS`): aplicarlo
 de nuevo no borra ni modifica nada, y cuesta milisegundos cuando las tablas ya
 existen. Hay tests que lo comprueban.
 
+Las columnas que se añaden después van como `ALTER TABLE … ADD COLUMN IF NOT
+EXISTS` en el mismo DDL, porque `CREATE TABLE IF NOT EXISTS` **no toca una tabla
+que ya existe**: sin ese `ALTER`, una base creada antes se quedaría sin las
+columnas nuevas y el despliegue fallaría al escribir en ellas. Es lo que pasó
+con `password_hash` y `recovery_hash` al añadir las cuentas.
+
 > Si prefieres hacerlo a mano —o usas un Postgres cuya cadena sí puedes leer—
 > el comando sigue disponible:
 >

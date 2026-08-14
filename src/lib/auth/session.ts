@@ -78,6 +78,35 @@ export async function getOrCreateUserId(): Promise<{ id: string; isNew: boolean 
   return { id, isNew: true };
 }
 
+/**
+ * Apunta la sesión a otro usuario. Es lo que hace «iniciar sesión».
+ *
+ * No hay tabla de sesiones ni token que revocar: la cookie firmada **es** la
+ * sesión. Cambiarla de valor es todo el trabajo, y la firma impide que ese
+ * cambio lo haga nadie más que el servidor.
+ */
+export async function setSessionCookie(id: string) {
+  const store = await cookies();
+  store.set(COOKIE, serializeSession(id), {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: MAX_AGE,
+    path: '/',
+  });
+}
+
+/**
+ * Cierra la sesión borrando la cookie.
+ *
+ * La siguiente petición crea una identidad anónima nueva y vacía. La cuenta no
+ * se toca: para eso se reclamó, para poder volver.
+ */
+export async function clearSessionCookie() {
+  const store = await cookies();
+  store.delete(COOKIE);
+}
+
 /** Solo lectura: no crea identidad. Para rutas que toleran usuario ausente. */
 export async function getUserId(): Promise<string | null> {
   const store = await cookies();
