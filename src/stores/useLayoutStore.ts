@@ -63,6 +63,15 @@ export const DEFAULT_LAYOUT: Record<WidgetId, WidgetLayout> = {
   tests: { zone: 'dock', order: 2, visible: true },
 };
 
+/**
+ * Paletas disponibles.
+ *
+ * Cada una redefine las mismas variables CSS en `globals.css`, así que añadir
+ * una es añadir un bloque allí y una entrada aquí: ningún componente cambia.
+ */
+export const THEMES = ['cyber', 'slate', 'amber', 'matrix', 'paper'] as const;
+export type ThemeId = (typeof THEMES)[number];
+
 /** Anchos de las columnas laterales, en píxeles. El centro se queda el resto. */
 export const DEFAULT_COLUMNS = { left: 260, right: 400 };
 /** Reparto vertical de la columna central: cuánto se lleva el editor. */
@@ -79,6 +88,7 @@ const LIMITS = {
 };
 
 interface LayoutState {
+  theme: ThemeId;
   widgets: Record<WidgetId, WidgetLayout>;
   columns: { left: number; right: number };
   editorRatio: number;
@@ -95,6 +105,7 @@ interface LayoutState {
   /** En modo edición aparecen los controles de mover, ocultar y reordenar. */
   editing: boolean;
 
+  setTheme: (theme: ThemeId) => void;
   toggleEditing: () => void;
   setVisible: (id: WidgetId, visible: boolean) => void;
   /** Mueve una tarjeta a una zona, opcionalmente en una posición concreta. */
@@ -137,12 +148,15 @@ function renumber(widgets: Record<WidgetId, WidgetLayout>): Record<WidgetId, Wid
 export const useLayoutStore = create<LayoutState>()(
   persist(
     (set, get) => ({
+      theme: 'cyber',
       widgets: DEFAULT_LAYOUT,
       columns: DEFAULT_COLUMNS,
       editorRatio: DEFAULT_EDITOR_RATIO,
       heights: {},
       dockHeight: DEFAULT_DOCK_HEIGHT,
       editing: false,
+
+      setTheme: (theme) => set({ theme }),
 
       toggleEditing: () => set((state) => ({ editing: !state.editing })),
 
@@ -231,14 +245,15 @@ export const useLayoutStore = create<LayoutState>()(
     {
       name: 'codequest.layout',
       // `editing` no se persiste: al volver, la pantalla está para jugar.
-      partialize: ({ widgets, columns, editorRatio, heights, dockHeight }) => ({
+      partialize: ({ theme, widgets, columns, editorRatio, heights, dockHeight }) => ({
+        theme,
         widgets,
         columns,
         editorRatio,
         heights,
         dockHeight,
       }),
-      version: 2,
+      version: 3,
     },
   ),
 );

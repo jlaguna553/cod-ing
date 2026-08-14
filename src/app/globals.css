@@ -55,6 +55,144 @@ body {
   background-size: 42px 42px;
 }
 
+
+/* ── Paletas ──────────────────────────────────────────────────────────
+   Los colores del `@theme` de arriba son los de la paleta por defecto y
+   siguen siendo la referencia. Cada tema redefine **las mismas variables**
+   sobre `<html data-theme="…">`, así que cambiar de paleta no toca ni un
+   componente: todo el CSS de la aplicación ya lee `var(--color-*)`.
+
+   Se redefinen en `:root[data-theme]` y no en una clase para que el tema
+   pueda aplicarse antes del primer pintado, desde un script en el `<head>`.
+   Sin eso hay un destello con los colores anteriores en cada carga.
+
+   El texto principal mantiene contraste holgado sobre su fondo en las cinco;
+   una paleta bonita que no se puede leer no es una opción, es un adorno. */
+
+:root[data-theme='amber'] {
+  color-scheme: dark;
+  --color-void: #0c0a06;
+  --color-abyss: #141009;
+  --color-panel: #1c160d;
+  --color-raised: #272013;
+  --color-border: #3d3320;
+  --color-border-glow: #5c4a2b;
+
+  --color-ink: #f5e6c8;
+  --color-ink-dim: #c2a878;
+  --color-ink-faint: #8a7550;
+
+  --color-neon: #fbbf24;
+  --color-neon-alt: #fb923c;
+  --color-power: #fde68a;
+  --color-success: #a3d977;
+  --color-damage: #f87171;
+
+  --color-track-frontend: #fbbf24;
+  --color-track-backend: #a3d977;
+  --color-track-devops: #fb923c;
+}
+
+:root[data-theme='matrix'] {
+  color-scheme: dark;
+  --color-void: #030806;
+  --color-abyss: #06120c;
+  --color-panel: #0a1a12;
+  --color-raised: #10261a;
+  --color-border: #1c3d29;
+  --color-border-glow: #2d5f40;
+
+  --color-ink: #d6f5e0;
+  --color-ink-dim: #86c9a0;
+  --color-ink-faint: #4e8a67;
+
+  --color-neon: #4ade80;
+  --color-neon-alt: #34d399;
+  --color-power: #d9f99d;
+  --color-success: #86efac;
+  --color-damage: #fb7185;
+
+  --color-track-frontend: #4ade80;
+  --color-track-backend: #34d399;
+  --color-track-devops: #d9f99d;
+}
+
+/* Sobria: los mismos huesos que la de por defecto, sin el neón.
+   Pensada para sesiones largas, donde el brillo cansa. */
+:root[data-theme='slate'] {
+  color-scheme: dark;
+  --color-void: #0f1115;
+  --color-abyss: #14171d;
+  --color-panel: #1a1e26;
+  --color-raised: #232833;
+  --color-border: #333a47;
+  --color-border-glow: #4a5364;
+
+  --color-ink: #e8eaee;
+  --color-ink-dim: #a8b0bd;
+  --color-ink-faint: #6f7889;
+
+  --color-neon: #7dd3fc;
+  --color-neon-alt: #a5b4fc;
+  --color-power: #fcd34d;
+  --color-success: #86efac;
+  --color-damage: #fca5a5;
+
+  --color-track-frontend: #7dd3fc;
+  --color-track-backend: #86efac;
+  --color-track-devops: #a5b4fc;
+}
+
+/* Clara. No es «la oscura invertida»: los acentos bajan de luminosidad
+   porque un cian de neón sobre blanco es ilegible. */
+:root[data-theme='paper'] {
+  color-scheme: light;
+  --color-void: #f6f7f9;
+  --color-abyss: #eceef2;
+  --color-panel: #ffffff;
+  --color-raised: #e8ebf0;
+  --color-border: #d0d6e0;
+  --color-border-glow: #a9b3c4;
+
+  --color-ink: #161c26;
+  --color-ink-dim: #4a5568;
+  --color-ink-faint: #6b7688;
+
+  --color-neon: #0369a1;
+  --color-neon-alt: #7c3aed;
+  --color-power: #b45309;
+  --color-success: #15803d;
+  --color-damage: #be123c;
+
+  --color-track-frontend: #0369a1;
+  --color-track-backend: #15803d;
+  --color-track-devops: #7c3aed;
+}
+
+/* La rejilla de fondo se tiñe con el acento del tema en vez de ser siempre
+   cian, que en las paletas cálidas o clara desentonaba. */
+:root[data-theme='paper'] body {
+  background-image:
+    linear-gradient(rgba(3, 105, 161, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(3, 105, 161, 0.05) 1px, transparent 1px);
+}
+
+:root[data-theme='amber'] body {
+  background-image:
+    linear-gradient(rgba(251, 191, 36, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(251, 191, 36, 0.04) 1px, transparent 1px);
+}
+
+:root[data-theme='matrix'] body {
+  background-image:
+    linear-gradient(rgba(74, 222, 128, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(74, 222, 128, 0.04) 1px, transparent 1px);
+}
+
+:root[data-theme='slate'] body {
+  background-image: none;
+}
+
 /* ── Utilidades de "juice" ────────────────────────────────────────────
    Definidas aquí y no en componentes para que el Modo Rendimiento pueda
    apagarlas todas de golpe con un atributo en <html> (ver más abajo). */

@@ -191,5 +191,15 @@
   "widgets": {
     "lessonInfo": "Lesson details",
     "stepNav": "Navigation"
+  },
+  "theme": {
+    "label": "Theme",
+    "names": {
+      "cyber": "Cyber",
+      "slate": "Slate",
+      "amber": "Amber",
+      "matrix": "Matrix",
+      "paper": "Paper"
+    }
   }
 }

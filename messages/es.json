@@ -191,5 +191,15 @@
   "widgets": {
     "lessonInfo": "Ficha de la lección",
     "stepNav": "Navegación"
+  },
+  "theme": {
+    "label": "Tema",
+    "names": {
+      "cyber": "Cyber",
+      "slate": "Pizarra",
+      "amber": "Ámbar",
+      "matrix": "Matrix",
+      "paper": "Papel"
+    }
   }
 }

@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl';
 import { ArrowLeft, Eye, LayoutGrid, RotateCcw } from 'lucide-react';
 import { Link } from '@/i18n/navigation';
 import { useLayoutStore, WIDGETS } from '@/stores/useLayoutStore';
+import { ThemePicker } from './ThemePicker';
 import { useAvailableWidgets, useWidgetLabels } from './widgets';
 
 /**
@@ -40,6 +41,8 @@ export function LayoutBar({ track }: { track: string }) {
       </Link>
 
       <div className="ml-auto flex flex-wrap items-center gap-2">
+        <ThemePicker />
+
         {editing && hidden.length > 0 && (
           <div className="flex flex-wrap items-center gap-1.5">
             <span className="text-[10px] uppercase tracking-widest text-[var(--color-ink-faint)]">

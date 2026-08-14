@@ -28,6 +28,12 @@ import '@xterm/xterm/css/xterm.css';
  * `<input>` superpuesto. Es lo que permite que las teclas de control se
  * comporten como en una terminal de verdad en lugar de como en un formulario.
  */
+/** Lee una variable CSS del `<html>`, ya resuelta a color. */
+function token(nombre: string, respaldo: string): string {
+  const valor = getComputedStyle(document.documentElement).getPropertyValue(nombre).trim();
+  return valor || respaldo;
+}
+
 export function XtermPane() {
   const containerRef = useRef<HTMLDivElement>(null);
   const terminalRef = useRef<{ write: (data: string) => void; dispose: () => void } | null>(null);
@@ -59,11 +65,17 @@ export function XtermPane() {
         cursorBlink: true,
         fontSize: 12.5,
         fontFamily: 'var(--font-mono), monospace',
+        /*
+         * Los colores salen de las mismas variables CSS que el resto: xterm
+         * pinta sobre canvas y no resuelve `var(--color-…)`, pero sí acepta el
+         * valor ya resuelto. Sin esto, la terminal se quedaba oscura en la
+         * paleta clara.
+         */
         theme: {
-          background: '#05070d',
-          foreground: '#e6edf7',
-          cursor: '#22d3ee',
-          selectionBackground: '#263148',
+          background: token('--color-void', '#05070d'),
+          foreground: token('--color-ink', '#e6edf7'),
+          cursor: token('--color-neon', '#22d3ee'),
+          selectionBackground: token('--color-border', '#263148'),
         },
       });
 

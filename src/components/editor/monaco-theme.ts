@@ -3,46 +3,90 @@ import type { Monaco } from '@monaco-editor/react';
 export const THEME_NAME = 'codequest-crt';
 
 /**
- * Tema de Monaco alineado con los tokens de `globals.css`.
+ * Tema de Monaco derivado de la paleta activa.
  *
- * Los colores se escriben aquí en literal y no como `var(--color-…)` porque
- * Monaco pinta sobre canvas y no resuelve variables CSS. Si cambian los tokens
- * del tema, hay que tocar los dos sitios — es el precio de que el editor no
- * sea DOM.
+ * Monaco pinta sobre canvas y no resuelve `var(--color-…)`, así que necesita
+ * colores en literal. Antes estaban escritos a mano aquí, con el precio de
+ * tener que tocar dos sitios al cambiar un token — y con el resultado visible
+ * al añadir paletas: con el tema claro, el editor se quedaba siendo un
+ * rectángulo oscuro en medio de una página blanca.
+ *
+ * Se resuelven leyendo del DOM las mismas variables que usa el resto de la
+ * aplicación. Así una paleta nueva no obliga a definir un tema de editor: basta
+ * con declarar sus variables en `globals.css`.
  */
+
+/** Lee una variable CSS del `<html>`, ya resuelta a color. */
+function token(nombre: string, respaldo: string): string {
+  if (typeof window === 'undefined') return respaldo;
+  const valor = getComputedStyle(document.documentElement).getPropertyValue(nombre).trim();
+  return valor || respaldo;
+}
+
 export function defineMonacoTheme(monaco: Monaco) {
+  const void_ = token('--color-void', '#05070d');
+  const panel = token('--color-panel', '#111726');
+  const raised = token('--color-raised', '#1a2233');
+  const border = token('--color-border', '#263148');
+  const borderGlow = token('--color-border-glow', '#3b4a6b');
+  const ink = token('--color-ink', '#e6edf7');
+  const inkDim = token('--color-ink-dim', '#93a3bd');
+  const inkFaint = token('--color-ink-faint', '#5a6b87');
+  const neon = token('--color-neon', '#22d3ee');
+  const neonAlt = token('--color-neon-alt', '#c084fc');
+  const power = token('--color-power', '#fbbf24');
+  const success = token('--color-success', '#4ade80');
+
+  // Monaco quiere los colores de los tokens SIN `#`.
+  const hex = (color: string) => color.replace('#', '');
+
+  /*
+   * `base` decide los colores de todo lo que no se declara aquí —menús,
+   * sugerencias, resaltados—. Elegirlo por la luminosidad del fondo evita que
+   * en la paleta clara aparezcan desplegables negros.
+   */
+  const claro = luminancia(void_) > 0.5;
+
   monaco.editor.defineTheme(THEME_NAME, {
-    base: 'vs-dark',
+    base: claro ? 'vs' : 'vs-dark',
     inherit: true,
     rules: [
-      { token: 'comment', foreground: '5a6b87', fontStyle: 'italic' },
-      { token: 'keyword', foreground: 'c084fc' },
-      { token: 'string', foreground: '4ade80' },
-      { token: 'number', foreground: 'fbbf24' },
-      { token: 'type', foreground: '22d3ee' },
-      { token: 'function', foreground: '22d3ee' },
-      { token: 'variable', foreground: 'e6edf7' },
-      { token: 'tag', foreground: 'c084fc' },
-      { token: 'attribute.name', foreground: '22d3ee' },
-      { token: 'attribute.value', foreground: '4ade80' },
-      { token: 'delimiter', foreground: '93a3bd' },
+      { token: 'comment', foreground: hex(inkFaint), fontStyle: 'italic' },
+      { token: 'keyword', foreground: hex(neonAlt) },
+      { token: 'string', foreground: hex(success) },
+      { token: 'number', foreground: hex(power) },
+      { token: 'type', foreground: hex(neon) },
+      { token: 'function', foreground: hex(neon) },
+      { token: 'variable', foreground: hex(ink) },
+      { token: 'tag', foreground: hex(neonAlt) },
+      { token: 'attribute.name', foreground: hex(neon) },
+      { token: 'attribute.value', foreground: hex(success) },
+      { token: 'delimiter', foreground: hex(inkDim) },
     ],
     colors: {
-      'editor.background': '#05070d',
-      'editor.foreground': '#e6edf7',
-      'editor.lineHighlightBackground': '#111726',
-      'editor.selectionBackground': '#263148',
-      'editorCursor.foreground': '#22d3ee',
-      'editorLineNumber.foreground': '#3b4a6b',
-      'editorLineNumber.activeForeground': '#22d3ee',
-      'editorIndentGuide.background1': '#1a2233',
-      'editorGutter.background': '#05070d',
-      'editorWidget.background': '#111726',
-      'editorWidget.border': '#263148',
-      'scrollbarSlider.background': '#26314880',
-      'scrollbarSlider.hoverBackground': '#3b4a6b80',
+      'editor.background': void_,
+      'editor.foreground': ink,
+      'editor.lineHighlightBackground': panel,
+      'editor.selectionBackground': border,
+      'editorCursor.foreground': neon,
+      'editorLineNumber.foreground': borderGlow,
+      'editorLineNumber.activeForeground': neon,
+      'editorIndentGuide.background1': raised,
+      'editorGutter.background': void_,
+      'editorWidget.background': panel,
+      'editorWidget.border': border,
+      'scrollbarSlider.background': `${border}80`,
+      'scrollbarSlider.hoverBackground': `${borderGlow}80`,
     },
   });
+}
+
+/** Luminancia relativa aproximada de un color hexadecimal. */
+export function luminancia(color: string): number {
+  const limpio = color.replace('#', '');
+  if (limpio.length < 6) return 0;
+  const [r, g, b] = [0, 2, 4].map((inicio) => parseInt(limpio.slice(inicio, inicio + 2), 16) / 255);
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 }
 
 /** Extensión → lenguaje de Monaco. */

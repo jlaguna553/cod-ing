@@ -749,6 +749,41 @@ silencio. `e2e/personalizar.spec.ts` comprueba lo que de verdad se promete: que 
 mover, reordenar y redimensionar **sobrevivan a una recarga**. Una preferencia que se
 olvida es peor que no ofrecerla.
 
+### ADR-16 · Las paletas son variables, no hojas de estilo
+
+**Contexto.** Los colores estaban en un único `@theme` de Tailwind: una paleta oscura de
+neón, sin alternativa. Quien programa muchas horas suele tener una preferencia fuerte —y a
+veces una necesidad— sobre el contraste y la temperatura de lo que mira.
+
+**Decisión.** Cinco paletas (`cyber`, `slate`, `amber`, `matrix`, `paper`), cada una un
+bloque `:root[data-theme='…']` que **redefine las mismas ~29 variables** `--color-*`.
+Ningún componente sabe que esto existe: todos leen `var(--color-…)` como antes. Añadir una
+paleta es añadir un bloque de CSS y una entrada en `THEMES`, nunca tocar un componente.
+
+**Un atributo, no una clase.** Va en `data-theme` del `<html>` porque lo pone un script
+síncrono en el `<head>` que lee `localStorage` **antes del primer pintado**. Aplicarlo desde
+React llegaría un fotograma tarde: se vería la paleta anterior y luego el cambio. Un
+destello de color en cada carga convierte una preferencia en una molestia.
+
+**Restablecer la disposición no cambia la paleta.** Comparten store pero son dos
+preferencias distintas, y `reset()` deja `theme` intacto a propósito. Quien recoloca sus
+tarjetas no ha pedido que le cambien los colores.
+
+**Lo que pinta sobre canvas hay que traducirlo a mano.** Monaco y xterm no resuelven
+`var(--color-…)`: llevan su propio tema. Con la paleta clara la página se aclaraba entera y
+el editor seguía siendo un rectángulo negro en el centro — lo más grande de la pantalla era
+lo único que no cambiaba. Ahora ambos leen las mismas variables ya resueltas con
+`getComputedStyle`, y Monaco además **redefine su tema** cuando la paleta cambia (el
+`base`, `vs` o `vs-dark`, sale de la luminancia del fondo). La regla general: **todo lo que
+no se pinta con CSS necesita un puente explícito, y ese puente debe leer la misma fuente
+que el CSS** — si no, se convierte en una segunda paleta que se desincroniza sola.
+
+**Guardia.** `e2e/temas.spec.ts` no comprueba que el atributo cambie —eso es trivial— sino
+que **los colores medidos** cambien, que sobrevivan a la recarga con el atributo ya puesto
+antes de esperar a nada (la prueba del destello), que el fondo del editor siga a la paleta,
+y que en las cinco el contraste texto/fondo llegue a **4,5:1**, el mínimo de WCAG para
+texto normal. Una paleta que no se puede leer no es una opción, es un adorno.
+
 ---
 
 ## 5. Modelo de datos de progreso (servidor)

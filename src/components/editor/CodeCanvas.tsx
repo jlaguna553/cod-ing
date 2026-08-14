@@ -12,6 +12,7 @@ import { useEvaluationStore } from '@/stores/useEvaluationStore';
 import { Panel } from '@/components/layout/GameShell';
 import { PowerModeFX } from './PowerModeFX';
 import { defineMonacoTheme, languageOf, THEME_NAME } from './monaco-theme';
+import { useLayoutStore } from '@/stores/useLayoutStore';
 import { ComboCounter } from '@/components/gamification/ComboCounter';
 
 /**
@@ -187,6 +188,19 @@ export function CodeCanvas() {
    * del archivo. El síntoma era desconcertante —un `SyntaxError` sobre código
    * que en pantalla se ve perfecto— porque el runner corría un texto a medias.
    */
+  /*
+   * El tema del editor se rehace al cambiar de paleta.
+   *
+   * `defineTheme` con el mismo nombre sustituye la definición y Monaco
+   * repinta, así que no hace falta remontar el editor ni perder el estado del
+   * buffer. Sin esto, el editor se quedaba con los colores de la paleta que
+   * hubiera al montarlo.
+   */
+  const theme = useLayoutStore((s) => s.theme);
+  useEffect(() => {
+    if (monacoRef.current) defineMonacoTheme(monacoRef.current);
+  }, [theme]);
+
   const handleRun = async () => {
     const current = useLessonStore.getState().files;
     await Promise.all(
