@@ -996,6 +996,31 @@ el intérprete arranca y ejecuta lo que se escribe (`6 * 7` sale 42, y ese núme
 en ningún enunciado), que las funciones del prelude están disponibles, y que un error de
 sintaxis aparece **con la línea del usuario**, no con la del prelude.
 
+### ADR-21 · Un logro se celebra una vez
+
+**Contexto.** El mismo logro aparecía **dos veces** en pantalla, con el mismo texto y el
+mismo XP. No era un fallo de la cola de avisos: había dos fuentes escribiendo en ella.
+
+**Las dos fuentes son correctas.** El cliente desbloquea el logro en cuanto se cumple la
+condición, para que la celebración llegue en el momento —esperar al servidor convertiría
+una recompensa en un aviso a destiempo—. Y el servidor lo concede al guardar el progreso,
+porque es quien lleva la cuenta de verdad (ADR de la Fase 7: el cliente envía qué hizo, no
+qué merece). Ninguna sobra.
+
+**Decisión.** Un único embudo, `celebrate()`, por el que pasan las dos: descarta lo que ya
+está desbloqueado **y también lo que sigue en la cola sin cerrar** —mientras el aviso está
+en pantalla, el logro ya se está celebrando— y solo suena y encola lo que de verdad es
+nuevo. El XP del logro lo concede quien lo desbloquea; lo que llega confirmado del servidor
+ya viene contado en su total, así que sumarlo otra vez sería pagar dos veces.
+
+**Guardia.** `tests/achievement-queue.test.ts` cubre las cuatro combinaciones —confirmación
+posterior, aviso aún abierto, aviso ya cerrado y logro distinto— y `e2e/lesson.spec.ts`
+reproduce el caso real: pegar una solución sube el combo, el cliente celebra, el
+autoguardado confirma. El test **vigila la ventana entera** en vez de mirar una vez,
+porque el aviso se cierra solo a los seis segundos y la confirmación llega a los tres: una
+foto tardía no encontraría nada y una temprana se perdería el duplicado. Verificado a la
+inversa deshaciendo el arreglo — con el código anterior el test cuenta dos.
+
 ---
 
 ## 5. Modelo de datos de progreso (servidor)

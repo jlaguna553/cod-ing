@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import type { Achievement } from '@/lib/content/types';
 import { useGameStore } from '@/stores/useGameStore';
 import { useLessonStore } from '@/stores/useLessonStore';
 
@@ -90,9 +91,9 @@ export function ProgressSync() {
         .then((response) => (response.ok ? response.json() : null))
         .then((data: { achievements?: unknown[] } | null) => {
           if (!data?.achievements?.length) return;
-          useGameStore.setState((state) => ({
-            pending: [...state.pending, ...(data.achievements as never[])],
-          }));
+          // Por el embudo común: el cliente ya pudo celebrarlo al conseguirlo,
+          // y anunciarlo otra vez al confirmarse lo duplicaba en pantalla.
+          useGameStore.getState().celebrate(data.achievements as Achievement[]);
         })
         .catch(() => {
           // Fallo de red: el siguiente autosave reintenta con el estado actual.

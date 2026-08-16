@@ -644,3 +644,38 @@ test('⭐ el teclado de una tablet también cuenta: combo y efectos sin keydown'
 
   await expect.poll(async () => Number(await pulsaciones.textContent())).toBeGreaterThan(0);
 });
+
+test('⭐ un logro se celebra una sola vez, aunque lo confirme el servidor', async ({ page }) => {
+  await page.goto('/es/play/backend/php-02-arrays-foreach');
+  await waitForEditor(page);
+
+  /*
+   * Pegar una solución larga sube el combo por encima de 50 y desbloquea
+   * «Ninja de la sintaxis» en el cliente. Segundos después el autoguardado
+   * responde con ese mismo logro concedido por el servidor — y ahí es donde
+   * aparecía el segundo aviso, idéntico y con el mismo XP.
+   */
+  await insertInEditor(
+    page,
+    "<?php\n\n$productos = ['Teclado', 'Monitor', 'Cable'];\n\nforeach ($productos as $i => $producto) {\n    echo ($i + 1) . '. ' . $producto . PHP_EOL;\n}\n",
+  );
+  await page.getByRole('button', { name: /^evaluar$/i }).click();
+
+  const avisos = page.getByRole('button', { name: /logro desbloqueado/i });
+  await expect(avisos.first()).toBeVisible({ timeout: 30_000 });
+
+  /*
+   * Se vigila durante toda la ventana en vez de mirar una vez: el aviso se
+   * cierra solo a los seis segundos y la confirmación del servidor llega a los
+   * tres o cuatro, así que una foto tardía no encontraría nada y una temprana
+   * se perdería el duplicado. Lo que importa es el máximo simultáneo.
+   */
+  let maximo = 0;
+  for (let i = 0; i < 32; i++) {
+    maximo = Math.max(maximo, await avisos.count());
+    await page.waitForTimeout(250);
+  }
+
+  expect(maximo, 'el logro no llegó a verse: el test no probaría nada').toBeGreaterThan(0);
+  expect(maximo, 'el mismo logro se anunció dos veces').toBe(1);
+});

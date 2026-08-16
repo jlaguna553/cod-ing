@@ -66,6 +66,8 @@ interface GameState {
     interviewCategory?: string;
   }) => void;
   checkAchievements: (catalog: Achievement[]) => void;
+  /** Encola logros para celebrarlos. Devuelve los que eran nuevos de verdad. */
+  celebrate: (achievements: Achievement[]) => Achievement[];
   /** Cierra la lección contra el servidor, que decide el XP. */
   finishLesson: (input: {
     lessonId: string;
@@ -210,19 +212,42 @@ export const useGameStore = create<GameState>()(
         get().awardXp(input.xp);
       },
 
-      checkAchievements: (catalog) => {
+      /**
+       * Un logro se celebra **una sola vez**, venga de donde venga.
+       *
+       * Hay dos fuentes y las dos son legítimas: el cliente lo desbloquea en
+       * cuanto se cumple —para que la celebración sea inmediata— y el servidor
+       * lo confirma después, porque es quien lleva la cuenta de verdad. Sin un
+       * embudo común, el usuario veía **el mismo logro anunciado dos veces**:
+       * uno al alcanzar el combo y otro al guardar el progreso unos segundos
+       * más tarde.
+       *
+       * Se descarta lo que ya está desbloqueado y también lo que sigue en la
+       * cola sin cerrar: mientras el aviso está en pantalla, el logro ya se
+       * está celebrando.
+       */
+      celebrate: (achievements) => {
         const state = get();
-        const newly = findNewlyUnlocked(catalog, state.stats, state.unlocked);
-        if (newly.length === 0) return;
+        const conocidos = new Set([...state.unlocked, ...state.pending.map((a) => a.id)]);
+        const nuevos = achievements.filter((achievement) => !conocidos.has(achievement.id));
+        if (nuevos.length === 0) return [];
 
         getSoundEngine().play('achievement');
 
         set({
-          unlocked: [...state.unlocked, ...newly.map((achievement) => achievement.id)],
-          pending: [...state.pending, ...newly],
+          unlocked: [...state.unlocked, ...nuevos.map((achievement) => achievement.id)],
+          pending: [...state.pending, ...nuevos],
         });
 
-        for (const achievement of newly) get().awardXp(achievement.xpReward);
+        return nuevos;
+      },
+
+      checkAchievements: (catalog) => {
+        const nuevos = get().celebrate(findNewlyUnlocked(catalog, get().stats, get().unlocked));
+
+        // El XP del logro lo concede quien lo desbloquea. Los que llegan
+        // confirmados por el servidor ya vienen con su XP en el total.
+        for (const achievement of nuevos) get().awardXp(achievement.xpReward);
       },
 
       /**
@@ -247,13 +272,7 @@ export const useGameStore = create<GameState>()(
 
           // El XP mostrado es el que el servidor concedió, no una estimación local.
           if (data.xpAwarded > 0) get().awardXp(data.xpAwarded);
-          if (data.achievements.length > 0) {
-            getSoundEngine().play('achievement');
-            set((state) => ({
-              unlocked: [...state.unlocked, ...data.achievements.map((a) => a.id)],
-              pending: [...state.pending, ...data.achievements],
-            }));
-          }
+          get().celebrate(data.achievements);
 
           return { xpAwarded: data.xpAwarded, alreadyCompleted: data.alreadyCompleted };
         } catch {
