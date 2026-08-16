@@ -38,8 +38,33 @@ export interface WidgetLayout {
   visible: boolean;
 }
 
-/** La disposición de siempre, y a la que devuelve el botón de restablecer. */
+/**
+ * La disposición de partida, y a la que devuelve el botón de restablecer.
+ *
+ * A la izquierda lo que se **lee** —la guía, y debajo los archivos— y a la
+ * derecha lo que se **usa**: el reto con sus pruebas, el briefing y el marcador.
+ * Repartido así, cada columna tiene un único trabajo y ninguna de las dos
+ * necesita ser ancha para caber: la guía deja de competir por el sitio con el
+ * enunciado que se relee cada dos minutos.
+ */
 export const DEFAULT_LAYOUT: Record<WidgetId, WidgetLayout> = {
+  guide: { zone: 'left', order: 0, visible: true },
+  files: { zone: 'left', order: 1, visible: true },
+  brief: { zone: 'guide', order: 0, visible: true },
+  session: { zone: 'guide', order: 1, visible: true },
+  achievements: { zone: 'guide', order: 2, visible: true },
+  challenge: { zone: 'dock', order: 0, visible: true },
+};
+
+/**
+ * La disposición anterior, solo para saber si el usuario la tocó.
+ *
+ * Cambiar la de fábrica no puede recolocarle las tarjetas a quien ya las puso
+ * a su gusto. Se compara con esto: si lo guardado es exactamente lo que venía
+ * de serie, es que nadie eligió nada y se adopta lo nuevo; si difiere en algo,
+ * manda el usuario.
+ */
+const LAYOUT_V4: Record<string, WidgetLayout> = {
   session: { zone: 'left', order: 0, visible: true },
   files: { zone: 'left', order: 1, visible: true },
   achievements: { zone: 'left', order: 2, visible: true },
@@ -57,8 +82,15 @@ export const DEFAULT_LAYOUT: Record<WidgetId, WidgetLayout> = {
 export const THEMES = ['cyber', 'slate', 'amber', 'matrix', 'paper'] as const;
 export type ThemeId = (typeof THEMES)[number];
 
-/** Anchos de las columnas laterales, en píxeles. El centro se queda el resto. */
-export const DEFAULT_COLUMNS = { left: 260, right: 400 };
+/**
+ * Anchos de las columnas laterales, en píxeles. El centro se queda el resto.
+ *
+ * Los dos suben respecto a los 260/400 de antes porque ahora cada columna
+ * carga con texto: a la izquierda la guía, a la derecha el enunciado con sus
+ * pruebas. Con la anchura anterior, las tarjetas cabían pero llegaban
+ * apretadas —cinco palabras por línea— y el propio ejercicio costaba de leer.
+ */
+export const DEFAULT_COLUMNS = { left: 400, right: 420 };
 /** Reparto vertical de la columna central: cuánto se lleva el editor. */
 export const DEFAULT_EDITOR_RATIO = 0.6;
 /** Alto de la franja fija de la derecha. `null` = el que pida su contenido. */
@@ -130,20 +162,46 @@ function renumber(widgets: Record<WidgetId, WidgetLayout>): Record<WidgetId, Wid
   return next;
 }
 
+/** ¿Es esta disposición exactamente la de fábrica de entonces? */
+function sinTocar(widgets: Record<string, WidgetLayout> | undefined, fabrica: Record<string, WidgetLayout>) {
+  if (!widgets) return true;
+  const ids = Object.keys(fabrica);
+  if (Object.keys(widgets).length !== ids.length) return false;
+
+  return ids.every((id) => {
+    const actual = widgets[id];
+    const previo = fabrica[id];
+    return (
+      actual &&
+      actual.zone === previo.zone &&
+      actual.order === previo.order &&
+      actual.visible === previo.visible
+    );
+  });
+}
+
 /**
- * v3 → v4: tres tarjetas se fundieron en una.
+ * Migraciones de la disposición guardada.
  *
- * «Reto», «pruebas» y «anterior/siguiente» son ahora `challenge`, y el título
- * de la lección y el idioma se fueron a la barra superior. Sin migración, una
- * disposición ya guardada traería ids que no existen y `widgets[id]` daría
- * `undefined` al pintar — pantalla en blanco para quien ya venía usando esto.
+ * **v3 → v4: tres tarjetas se fundieron en una.** «Reto», «pruebas» y
+ * «anterior/siguiente» son ahora `challenge`, y el título de la lección y el
+ * idioma se fueron a la barra superior. Sin migración, una disposición ya
+ * guardada traería ids que no existen y `widgets[id]` daría `undefined` al
+ * pintar — pantalla en blanco para quien ya venía usando esto. `challenge`
+ * hereda el sitio y el alto que tenía «reto».
  *
- * Se conserva lo que sigue teniendo sentido, y `challenge` hereda el sitio y el
- * alto que tenía «reto», que es donde el usuario espera encontrarlo.
+ * **v4 → v5: cambia la disposición de fábrica**, no las tarjetas. La guía pasa
+ * a la izquierda y el marcador a la derecha, y las columnas nacen más anchas.
+ * Aquí no se puede migrar a ciegas: recolocarle las tarjetas a quien ya las
+ * puso a su gusto sería peor que no cambiar nada. Solo se adopta lo nuevo si lo
+ * guardado es **exactamente** lo que venía de serie, que es la firma de que
+ * nadie eligió nada.
  */
 export function migrateLayout(persisted: unknown, version: number) {
   const estado = persisted as (Partial<LayoutState> & Record<string, unknown>) | undefined;
-  if (!estado || version >= 4) return estado;
+  if (!estado) return estado;
+
+  if (version >= 4) return migrarV4aV5(estado, version);
 
   const equivalente = (id: WidgetId) => (id === 'challenge' ? 'task' : id);
 
@@ -161,7 +219,23 @@ export function migrateLayout(persisted: unknown, version: number) {
     if (px !== undefined) heights[id] = px;
   }
 
-  return { ...estado, widgets: renumber(widgets), heights };
+  return migrarV4aV5({ ...estado, widgets: renumber(widgets), heights }, 4);
+}
+
+function migrarV4aV5(estado: Partial<LayoutState> & Record<string, unknown>, version: number) {
+  if (version >= 5) return estado;
+
+  const widgets = estado.widgets as Record<string, WidgetLayout> | undefined;
+  if (!sinTocar(widgets, LAYOUT_V4)) return estado;
+
+  const columnas = estado.columns as { left: number; right: number } | undefined;
+  const anchosDeFabrica = columnas?.left === 260 && columnas?.right === 400;
+
+  return {
+    ...estado,
+    widgets: DEFAULT_LAYOUT,
+    ...(anchosDeFabrica ? { columns: DEFAULT_COLUMNS } : {}),
+  };
 }
 
 export const useLayoutStore = create<LayoutState>()(
@@ -272,7 +346,7 @@ export const useLayoutStore = create<LayoutState>()(
         heights,
         dockHeight,
       }),
-      version: 4,
+      version: 5,
       /*
        * v3 → v4: tres tarjetas se fundieron en una.
        *

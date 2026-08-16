@@ -66,7 +66,7 @@ export function ChallengeCard() {
 
   return (
     <section
-      className="flex flex-col rounded-[var(--radius-panel)] border-2 bg-[var(--color-panel)]"
+      className="flex min-h-0 flex-1 flex-col rounded-[var(--radius-panel)] border-2 bg-[var(--color-panel)]"
       style={{ borderColor: accent, boxShadow: `0 0 32px -14px ${accent}` }}
       aria-labelledby="task-heading"
     >

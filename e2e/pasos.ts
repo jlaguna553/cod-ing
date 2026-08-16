@@ -43,7 +43,7 @@ export function solucionDelPaso(lessonId: string, stepIndex: number): Solucion[]
 
 /** Sustituye el contenido del editor de golpe (sin disparar el autocierre). */
 export async function escribirEnEditor(page: Page, text: string) {
-  await page.locator('.monaco-editor .view-lines').click();
+  await page.locator('.monaco-editor').click({ position: { x: 100, y: 40 } });
   await page.keyboard.press('ControlOrMeta+a');
   await page.keyboard.insertText(text);
 }

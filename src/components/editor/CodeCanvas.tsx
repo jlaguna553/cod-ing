@@ -56,6 +56,8 @@ export function CodeCanvas() {
   const fxRef = useRef<PowerModeFX | null>(null);
   const decorationsRef = useRef<editor.IEditorDecorationsCollection | null>(null);
   const syncTimer = useRef<number | null>(null);
+  /** Marca del último `keydown` real, para no contar dos veces una pulsación. */
+  const teclaFisicaAt = useRef(0);
   const [ready, setReady] = useState(false);
 
   const readOnly = fileMeta?.readOnly ?? false;
@@ -155,12 +157,11 @@ export function CodeCanvas() {
     monacoRef.current = monaco;
     setReady(true);
 
-    // Emitir partículas en la posición real del cursor dentro del editor.
-    instance.onKeyDown((event) => {
-      const key = event.browserEvent.key;
+    /** Cuenta la pulsación y, si suma combo, emite partículas en el cursor. */
+    const celebrar = (key: string, options: { repeat?: boolean } = {}) => {
       const before = useGameStore.getState().combo.count;
 
-      registerKeystroke(key, { repeat: event.browserEvent.repeat });
+      registerKeystroke(key, options);
       if (useGameStore.getState().combo.count === before) return;
 
       scheduleTypeCheck();
@@ -171,7 +172,53 @@ export function CodeCanvas() {
       if (!point) return;
 
       fxRef.current?.burst(point.left, point.top + point.height / 2);
+    };
+
+    instance.onKeyDown((event) => {
+      teclaFisicaAt.current = Date.now();
+      celebrar(event.browserEvent.key, { repeat: event.browserEvent.repeat });
     });
+
+    /*
+     * El camino del teclado virtual.
+     *
+     * En una tablet no llega la tecla en `keydown`: el texto entra por
+     * composición y el navegador reporta `Unidentified` o `Process`, que
+     * `isProductiveKey` descarta —con razón, no son caracteres—. El efecto era
+     * que en táctil desaparecía media aplicación: sin combo, sin partículas y
+     * sin sonido, escribiendo exactamente igual que en un portátil.
+     *
+     * Se cuenta entonces el mismo hecho donde sí llega: el texto que entra en
+     * el modelo. Con tres cautelas, porque no todo cambio es una pulsación:
+     *
+     * - `isFlush` es un `setValue` —restaurar el buffer, reiniciar el
+     *   ejercicio—, y nadie ha tecleado nada.
+     * - Si acaba de haber un `keydown` real, ya está contado: en un teclado
+     *   físico llegan los dos eventos por la misma tecla.
+     * - Un pegado no es teclear. Solo cuenta lo que cabe en una pulsación: un
+     *   carácter (o dos, si Monaco cierra el paréntesis), un borrado, o un
+     *   salto de línea con su sangrado.
+     *
+     * Se usa este evento y no `onDidType`, que existe en el runtime de Monaco
+     * pero no en su API pública: lo no declarado desaparece sin aviso en una
+     * actualización, y con ello volvería a irse el táctil entero.
+     */
+    instance.onDidChangeModelContent((event) => {
+      if (event.isFlush) return;
+      if (Date.now() - teclaFisicaAt.current < 60) return;
+
+      for (const cambio of event.changes) {
+        const texto = cambio.text;
+        if (texto === '') {
+          if (cambio.rangeLength > 0) celebrar('Backspace');
+        } else if (texto.startsWith('\n') || texto.startsWith('\r')) {
+          celebrar('Enter');
+        } else if ([...texto].length <= 2) {
+          celebrar(texto.slice(-1));
+        }
+      }
+    });
+
     instance.onDidPaste(() => {
       const model = instance.getModel();
       registerPaste(model?.getValue() ?? '');

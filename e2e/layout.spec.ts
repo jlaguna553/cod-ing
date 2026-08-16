@@ -14,9 +14,9 @@ async function waitForEditor(page: Page) {
   await expect(page.locator('.view-lines')).not.toBeEmpty({ timeout: 20_000 });
 }
 
-/** La región que scrollea: la guía. */
+/** La región que scrollea: el cuerpo de la guía, dentro de su propia tarjeta. */
 function guide(page: Page) {
-  return page.getByRole('heading', { name: /^guía$/i }).locator('xpath=ancestor::section[1]');
+  return page.locator('[data-widget="guide"] .overflow-y-auto').first();
 }
 
 test('⭐ el reto y las pruebas sobreviven al scroll de la guía', async ({ page }) => {
@@ -33,7 +33,7 @@ test('⭐ el reto y las pruebas sobreviven al scroll de la guía', async ({ page
   const before = await task.boundingBox();
 
   // Se desplaza el contenido didáctico hasta el fondo.
-  const scroller = guide(page).locator('xpath=ancestor::div[contains(@class,"overflow-y-auto")][1]');
+  const scroller = guide(page);
   await scroller.evaluate((element) => element.scrollTo(0, element.scrollHeight));
   await expect
     .poll(async () => scroller.evaluate((element) => element.scrollTop))
@@ -197,4 +197,48 @@ test('⭐ las pistas viven dentro del reto, no en un panel aparte', async ({ pag
   await expect(reto).toContainText(/1 de \d+ usadas/, { timeout: 15_000 });
   await expect(reto).toContainText('★');
   expect(await reto.innerText()).toContain(enunciado);
+});
+
+test('⭐ en pantalla estrecha la barra no se amontona ni el centro se aplasta', async ({ page }) => {
+  // Una tablet en horizontal: el sitio justo donde antes se rompía.
+  await page.setViewportSize({ width: 1100, height: 780 });
+  await page.goto('/es/play/frontend/css-01-selectors');
+  await waitForEditor(page);
+
+  // La barra es UNA fila. Antes envolvía en dos y tres alturas y se comía
+  // justo la pantalla que venía a liberar.
+  const barra = (await page.locator('header').first().boundingBox())!;
+  expect(barra.height).toBeLessThan(48);
+
+  // Y los controles siguen dentro, no empujados fuera del borde.
+  const personalizar = (await page.getByRole('button', { name: /personalizar/i }).boundingBox())!;
+  expect(personalizar.x + personalizar.width).toBeLessThanOrEqual(1100);
+
+  /*
+   * El editor conserva un ancho usable. Con los anchos guardados aplicados tal
+   * cual, el centro se quedaba en 230 px: la barra del panel se salía y el
+   * código llegaba cortado a media línea.
+   */
+  const editor = (await page.locator('.monaco-editor').first().boundingBox())!;
+  expect(editor.width).toBeGreaterThan(330);
+});
+
+test('⭐ la guía y los archivos caben los dos en su columna, sin taparse', async ({ page }) => {
+  await page.goto('/es/play/devops/docker-05-images-layers');
+  await waitForEditor(page);
+
+  const guia = page.locator('[data-widget="guide"]');
+  const archivos = page.locator('[data-widget="files"]');
+
+  // La guía es larguísima; aun así los archivos siguen a la vista, porque la
+  // guía se desplaza por dentro en vez de empujar a la tarjeta de abajo.
+  await expect(guia).toBeInViewport();
+  await expect(archivos).toBeInViewport();
+
+  const cajaGuia = (await guia.boundingBox())!;
+  const cajaArchivos = (await archivos.boundingBox())!;
+  expect(
+    cajaArchivos.y,
+    'la guía se dibuja encima de los archivos',
+  ).toBeGreaterThanOrEqual(cajaGuia.y + cajaGuia.height - 1);
 });

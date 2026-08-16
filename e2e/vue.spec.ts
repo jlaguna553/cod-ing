@@ -42,7 +42,7 @@ test('⭐ la lista y las directivas funcionan con la solución', async ({ page }
   await page.goto('/es/play/frontend/vue-01-template-syntax');
   await waitForEditor(page);
 
-  await page.locator('.monaco-editor .view-lines').click();
+  await page.locator('.monaco-editor').click({ position: { x: 100, y: 40 } });
   await page.keyboard.press('ControlOrMeta+a');
   await page.keyboard.insertText(
     `<script setup>
@@ -81,7 +81,7 @@ test('⭐ un error de compilación se enseña en vez de dejar la pantalla en bla
   await page.goto('/es/play/frontend/vue-01-template-syntax');
   await waitForEditor(page);
 
-  await page.locator('.monaco-editor .view-lines').click();
+  await page.locator('.monaco-editor').click({ position: { x: 100, y: 40 } });
   await page.keyboard.press('ControlOrMeta+a');
   // Un error de sintaxis en el `<script setup>`: el compilador sí lo rechaza.
   // (Una plantilla mal cerrada Vue la tolera y la arregla, como el navegador.)
@@ -105,7 +105,7 @@ test('⭐ vue-04: los tres pasos de la lista de tareas renderizan lo prometido',
   await waitForEditor(page);
 
   const write = async (code: string) => {
-    await page.locator('.monaco-editor .view-lines').click();
+    await page.locator('.monaco-editor').click({ position: { x: 100, y: 40 } });
     await page.keyboard.press('ControlOrMeta+a');
     await page.keyboard.insertText(code);
     await page.getByRole('button', { name: /ejecutar/i }).click();
@@ -198,7 +198,7 @@ test('⭐ vue-05: las cuentas que promete la lección son las que salen', async 
     });
 
   const run = async (code: string) => {
-    await page.locator('.monaco-editor .view-lines').click();
+    await page.locator('.monaco-editor').click({ position: { x: 100, y: 40 } });
     await page.keyboard.press('ControlOrMeta+a');
     await page.keyboard.insertText(code);
     await page.getByRole('button', { name: /ejecutar/i }).click();

@@ -1,12 +1,14 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
+  DEFAULT_COLUMNS,
   DEFAULT_LAYOUT,
   migrateLayout,
   useLayoutStore,
   widgetsOf,
   WIDGETS,
   type WidgetId,
+  type WidgetLayout,
 } from '@/stores/useLayoutStore';
 
 /**
@@ -27,31 +29,32 @@ const orden = (zone: 'left' | 'guide' | 'dock') =>
 
 test('la disposición por defecto reproduce la pantalla de siempre', () => {
   reset();
-  assert.deepEqual(orden('left'), ['session', 'files', 'achievements']);
-  assert.deepEqual(orden('guide'), ['brief', 'guide']);
+  // A la izquierda lo que se lee; a la derecha lo que se usa.
+  assert.deepEqual(orden('left'), ['guide', 'files']);
+  assert.deepEqual(orden('guide'), ['brief', 'session', 'achievements']);
   assert.deepEqual(orden('dock'), ['challenge']);
 });
 
 test('ocultar una tarjeta la saca de su zona sin perder su sitio', () => {
   reset();
   useLayoutStore.getState().setVisible('files', false);
-  assert.deepEqual(orden('left'), ['session', 'achievements']);
+  assert.deepEqual(orden('left'), ['guide']);
 
   useLayoutStore.getState().setVisible('files', true);
-  assert.deepEqual(orden('left'), ['session', 'files', 'achievements']);
+  assert.deepEqual(orden('left'), ['guide', 'files']);
 });
 
 test('⭐ mover a otra zona la inserta donde se pide, no al final', () => {
   reset();
   useLayoutStore.getState().moveWidget('files', 'dock', 1);
   assert.deepEqual(orden('dock'), ['challenge', 'files']);
-  assert.deepEqual(orden('left'), ['session', 'achievements']);
+  assert.deepEqual(orden('left'), ['guide']);
 });
 
 test('⭐ insertar al principio de una zona funciona', () => {
   reset();
   useLayoutStore.getState().moveWidget('challenge', 'left', 0);
-  assert.deepEqual(orden('left'), ['challenge', 'session', 'files', 'achievements']);
+  assert.deepEqual(orden('left'), ['challenge', 'guide', 'files']);
 });
 
 test('⭐ tras cualquier movimiento los órdenes quedan sin huecos ni empates', () => {
@@ -69,14 +72,14 @@ test('⭐ tras cualquier movimiento los órdenes quedan sin huecos ni empates', 
 
 test('subir y bajar respeta los extremos en vez de dar la vuelta', () => {
   reset();
-  useLayoutStore.getState().nudge('session', -1);
-  assert.deepEqual(orden('left')[0], 'session', 'la primera no sube más');
+  useLayoutStore.getState().nudge('guide', -1);
+  assert.deepEqual(orden('left')[0], 'guide', 'la primera no sube más');
 
-  useLayoutStore.getState().nudge('achievements', 1);
-  assert.deepEqual(orden('left').at(-1), 'achievements', 'la última no baja más');
+  useLayoutStore.getState().nudge('files', 1);
+  assert.deepEqual(orden('left').at(-1), 'files', 'la última no baja más');
 
-  useLayoutStore.getState().nudge('session', 1);
-  assert.deepEqual(orden('left').slice(0, 2), ['files', 'session']);
+  useLayoutStore.getState().nudge('guide', 1);
+  assert.deepEqual(orden('left'), ['files', 'guide']);
 });
 
 test('⭐ los anchos se recortan a un rango usable', () => {
@@ -99,17 +102,17 @@ test('restablecer devuelve todo, incluida una tarjeta oculta', () => {
 
   useLayoutStore.getState().reset();
   assert.deepEqual(useLayoutStore.getState().widgets, DEFAULT_LAYOUT);
-  assert.equal(useLayoutStore.getState().columns.right, 400);
+  assert.equal(useLayoutStore.getState().columns.right, DEFAULT_COLUMNS.right);
 });
 
 test('⭐ soltar una tarjeta sobre otra las intercambia, no empuja la lista', () => {
   reset();
   const antes = orden('left');
 
-  useLayoutStore.getState().swap('session', 'files');
+  useLayoutStore.getState().swap('guide', 'files');
 
-  // `session` y `files` cambian de sitio; las demás no se mueven.
-  assert.deepEqual(orden('left'), ['files', 'session', 'achievements']);
+  // Las dos cambian de sitio; ninguna otra se mueve.
+  assert.deepEqual(orden('left'), ['files', 'guide']);
   assert.equal(orden('left').length, antes.length);
 });
 
@@ -117,10 +120,10 @@ test('⭐ el intercambio funciona entre columnas distintas', () => {
   reset();
   useLayoutStore.getState().swap('files', 'challenge');
 
-  assert.ok(orden('left').includes('challenge'), 'el reto baja a la izquierda');
+  assert.ok(orden('left').includes('challenge'), 'el reto pasa a la izquierda');
   assert.ok(orden('dock').includes('files'), 'files sube a la franja fija');
   // Y cada una ocupa el sitio exacto de la otra, sin desplazar a nadie.
-  assert.deepEqual(orden('left'), ['session', 'challenge', 'achievements']);
+  assert.deepEqual(orden('left'), ['guide', 'challenge']);
   assert.deepEqual(orden('dock'), ['files']);
 });
 
@@ -200,4 +203,44 @@ test('⭐ una disposición guardada con las tarjetas viejas sigue abriendo', () 
 test('migrar dos veces no vuelve a tocar nada', () => {
   const yaMigrado = { widgets: DEFAULT_LAYOUT, heights: { challenge: 250 } };
   assert.equal(migrateLayout(yaMigrado, 4), yaMigrado);
+});
+
+test('⭐ cambiar la disposición de fábrica no le mueve las tarjetas a quien las colocó', () => {
+  /*
+   * Dos usuarios con la misma versión guardada. Uno no tocó nada; el otro se
+   * llevó los archivos a la franja fija. Adoptar la disposición nueva es
+   * correcto para el primero y una grosería para el segundo: le desharía
+   * exactamente el trabajo que la personalización venía a permitir.
+   */
+  const deFabrica = {
+    widgets: {
+      session: { zone: 'left', order: 0, visible: true },
+      files: { zone: 'left', order: 1, visible: true },
+      achievements: { zone: 'left', order: 2, visible: true },
+      brief: { zone: 'guide', order: 0, visible: true },
+      guide: { zone: 'guide', order: 1, visible: true },
+      challenge: { zone: 'dock', order: 0, visible: true },
+    },
+    columns: { left: 260, right: 400 },
+  };
+
+  const adoptada = migrateLayout(deFabrica, 4) as {
+    widgets: Record<WidgetId, WidgetLayout>;
+    columns: { left: number };
+  };
+  assert.equal(adoptada.widgets.guide.zone, 'left', 'la guía pasa a la izquierda');
+  assert.equal(adoptada.widgets.session.zone, 'guide', 'el marcador pasa a la derecha');
+  assert.equal(adoptada.columns.left, DEFAULT_COLUMNS.left, 'y las columnas se ensanchan');
+
+  const personalizada = {
+    widgets: {
+      ...deFabrica.widgets,
+      files: { zone: 'dock', order: 1, visible: true },
+    },
+    columns: { left: 260, right: 400 },
+  };
+
+  const respetada = migrateLayout(personalizada, 4) as { widgets: Record<WidgetId, WidgetLayout> };
+  assert.equal(respetada.widgets.files.zone, 'dock', 'lo que movió sigue donde lo puso');
+  assert.equal(respetada.widgets.guide.zone, 'guide', 'y nada más se recoloca');
 });

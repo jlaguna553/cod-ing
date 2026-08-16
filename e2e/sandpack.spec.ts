@@ -51,7 +51,7 @@ test('⭐ una lección de React compila y su regla dom-assert se evalúa', async
    * final: el sandbox recibía un `SyntaxError` real y no renderizaba. Costó un
    * diagnóstico entero — parecía un fallo del bundler y era del test.
    */
-  await page.locator('.monaco-editor .view-lines').click();
+  await page.locator('.monaco-editor').click({ position: { x: 100, y: 40 } });
   await page.keyboard.press('ControlOrMeta+a');
   await page.keyboard.press('Delete');
   await page.evaluate(async (code) => navigator.clipboard.writeText(code), SOLUCION);
@@ -101,7 +101,7 @@ test('⭐ react-05: los tres pasos renderizan lo que prometen', async ({ page })
     const code = step.solution?.find((file) => file.path === 'src/App.jsx')?.content;
     expect(code, `${step.id} no trae solución`).toBeTruthy();
 
-    await page.locator('.monaco-editor .view-lines').click();
+    await page.locator('.monaco-editor').click({ position: { x: 100, y: 40 } });
     await page.keyboard.press('ControlOrMeta+a');
     await page.keyboard.press('Delete');
     await page.evaluate(async (text) => navigator.clipboard.writeText(text), code!);

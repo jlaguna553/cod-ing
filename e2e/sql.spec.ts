@@ -17,7 +17,7 @@ async function waitForEditor(page: Page) {
 
 /** Sustituye la consulta insertando el texto de golpe (sin autocierre de Monaco). */
 async function writeQuery(page: Page, sql: string) {
-  await page.locator('.monaco-editor .view-lines').click();
+  await page.locator('.monaco-editor').click({ position: { x: 100, y: 40 } });
   await page.keyboard.press('ControlOrMeta+a');
   await page.keyboard.insertText(sql);
 }

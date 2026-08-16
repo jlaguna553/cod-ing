@@ -24,6 +24,12 @@ import { useAvailableWidgets, useWidgetLabels } from './widgets';
  * que solo dice dónde estás, y el **idioma**, que se cambia una vez y no se
  * vuelve a tocar. Las dos eran tarjetas movibles y ocupaban altura de las que
  * sí se usan mientras se programa.
+ *
+ * **Una fila, siempre.** La barra no envuelve: en una pantalla estrecha los
+ * controles se apilaban en dos y tres alturas y se comían la pantalla que
+ * venían a liberar. Lo que cede es lo prescindible —primero las etiquetas de
+ * los botones, luego el título de la lección, que se recorta— y nunca los
+ * controles, que se quedan enteros y en su sitio.
  */
 export function LayoutBar({ track }: { track: string }) {
   const t = useTranslations();
@@ -38,21 +44,32 @@ export function LayoutBar({ track }: { track: string }) {
   const hidden = WIDGETS.filter((id) => !widgets[id].visible && disponibles.has(id));
 
   return (
-    <header className="flex shrink-0 items-center gap-3">
+    <header
+      className={
+        'flex shrink-0 items-center gap-2 ' +
+        // En edición la bandeja puede envolver; jugando, la barra es una fila.
+        (editing ? 'flex-wrap' : 'h-9 overflow-hidden')
+      }
+    >
       <Link
         href={`/tracks/${track}`}
-        className="flex items-center gap-1.5 rounded-md border border-[var(--color-border)] px-2.5 py-1.5 text-xs text-[var(--color-ink-dim)] transition-colors hover:border-[var(--color-border-glow)] hover:text-[var(--color-ink)]"
+        className="flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md border border-[var(--color-border)] px-2 py-1.5 text-xs text-[var(--color-ink-dim)] transition-colors hover:border-[var(--color-border-glow)] hover:text-[var(--color-ink)]"
       >
         <ArrowLeft size={13} />
-        <span className="hidden sm:inline">{t('nav.backToTrack')}</span>
+        <span className="hidden xl:inline">{t('nav.backToTrack')}</span>
       </Link>
 
       <LessonHeading />
 
-      <div className="ml-auto flex flex-wrap items-center gap-2">
+      <div className="ml-auto flex shrink-0 items-center gap-1.5">
         <LocaleSwitch compact />
         <ThemePicker />
 
+        {/*
+          La bandeja solo aparece en modo edición, y ahí sí puede envolver: es
+          el único momento en que la barra puede crecer sin estorbar, porque
+          nadie está programando mientras recoloca sus tarjetas.
+        */}
         {editing && hidden.length > 0 && (
           <div className="flex flex-wrap items-center gap-1.5">
             <span className="text-[10px] uppercase tracking-widest text-[var(--color-ink-faint)]">
@@ -76,10 +93,10 @@ export function LayoutBar({ track }: { track: string }) {
           <button
             type="button"
             onClick={reset}
-            className="flex items-center gap-1.5 rounded-md border border-[var(--color-border)] px-2.5 py-1.5 text-xs text-[var(--color-ink-dim)] transition-colors hover:border-[var(--color-damage)] hover:text-[var(--color-ink)]"
+            className="flex items-center gap-1.5 rounded-md border border-[var(--color-border)] px-2 py-1.5 text-xs text-[var(--color-ink-dim)] transition-colors hover:border-[var(--color-damage)] hover:text-[var(--color-ink)]"
           >
             <RotateCcw size={12} />
-            {t('layout.reset')}
+            <span className="hidden lg:inline">{t('layout.reset')}</span>
           </button>
         )}
 
@@ -87,14 +104,16 @@ export function LayoutBar({ track }: { track: string }) {
           type="button"
           onClick={toggleEditing}
           aria-pressed={editing}
-          className="flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs transition-colors"
+          className="flex items-center gap-1.5 rounded-md border px-2 py-1.5 text-xs transition-colors"
           style={{
             borderColor: editing ? 'var(--color-neon)' : 'var(--color-border)',
             color: editing ? 'var(--color-neon)' : 'var(--color-ink-dim)',
           }}
         >
           <LayoutGrid size={13} />
-          {editing ? t('layout.done') : t('layout.customize')}
+          <span className="hidden md:inline">
+            {editing ? t('layout.done') : t('layout.customize')}
+          </span>
         </button>
       </div>
     </header>

@@ -17,7 +17,7 @@ async function waitForEditor(page: Page) {
 }
 
 async function writeMethod(page: Page, expression: string) {
-  await page.locator('.monaco-editor .view-lines').click();
+  await page.locator('.monaco-editor').click({ position: { x: 100, y: 40 } });
   await page.keyboard.press('ControlOrMeta+a');
   await page.keyboard.insertText(
     'namespace Calendario;\n\npublic static class Leap\n{\n' +
@@ -98,7 +98,7 @@ for (const [lessonId, methodFile] of [
       const code = step.solution?.find((file) => file.path === methodFile)?.content;
       expect(code, `${step.id} no trae solución para ${methodFile}`).toBeTruthy();
 
-      await page.locator('.monaco-editor .view-lines').click();
+      await page.locator('.monaco-editor').click({ position: { x: 100, y: 40 } });
       await page.keyboard.press('ControlOrMeta+a');
       await page.keyboard.press('Delete');
       await page.evaluate(async (text) => navigator.clipboard.writeText(text), code!);

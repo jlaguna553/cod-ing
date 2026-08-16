@@ -25,6 +25,15 @@ import { useLessonStore, useVisibleFiles } from '@/stores/useLessonStore';
  */
 
 /**
+ * Tarjetas que se quedan con el espacio sobrante de su columna.
+ *
+ * Son las dos que llevan texto largo y saben desplazarse por dentro: la guía y
+ * el reto con sus pruebas. Las demás piden el alto que necesitan y se acabó —
+ * estirar el árbol de archivos solo dejaría un hueco gris debajo de la lista.
+ */
+export const EXPANSIBLES = new Set<WidgetId>(['guide', 'challenge']);
+
+/**
  * Qué tarjetas tienen sentido en ESTA lección.
  *
  * Sin esto, el modo edición enseñaba un hueco titulado «Briefing de entrevista»

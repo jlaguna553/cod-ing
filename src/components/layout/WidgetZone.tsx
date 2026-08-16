@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import { ChevronDown, ChevronUp, EyeOff, GripVertical, Maximize2 } from 'lucide-react';
 import { useLayoutStore, widgetsOf, type WidgetId, type Zone } from '@/stores/useLayoutStore';
 import { Splitter } from './Splitter';
-import { Widget, useAvailableWidgets, useWidgetLabels } from './widgets';
+import { EXPANSIBLES, Widget, useAvailableWidgets, useWidgetLabels } from './widgets';
 
 /**
  * Una zona de la pantalla, compuesta con las tarjetas que el usuario ha puesto
@@ -89,8 +89,18 @@ export function WidgetZone({
              * salía y se dibujaba **encima de la siguiente**. Era el solape que
              * se veía al reordenar.
              */
+            /*
+             * Una tarjeta «expansible» sin alto fijado se queda con el espacio
+             * sobrante de su columna en vez de con el que pide su contenido.
+             *
+             * Sin esto, la guía —que es larguísima— empujaba a los archivos
+             * fuera de la pantalla: la tarjeta de abajo existía, pero había que
+             * ir a buscarla con el scroll. Ahora la de arriba se desplaza por
+             * dentro y la de abajo se queda donde se la puso.
+             */
             className={
-              'flex shrink-0 flex-col ' +
+              'flex flex-col ' +
+              (!alto && EXPANSIBLES.has(id) ? 'min-h-0 flex-1 ' : 'shrink-0 ') +
               (alto ? 'overflow-hidden ' : '') +
               (sobre === id ? 'rounded-[var(--radius-panel)] outline outline-2 outline-[var(--color-neon)]' : '')
             }
@@ -153,8 +163,24 @@ export function WidgetZone({
               </div>
             )}
 
-            {/* La tarjeta sigue viva mientras se ordena: se ve lo que se mueve. */}
-            <div className={alto ? 'min-h-0 flex-1 overflow-y-auto' : ''}>
+            {/*
+              La tarjeta sigue viva mientras se ordena: se ve lo que se mueve.
+
+              Con alto fijado, esta capa es la que recorta. Y cuando la tarjeta
+              se estira tiene que ser **flex** además de alta: si no, la tarjeta
+              de dentro no tiene contra qué medirse, crece hasta su contenido y
+              se dibuja encima de la siguiente. Era exactamente lo que le pasaba
+              a la guía sobre los archivos.
+            */}
+            <div
+              className={
+                alto
+                  ? 'min-h-0 flex-1 overflow-y-auto'
+                  : EXPANSIBLES.has(id)
+                    ? 'flex min-h-0 flex-1 flex-col'
+                    : ''
+              }
+            >
               <Widget id={id} />
             </div>
 

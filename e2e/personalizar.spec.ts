@@ -69,7 +69,8 @@ test('⭐ reordenar con los botones funciona sin ratón', async ({ page }) => {
       .evaluateAll((nodes) => nodes.map((node) => node.getAttribute('data-widget')));
 
   const antes = await ordenActual();
-  await page.getByRole('button', { name: new RegExp(`subir`, 'i') }).nth(1).click();
+  // Dentro de la columna izquierda: los botones de subir existen en las tres.
+  await zona(page, 'left').getByRole('button', { name: /subir/i }).nth(1).click();
   const despues = await ordenActual();
 
   expect(despues).not.toEqual(antes);
@@ -118,15 +119,16 @@ test('⭐ soltar una tarjeta sobre otra las intercambia, y no se solapan', async
     izquierda.locator('[data-widget]').evaluateAll((n) => n.map((x) => x.getAttribute('data-widget')));
 
   const antes = await idsDe();
+  const ultimo = antes.length - 1;
   await izquierda
     .locator(`[data-widget="${antes[0]}"] [aria-label*="Arrastrar"]`)
-    .dragTo(izquierda.locator(`[data-widget="${antes[2]}"]`));
+    .dragTo(izquierda.locator(`[data-widget="${antes[ultimo]}"]`));
 
   const despues = await idsDe();
   // Se cambian de sitio las dos; el resto se queda donde estaba.
-  expect(despues[0]).toBe(antes[2]);
-  expect(despues[2]).toBe(antes[0]);
-  expect(despues[1]).toBe(antes[1]);
+  expect(despues[0]).toBe(antes[ultimo]);
+  expect(despues[ultimo]).toBe(antes[0]);
+  expect(despues.slice(1, ultimo)).toEqual(antes.slice(1, ultimo));
   expect(despues).toHaveLength(antes.length);
 
   // Y lo que motivó el cambio: ninguna tarjeta pisa a la siguiente.
@@ -239,6 +241,13 @@ test('⭐ la columna derecha crece hacia la izquierda, quitándole sitio al cent
    * Por eso el test mide las dos: que una crezca sin que la otra encoja no es
    * redimensionar, es desbordar.
    */
+  /*
+   * Pantalla ancha a propósito: el centro tiene un mínimo garantizado y en
+   * 1280 el arrastre choca contra él a los pocos píxeles. Lo que se prueba
+   * aquí es el intercambio entre columnas, no el suelo — que tiene su propio
+   * test en `layout.spec.ts`.
+   */
+  await page.setViewportSize({ width: 1600, height: 900 });
   await page.goto(LECCION);
   await waitForEditor(page);
 
@@ -264,8 +273,11 @@ test('⭐ la columna derecha crece hacia la izquierda, quitándole sitio al cent
   });
   await page.mouse.up();
 
+  // Se espera al reparto, no se lee de golpe: el arrastre pasa por el store y
+  // el ancho aplicado se recalcula al pintar.
+  await expect.poll(async () => (await medir()).derecha).toBeGreaterThan(antes.derecha + 60);
+
   const despues = await medir();
-  expect(despues.derecha, 'la derecha no se ensanchó').toBeGreaterThan(antes.derecha + 60);
   expect(despues.centro, 'el centro no cedió sitio: se está desbordando').toBeLessThan(
     antes.centro - 60,
   );

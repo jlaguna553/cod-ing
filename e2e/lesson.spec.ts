@@ -26,7 +26,7 @@ async function waitForPristineEditor(page: Page) {
 
 /** Escribe en Monaco sustituyendo todo el contenido. */
 async function typeInEditor(page: Page, text: string) {
-  await page.locator('.monaco-editor .view-lines').click();
+  await page.locator('.monaco-editor').click({ position: { x: 100, y: 40 } });
   await page.keyboard.press('ControlOrMeta+a');
   await page.keyboard.type(text, { delay: 8 });
 }
@@ -40,7 +40,7 @@ async function typeInEditor(page: Page, text: string) {
  * pulsaciones sueltas.
  */
 async function insertInEditor(page: Page, text: string) {
-  await page.locator('.monaco-editor .view-lines').click();
+  await page.locator('.monaco-editor').click({ position: { x: 100, y: 40 } });
   await page.keyboard.press('ControlOrMeta+a');
   await page.keyboard.insertText(text);
 }
@@ -135,7 +135,7 @@ test('⭐ mantiene el ritmo de fotogramas tecleando con los efectos activos', as
   await page.goto(LESSON);
   await waitForEditor(page);
 
-  await page.locator('.monaco-editor .view-lines').click();
+  await page.locator('.monaco-editor').click({ position: { x: 100, y: 40 } });
 
   // Contador de fotogramas montado ANTES de teclear.
   await page.evaluate(() => {
@@ -167,7 +167,7 @@ test('⭐ mantiene el ritmo de fotogramas tecleando con los efectos activos', as
 test('⭐ el combo sube al teclear y aparece el contador', async ({ page }) => {
   await page.goto(LESSON);
   await waitForEditor(page);
-  await page.locator('.monaco-editor .view-lines').click();
+  await page.locator('.monaco-editor').click({ position: { x: 100, y: 40 } });
 
   // El contador solo aparece a partir de 10 pulsaciones: por debajo sería ruido.
   await page.keyboard.type('const abcdefghijklmnop = 1;', { delay: 15 });
@@ -182,7 +182,7 @@ test('⭐ el combo sube al teclear y aparece el contador', async ({ page }) => {
 test('⭐ pegar un bloque grande rompe el combo (anti-cheat)', async ({ page }) => {
   await page.goto(LESSON);
   await waitForEditor(page);
-  await page.locator('.monaco-editor .view-lines').click();
+  await page.locator('.monaco-editor').click({ position: { x: 100, y: 40 } });
 
   await page.keyboard.type('const abcdefghijklmnopqrs = 1;', { delay: 15 });
   await expect(page.getByText(/×$/)).toBeVisible({ timeout: 5000 });
@@ -372,7 +372,9 @@ test('⭐ una comprobación superada no muestra el mensaje de fallo en verde', a
     "const playerName = 'Ada';\nlet score = 0;\nscore = score + 10;\nconst team = 'cyan';\nconsole.log(playerName, score, team);",
   );
   await page.getByRole('button', { name: /^evaluar$/i }).click();
-  await page.waitForTimeout(1500);
+  // Se espera al veredicto, no a un reloj: el botón cambia a «Siguiente»
+  // cuando el paso está superado, y hasta entonces las filas están a medias.
+  await expect(page.getByRole('button', { name: /^siguiente$/i })).toBeVisible({ timeout: 30_000 });
 
   // La regla `no-var` pasa; su mensaje ("¡Daño! `var` es la forma antigua…")
   // está redactado para el fallo y no puede encabezar una fila en verde.
@@ -617,4 +619,28 @@ test('⭐ ejecutar varias veces no acumula la salida en la evaluación', async (
   // Sin acotar la salida a la última ejecución, el stdout traía las dos
   // pegadas y la comprobación fallaba con la solución correcta delante.
   await expect(page.getByText(/todas las pruebas superadas/i)).toBeVisible({ timeout: 20_000 });
+});
+
+test('⭐ el teclado de una tablet también cuenta: combo y efectos sin keydown', async ({ page }) => {
+  await page.goto('/es/play/frontend/js-01-variables');
+  await waitForEditor(page);
+
+  const pulsaciones = page.getByText(/pulsaciones/i).locator('xpath=preceding-sibling::*[1]');
+  await expect(pulsaciones).toHaveText('0');
+
+  /*
+   * `insertText` mete el texto por el evento `input`, **sin `keydown`** — que
+   * es exactamente lo que hace un teclado virtual. Antes esto no contaba como
+   * pulsación: en táctil desaparecían el combo, las partículas y el sonido, y
+   * el marcador se quedaba clavado en cero mientras el código se escribía.
+   */
+  await page.locator('.monaco-editor').click({ position: { x: 100, y: 40 } });
+
+  // Carácter a carácter, como un teclado virtual: de golpe sería un pegado.
+  // Se comprueba antes que el texto llega de verdad al editor; si no llegara,
+  // el contador a cero no diría nada sobre lo que se quiere probar.
+  for (const letra of 'const tablet = 1;') await page.keyboard.insertText(letra);
+  await expect(page.locator('.view-lines')).toContainText('const tablet = 1;');
+
+  await expect.poll(async () => Number(await pulsaciones.textContent())).toBeGreaterThan(0);
 });

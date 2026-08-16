@@ -894,6 +894,53 @@ incluida una tarjeta movida a mano. En E2E, los tests que antes saltaban al paso
 test verde contra un enunciado que ya no existe. Un paso que no se resuelve escribiendo
 —`dotnet test` en la terminal— se cumple como pide la lección.
 
+### ADR-19 · Que quepa: pantalla estrecha y dedos
+
+**Contexto.** Probando en una tablet aparecieron tres cosas a la vez: los controles de la
+barra se apilaban en dos y tres alturas, las columnas laterales dejaban al editor en 230 px
+—la barra del panel se salía y el código llegaba cortado— y **al escribir no pasaba nada**:
+ni combo, ni partículas, ni sonido.
+
+**La barra es una fila.** Lo que cede es lo prescindible: primero las etiquetas de los
+botones, luego el título de la lección, que se recorta. Los controles nunca se apilan,
+porque una barra que crece hacia abajo se come justo la pantalla que venía a liberar. En
+modo edición sí puede envolver: ahí nadie está programando.
+
+**Las columnas ceden en proporción, el editor tiene un suelo.** El ancho elegido está en
+píxeles y no sobrevive a un cambio de pantalla. Se reduce lo justo para que el centro
+conserve un mínimo, **manteniendo la proporción entre las dos columnas** — que es lo que el
+usuario eligió. Recortar con `max-width` habría sido una línea, pero entonces arrastrar el
+divisor deja de hacer nada al llegar al tope y no se sabe por qué; el mismo error de
+«el store cambia y la pantalla no» que ya costó un ADR.
+
+**A la izquierda lo que se lee, a la derecha lo que se usa.** La guía pasa a la columna
+izquierda con los archivos debajo, y el reto, el briefing y el marcador a la derecha. Cada
+columna tiene un trabajo, y la guía deja de competir por el sitio con el enunciado que se
+relee cada dos minutos.
+
+**Tarjetas que se estiran.** Las dos que llevan texto largo y saben desplazarse por dentro
+—la guía y el reto— se quedan con el espacio sobrante de su columna; las demás piden el
+alto que necesitan. Sin esto la guía empujaba a los archivos fuera de la pantalla: la
+tarjeta existía, pero había que ir a buscarla con el scroll. Y la franja fija ya no se
+abraza a su contenido: se queda lo que sobra, así que el reto no acaba pegado al borde
+inferior con media columna vacía encima.
+
+**El teclado virtual no manda teclas.** En táctil el texto entra por composición y el
+navegador reporta `Unidentified` o `Process`, que el filtro de teclas productivas descarta
+—con razón, no son caracteres—. Se cuenta entonces el mismo hecho donde sí llega: el
+cambio en el modelo del editor, ignorando lo que ya contó un `keydown` real, lo que no ha
+escrito nadie (`isFlush`) y lo que no cabe en una pulsación (un pegado). Se usa el evento
+declarado en la API pública de Monaco y no `onDidType`, que existe en su runtime pero no en
+sus tipos: lo no declarado desaparece sin aviso en una actualización, y con ello volvería a
+irse el táctil entero.
+
+**Guardia.** `e2e/layout.spec.ts` mide a 1100 px que la barra ocupa una fila, que los
+controles siguen dentro y que el editor conserva ancho usable, y comprueba en la lección de
+guía más larga que los archivos siguen a la vista sin que nadie se dibuje encima.
+`e2e/lesson.spec.ts` escribe **carácter a carácter con `insertText`** —texto sin `keydown`,
+que es exactamente lo que hace un teclado virtual— y exige que el contador de pulsaciones
+se mueva.
+
 ---
 
 ## 5. Modelo de datos de progreso (servidor)

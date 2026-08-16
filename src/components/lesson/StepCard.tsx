@@ -66,7 +66,7 @@ export function StepCard() {
 
   if (!step) {
     return (
-      <Panel scroll={false} title={t('panels.guide')}>
+      <Panel title={t('panels.guide')}>
         <p className="text-xs text-[var(--color-ink-faint)]">{t('empty.noLesson')}</p>
       </Panel>
     );
@@ -74,7 +74,7 @@ export function StepCard() {
 
   return (
     <Panel
-      scroll={false}
+      className="min-h-0 flex-1"
       title={t('panels.guide')}
       action={
         <span className="font-mono text-[10px] text-[var(--color-ink-faint)]">

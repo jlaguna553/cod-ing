@@ -39,7 +39,7 @@ test('⭐ css-01: la especificidad decide los colores que la lección promete', 
     });
 
   const aplicar = async (css: string) => {
-    await page.locator('.monaco-editor .view-lines').click();
+    await page.locator('.monaco-editor').click({ position: { x: 100, y: 40 } });
     await page.keyboard.press('ControlOrMeta+a');
     await page.keyboard.press('Delete');
     await page.evaluate(async (text) => navigator.clipboard.writeText(text), css);
@@ -94,7 +94,7 @@ test('⭐ html-03: el formulario pasa de decorativo a usable', async ({ page }) 
     });
 
   const aplicar = async (html: string) => {
-    await page.locator('.monaco-editor .view-lines').click();
+    await page.locator('.monaco-editor').click({ position: { x: 100, y: 40 } });
     await page.keyboard.press('ControlOrMeta+a');
     await page.keyboard.press('Delete');
     await page.evaluate(async (text) => navigator.clipboard.writeText(text), html);

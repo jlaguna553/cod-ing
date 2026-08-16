@@ -1,6 +1,6 @@
 'use client';
 
-import type { ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { useLayoutStore } from '@/stores/useLayoutStore';
 import { useTranslations } from 'next-intl';
 import { LayoutBar } from './LayoutBar';
@@ -29,6 +29,14 @@ import { WidgetZone } from './WidgetZone';
  * número que cambia en cada arrastre, y generar clases dinámicas no funciona
  * con un compilador que las extrae del código fuente.
  */
+/**
+ * Lo que se le reserva al editor pase lo que pase, en píxeles.
+ *
+ * Es la columna entera: el panel se queda unos 40 en bordes y relleno, así que
+ * por debajo de esto el código empieza a llegar cortado a media línea.
+ */
+const MIN_CENTRO = 420;
+
 export function GameShell({
   editor,
   output,
@@ -49,11 +57,40 @@ export function GameShell({
   const setEditorRatio = useLayoutStore((s) => s.setEditorRatio);
   const setDockHeight = useLayoutStore((s) => s.setDockHeight);
 
+  // Empieza en 0 —y con factor 1— para que el primer render del cliente sea
+  // idéntico al del servidor; el efecto lo ajusta antes de que se note.
+  const [anchoVentana, setAnchoVentana] = useState(0);
+  useEffect(() => {
+    const medir = () => setAnchoVentana(window.innerWidth);
+    medir();
+    window.addEventListener('resize', medir);
+    return () => window.removeEventListener('resize', medir);
+  }, []);
+
   /*
    * Arrastrar hacia arriba agranda la franja, así que el delta se resta. Y sin
    * alto fijado se parte del que tiene ahora, medido del DOM: con un valor por
    * defecto, el primer paso la encogía de golpe en vez de moverla.
    */
+  /*
+   * Las columnas ceden en proporción antes que aplastar el editor.
+   *
+   * El ancho guardado está en píxeles, y el mismo reparto que en una pantalla
+   * ancha se ve bien deja al centro en 230 px en una tablet: la barra del
+   * editor se salía y el código llegaba recortado. Se reduce lo que haga falta
+   * para que el centro conserve un mínimo, **manteniendo la proporción** entre
+   * las dos columnas — que es lo que el usuario eligió.
+   *
+   * En una pantalla que da de sí, el factor es 1 y no se toca nada: recortar
+   * por `max-width` habría sido más corto, pero entonces arrastrar el divisor
+   * dejaba de hacer nada al llegar al tope, sin decir por qué.
+   */
+  const factor = anchoVentana > 0
+    ? Math.min(1, Math.max(0.3, (anchoVentana - MIN_CENTRO) / (columns.left + columns.right)))
+    : 1;
+  const anchoIzquierda = Math.round(columns.left * factor);
+  const anchoDerecha = Math.round(columns.right * factor);
+
   const ajustarFranja = (delta: number) => {
     const actual =
       dockHeight ??
@@ -68,10 +105,10 @@ export function GameShell({
 
       <div className="flex min-h-0 flex-1 flex-col gap-3 lg:flex-row lg:gap-0">
         <aside
-          className="hidden min-h-0 flex-col gap-3 overflow-y-auto lg:flex"
-          style={{ width: columns.left, flex: '0 0 auto' }}
+          className="hidden min-h-0 flex-col gap-3 lg:flex"
+          style={{ width: anchoIzquierda, flex: '0 0 auto' }}
         >
-          <WidgetZone zone="left" className="flex flex-col gap-3" />
+          <WidgetZone zone="left" className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto" />
         </aside>
 
         <div className="hidden self-stretch lg:block">
@@ -125,11 +162,18 @@ export function GameShell({
 
         <aside
           className="flex min-h-0 flex-col lg:overflow-hidden"
-          style={{ width: columns.right, flex: '0 0 auto' }}
+          style={{ width: anchoDerecha, flex: '0 0 auto' }}
         >
+          {/*
+            La zona con scroll pide lo que necesita y **no crece**: lo que sobra
+            se lo queda la franja fija de abajo. Al revés —que era como
+            estaba— el reto se pegaba al borde inferior con un hueco vacío
+            encima suyo, y sus pruebas se apretaban en cuatro líneas mientras
+            media columna estaba sin usar.
+          */}
           <WidgetZone
             zone="guide"
-            className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto pr-1"
+            className="flex min-h-0 shrink flex-col gap-3 overflow-y-auto pr-1"
           />
 
           {/* El reparto entre lo que se desplaza y lo que se queja fijo también
@@ -142,11 +186,14 @@ export function GameShell({
           />
 
           <div
-            className={'flex shrink-0 flex-col gap-3 ' + (dockHeight ? 'overflow-y-auto' : '')}
+            className={
+              'flex min-h-0 flex-col gap-3 ' +
+              (dockHeight ? 'shrink-0 overflow-y-auto' : 'flex-1')
+            }
             style={dockHeight ? { height: dockHeight } : undefined}
           >
             {complete}
-            <WidgetZone zone="dock" className="flex flex-col gap-3" />
+            <WidgetZone zone="dock" className="flex min-h-0 flex-1 flex-col gap-3" />
           </div>
         </aside>
       </div>
