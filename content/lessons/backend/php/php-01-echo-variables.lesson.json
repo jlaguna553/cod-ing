@@ -1,0 +1,293 @@
+{
+  "$schema": "../../../schema/lesson.schema.json",
+  "schemaVersion": 1,
+  "id": "php-01-echo-variables",
+  "track": "backend",
+  "module": "php",
+  "order": 1,
+  "kind": "concept",
+  "difficulty": "novice",
+  "estimatedMinutes": 16,
+  "title": {
+    "es": "Las comillas deciden qué imprimes",
+    "en": "Quotes decide what you print"
+  },
+  "summary": {
+    "es": "Variables, `echo` y la diferencia entre comillas simples y dobles: el primer fallo que comete todo el mundo en PHP y el que más veces se cuela en producción.",
+    "en": "Variables, `echo`, and the difference between single and double quotes: everyone's first PHP mistake, and the one that most often reaches production."
+  },
+  "concepts": [
+    "php",
+    "variables",
+    "strings",
+    "interpolacion"
+  ],
+  "prerequisites": [],
+  "runtime": {
+    "kind": "php",
+    "dependencies": {},
+    "timeoutMs": 10000
+  },
+  "workspace": {
+    "entry": "saludo.php",
+    "allowCreate": false,
+    "allowDelete": false,
+    "files": [
+      {
+        "path": "saludo.php",
+        "active": true,
+        "content": "<?php\n\n$nombre = 'Ada';\n\n// Paso 1: imprime exactamente  Hola, Ada.\n// Usa la variable, no escribas «Ada» a mano.\necho 'Hola.';\n"
+      }
+    ]
+  },
+  "rules": [
+    {
+      "id": "saluda-por-su-nombre",
+      "kind": "stdout-match",
+      "equals": "Hola, Ada.",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "La salida tiene que ser exactamente `Hola, Ada.` — y el nombre debe venir de la variable.",
+        "en": "The output must be exactly `Hola, Ada.` — and the name has to come from the variable."
+      },
+      "successMessage": {
+        "es": "La variable llega hasta la salida.",
+        "en": "The variable made it all the way to the output."
+      },
+      "points": 25
+    },
+    {
+      "id": "usa-la-variable",
+      "kind": "regex-must",
+      "file": "saludo.php",
+      "pattern": "echo[^;]*\\$nombre",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Escribir `Hola, Ada.` a mano da la misma salida y no enseña nada: usa `$nombre`.",
+        "en": "Typing `Hola, Ada.` by hand gives the same output and teaches nothing: use `$nombre`."
+      },
+      "successMessage": {
+        "es": "El nombre sale de la variable, no de tus dedos.",
+        "en": "The name comes from the variable, not from your fingers."
+      },
+      "points": 10
+    },
+    {
+      "id": "precio-concatenado",
+      "kind": "stdout-match",
+      "equals": "El curso cuesta 49 euros.",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Debe imprimir `El curso cuesta 49 euros.` con el número saliendo de `$precio`.",
+        "en": "It must print `El curso cuesta 49 euros.` with the number coming from `$precio`."
+      },
+      "successMessage": {
+        "es": "Comillas simples y concatenación: sin sorpresas.",
+        "en": "Single quotes and concatenation: no surprises."
+      },
+      "points": 30
+    },
+    {
+      "id": "concatena-el-precio",
+      "kind": "regex-must",
+      "file": "saludo.php",
+      "pattern": "\\.\\s*\\$precio|\\$precio\\s*\\.",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Junta el texto y la variable con el punto: `'…cuesta ' . $precio . ' euros.'`.",
+        "en": "Join text and variable with the dot: `'…cuesta ' . $precio . ' euros.'`."
+      },
+      "successMessage": {
+        "es": "El punto une; las comillas simples no interpolan.",
+        "en": "The dot joins; single quotes do not interpolate."
+      },
+      "points": 10
+    },
+    {
+      "id": "total-con-iva",
+      "kind": "stdout-match",
+      "equals": "Total con IVA: 59.29 euros.",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Debe imprimir `Total con IVA: 59.29 euros.` — dos decimales, calculados, no escritos a mano.",
+        "en": "It must print `Total con IVA: 59.29 euros.` — two decimals, computed, not typed by hand."
+      },
+      "successMessage": {
+        "es": "Calculado y formateado a dos decimales.",
+        "en": "Computed and formatted to two decimals."
+      },
+      "points": 35
+    },
+    {
+      "id": "usa-number-format",
+      "kind": "regex-must",
+      "file": "saludo.php",
+      "pattern": "number_format\\s*\\(",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Usa `number_format($total, 2)`: redondear a mano con cadenas es de donde salen los céntimos que no cuadran.",
+        "en": "Use `number_format($total, 2)`: hand-rolled rounding with strings is where mismatched cents come from."
+      },
+      "successMessage": {
+        "es": "El formato lo pone una función, no un apaño.",
+        "en": "A function does the formatting, not a workaround."
+      },
+      "points": 15
+    }
+  ],
+  "steps": [
+    {
+      "id": "step-1-interpolacion",
+      "title": {
+        "es": "Una variable dentro de una frase",
+        "en": "A variable inside a sentence"
+      },
+      "body": {
+        "es": "En PHP todas las variables empiezan por `$`, y no hay que declararlas antes: la primera asignación las crea.\n\n```php\n$nombre = 'Ada';\n```\n\nPara imprimir se usa `echo`. Y aquí llega lo que hace distinto a PHP de casi todo lo demás: **una cadena entre comillas dobles interpola las variables que hay dentro**.\n\n```php\necho \"Hola, $nombre.\";   // Hola, Ada.\n```\n\nNo hace falta concatenar nada. La cadena se lee como una plantilla y PHP sustituye `$nombre` por su valor antes de imprimirla.\n\nSi el nombre va pegado a otras letras, se marcan los límites con llaves — `\"{$nombre}s\"` — porque si no PHP intenta leer una variable llamada `$nombres`, que no existe.\n\n**Escribe la línea que imprime `Hola, Ada.` usando la variable.** Cambiar el `echo` que hay puesto por el correcto es todo el ejercicio.",
+        "en": "In PHP every variable starts with `$`, and you don't declare them first: the initial assignment creates them.\n\n```php\n$nombre = 'Ada';\n```\n\nTo print you use `echo`. And here comes what makes PHP different from almost everything else: **a double-quoted string interpolates the variables inside it**.\n\n```php\necho \"Hola, $nombre.\";   // Hola, Ada.\n```\n\nNo concatenation needed. The string reads as a template and PHP replaces `$nombre` with its value before printing.\n\nIf the name sits next to other letters, mark the boundary with braces — `\"{$nombre}s\"` — otherwise PHP looks for a variable called `$nombres`, which doesn't exist.\n\n**Write the line that prints `Hola, Ada.` using the variable.** Swapping the `echo` that's there for the right one is the whole exercise."
+      },
+      "task": {
+        "es": "Cambia el `echo` para que imprima `Hola, Ada.` tomando el nombre de `$nombre`.",
+        "en": "Change the `echo` so it prints `Hola, Ada.` taking the name from `$nombre`."
+      },
+      "focusFile": "saludo.php",
+      "ruleIds": [
+        "saluda-por-su-nombre",
+        "usa-la-variable"
+      ],
+      "xp": 25,
+      "hints": [
+        {
+          "id": "h-dobles",
+          "tier": 1,
+          "text": {
+            "es": "Comillas **dobles**: `echo \"Hola, $nombre.\";`. Con simples se imprimiría el dólar y el nombre de la variable.",
+            "en": "**Double** quotes: `echo \"Hola, $nombre.\";`. With single quotes you'd print the dollar sign and the variable name."
+          },
+          "xpPenalty": 5,
+          "autoOfferAfterSeconds": 60
+        }
+      ],
+      "solution": [
+        {
+          "path": "saludo.php",
+          "content": "<?php\n\n$nombre = 'Ada';\n\necho \"Hola, $nombre.\";\n"
+        }
+      ]
+    },
+    {
+      "id": "step-2-comillas-simples",
+      "title": {
+        "es": "Las comillas simples no interpolan",
+        "en": "Single quotes don't interpolate"
+      },
+      "body": {
+        "es": "Las comillas simples hacen lo contrario: **imprimen el texto tal cual**, dólar incluido.\n\n```php\n$precio = 49;\necho 'El curso cuesta $precio euros.';\n// El curso cuesta $precio euros.\n```\n\nNo es un fallo del lenguaje, es la regla: `'…'` es texto literal y `\"…\"` es una plantilla. La confusión aparece porque las dos parecen lo mismo al leerlas rápido, y el resultado solo se nota al mirar la salida — o al leer el correo de un cliente al que le llegó «Hola $nombre».\n\nPara juntar texto y variables sin comillas dobles está el punto, que es el operador de concatenación:\n\n```php\necho 'El curso cuesta ' . $precio . ' euros.';\n```\n\nCon comillas simples, PHP no tiene que analizar la cadena buscando variables. La diferencia de velocidad es irrelevante en una página; la de intención no: quien lee `'…'` sabe que ahí dentro no pasa nada.\n\n**Añade `$precio = 49;` e imprime la frase concatenando**, sin usar comillas dobles.",
+        "en": "Single quotes do the opposite: **they print the text as-is**, dollar sign included.\n\n```php\n$precio = 49;\necho 'El curso cuesta $precio euros.';\n// El curso cuesta $precio euros.\n```\n\nThat's not a language bug, it's the rule: `'…'` is literal text and `\"…\"` is a template. The confusion comes from both looking alike when read quickly, and the result only shows up in the output — or in an email from a customer who got \"Hello $name\".\n\nTo join text and variables without double quotes there's the dot, the concatenation operator:\n\n```php\necho 'El curso cuesta ' . $precio . ' euros.';\n```\n\nWith single quotes PHP doesn't have to scan the string looking for variables. The speed difference is irrelevant in a page; the difference in intent isn't: whoever reads `'…'` knows nothing happens in there.\n\n**Add `$precio = 49;` and print the sentence by concatenating**, without double quotes."
+      },
+      "task": {
+        "es": "Declara `$precio = 49;` e imprime `El curso cuesta 49 euros.` concatenando con `.` y comillas simples.",
+        "en": "Declare `$precio = 49;` and print `El curso cuesta 49 euros.` concatenating with `.` and single quotes."
+      },
+      "focusFile": "saludo.php",
+      "ruleIds": [
+        "precio-concatenado",
+        "concatena-el-precio"
+      ],
+      "xp": 30,
+      "hints": [
+        {
+          "id": "h-punto",
+          "tier": 1,
+          "text": {
+            "es": "El punto une cadenas: `'a' . $x . 'b'`. Cuidado con los espacios — van dentro de las comillas.",
+            "en": "The dot joins strings: `'a' . $x . 'b'`. Mind the spaces — they belong inside the quotes."
+          },
+          "xpPenalty": 6,
+          "autoOfferAfterSeconds": 70
+        }
+      ],
+      "solution": [
+        {
+          "path": "saludo.php",
+          "content": "<?php\n\n$precio = 49;\n\necho 'El curso cuesta ' . $precio . ' euros.';\n"
+        }
+      ],
+      "bestPractice": {
+        "es": "**Estándar de la industria:** comillas simples por defecto y dobles solo cuando de verdad hay que interpolar. Deja a la vista dónde entra un valor en un texto, que es justo el sitio donde después hay que escapar la salida.",
+        "en": "**Industry standard:** single quotes by default, double only when you actually need interpolation. It makes visible where a value enters a text — exactly the place you'll later need to escape the output."
+      }
+    },
+    {
+      "id": "step-3-numeros",
+      "title": {
+        "es": "Números que se imprimen como dinero",
+        "en": "Numbers printed as money"
+      },
+      "body": {
+        "es": "PHP convierte tipos solo cuando hace falta: `49 * 1.21` da un decimal aunque `49` fuera entero, y `'49' + 1` da 50 porque la cadena se lee como número.\n\nEsa comodidad tiene una arista conocida: al imprimir un decimal salen todas las cifras que quepan.\n\n```php\n$total = 49 * 1.21;\necho $total;   // 59.29 con suerte, 59.290000000000006 con la que suele haber\n```\n\nNo es cosa de PHP: es coma flotante, y pasa igual en JavaScript o en Python. Por eso lo que se enseña al usuario **se formatea siempre**:\n\n```php\necho number_format($total, 2);   // 59.29\n```\n\nY por eso, en cuanto el dinero importa de verdad, no se guarda en coma flotante — se guardan céntimos enteros, o un decimal exacto en la base de datos. Aquí basta con formatear al imprimir.\n\n**Calcula el total con un 21% de IVA y muéstralo con dos decimales.**",
+        "en": "PHP converts types only when needed: `49 * 1.21` yields a decimal even though `49` was an integer, and `'49' + 1` gives 50 because the string is read as a number.\n\nThat convenience has a well-known edge: printing a decimal shows every digit that fits.\n\n```php\n$total = 49 * 1.21;\necho $total;   // 59.29 if you're lucky, 59.290000000000006 more often\n```\n\nThat's not a PHP thing: it's floating point, and it happens the same in JavaScript or Python. That's why whatever you show a user **is always formatted**:\n\n```php\necho number_format($total, 2);   // 59.29\n```\n\nAnd that's why, as soon as money really matters, it isn't stored as floating point — you store integer cents, or an exact decimal in the database. Here, formatting on output is enough.\n\n**Compute the total with 21% VAT and show it with two decimals.**"
+      },
+      "task": {
+        "es": "Con `$precio = 49;`, calcula el total con un 21% de IVA e imprime `Total con IVA: 59.29 euros.` usando `number_format`.",
+        "en": "With `$precio = 49;`, compute the total with 21% VAT and print `Total con IVA: 59.29 euros.` using `number_format`."
+      },
+      "focusFile": "saludo.php",
+      "ruleIds": [
+        "total-con-iva",
+        "usa-number-format"
+      ],
+      "xp": 35,
+      "hints": [
+        {
+          "id": "h-iva",
+          "tier": 1,
+          "text": {
+            "es": "`$total = $precio * 1.21;` y luego `number_format($total, 2)` dentro de la frase.",
+            "en": "`$total = $precio * 1.21;` and then `number_format($total, 2)` inside the sentence."
+          },
+          "xpPenalty": 8,
+          "autoOfferAfterSeconds": 80
+        }
+      ],
+      "solution": [
+        {
+          "path": "saludo.php",
+          "content": "<?php\n\n$precio = 49;\n$total = $precio * 1.21;\n\necho 'Total con IVA: ' . number_format($total, 2) . ' euros.';\n"
+        }
+      ],
+      "bestPractice": {
+        "es": "**Estándar de la industria:** el redondeo se hace al presentar, nunca al calcular. Redondear a mitad de cuenta arrastra el error a las siguientes operaciones, y en una factura con veinte líneas eso se ve.",
+        "en": "**Industry standard:** round when presenting, never while computing. Rounding mid-calculation carries the error into the next operations, and on a twenty-line invoice that shows."
+      }
+    }
+  ],
+  "drills": [],
+  "reward": {
+    "baseXp": 100,
+    "flawlessBonus": 40,
+    "noHintBonus": 20,
+    "comboMultiplierCap": 3,
+    "achievements": [
+      "first-steps"
+    ]
+  },
+  "solution": {
+    "files": [
+      {
+        "path": "saludo.php",
+        "content": "<?php\n\n$precio = 49;\n$total = $precio * 1.21;\n\necho 'Total con IVA: ' . number_format($total, 2) . ' euros.';\n"
+      }
+    ],
+    "explanation": {
+      "es": "Tres pasos y una sola idea: en PHP el tipo de comillas no es estilo, es comportamiento. Las dobles interpolan, las simples no, y el punto concatena. El tercer paso añade la regla que sobrevive a cualquier lenguaje: los decimales se formatean al imprimirlos.",
+      "en": "Three steps, one idea: in PHP the kind of quotes isn't style, it's behaviour. Double interpolates, single doesn't, and the dot concatenates. The third step adds the rule that outlives any language: decimals get formatted when printed."
+    }
+  }
+}

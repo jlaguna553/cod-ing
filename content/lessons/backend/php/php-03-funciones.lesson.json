@@ -1,0 +1,293 @@
+{
+  "$schema": "../../../schema/lesson.schema.json",
+  "schemaVersion": 1,
+  "id": "php-03-funciones",
+  "track": "backend",
+  "module": "php",
+  "order": 3,
+  "kind": "challenge",
+  "difficulty": "adept",
+  "estimatedMinutes": 22,
+  "title": {
+    "es": "Funciones: devolver en vez de imprimir",
+    "en": "Functions: return instead of print"
+  },
+  "summary": {
+    "es": "«Two Fer» de Exercism y «Reversed Words» de Codewars, con lo que de verdad se juzga en una revisión: parámetros por defecto y una función que devuelve en lugar de escribir en pantalla.",
+    "en": "Exercism's \"Two Fer\" and Codewars' \"Reversed Words\", with what actually gets judged in review: default parameters and a function that returns instead of printing."
+  },
+  "concepts": [
+    "php",
+    "funciones",
+    "parametros-por-defecto",
+    "return"
+  ],
+  "prerequisites": [
+    "php-02-arrays-foreach"
+  ],
+  "runtime": {
+    "kind": "php",
+    "dependencies": {},
+    "timeoutMs": 10000
+  },
+  "workspace": {
+    "entry": "funciones.php",
+    "allowCreate": false,
+    "allowDelete": false,
+    "files": [
+      {
+        "path": "funciones.php",
+        "active": true,
+        "content": "<?php\n\n// Paso 1: escribe dosPorUno($nombre) para que DEVUELVA la frase.\n// La llamada de abajo ya está: no la toques.\n\necho dosPorUno('Ada');\n"
+      }
+    ]
+  },
+  "rules": [
+    {
+      "id": "two-fer-con-nombre",
+      "kind": "stdout-match",
+      "equals": "Uno para Ada, uno para mí.",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "`dosPorUno('Ada')` debe producir `Uno para Ada, uno para mí.`",
+        "en": "`dosPorUno('Ada')` must produce `Uno para Ada, uno para mí.`"
+      },
+      "successMessage": {
+        "es": "La función devuelve la frase y `echo` la imprime.",
+        "en": "The function returns the sentence and `echo` prints it."
+      },
+      "points": 30
+    },
+    {
+      "id": "devuelve-no-imprime",
+      "kind": "regex-must",
+      "file": "funciones.php",
+      "pattern": "return\\s",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "La función tiene que **devolver** la frase con `return`, no imprimirla ella misma.",
+        "en": "The function must **return** the sentence with `return`, not print it itself."
+      },
+      "successMessage": {
+        "es": "Devuelve un valor: se puede reutilizar y se puede probar.",
+        "en": "It returns a value: reusable, and testable."
+      },
+      "points": 15
+    },
+    {
+      "id": "two-fer-por-defecto",
+      "kind": "stdout-match",
+      "equals": "Uno para Ada, uno para mí.\nUno para ti, uno para mí.",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Con nombre y sin nombre: la segunda llamada, sin argumentos, debe decir `Uno para ti, uno para mí.`",
+        "en": "With and without a name: the second call, with no arguments, must say `Uno para ti, uno para mí.`"
+      },
+      "successMessage": {
+        "es": "Un solo camino en el código para los dos casos.",
+        "en": "One code path for both cases."
+      },
+      "points": 35
+    },
+    {
+      "id": "usa-valor-por-defecto",
+      "kind": "regex-must",
+      "file": "funciones.php",
+      "pattern": "function\\s+dosPorUno\\s*\\(\\s*\\$\\w+\\s*=",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "El caso sin nombre se resuelve en la firma: `function dosPorUno($nombre = 'ti')`, no con un `if` dentro.",
+        "en": "The nameless case is solved in the signature: `function dosPorUno($nombre = 'ti')`, not with an `if` inside."
+      },
+      "successMessage": {
+        "es": "El valor por defecto vive donde se lee la firma.",
+        "en": "The default lives where the signature is read."
+      },
+      "points": 15
+    },
+    {
+      "id": "palabras-al-reves",
+      "kind": "stdout-match",
+      "equals": "mundo el hola",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "`invertirPalabras('hola el mundo')` debe devolver `mundo el hola` — las palabras al revés, cada una intacta.",
+        "en": "`invertirPalabras('hola el mundo')` must return `mundo el hola` — words reversed, each one intact."
+      },
+      "successMessage": {
+        "es": "Palabras invertidas, letras en su sitio.",
+        "en": "Words reversed, letters untouched."
+      },
+      "points": 40
+    },
+    {
+      "id": "nada-de-strrev-entero",
+      "kind": "regex-forbid",
+      "file": "funciones.php",
+      "pattern": "strrev\\s*\\(\\s*\\$\\w+\\s*\\)\\s*;",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "`strrev` sobre la frase entera invierte también las letras: saldría `odnum le aloh`. Hay que separar por palabras.",
+        "en": "`strrev` on the whole sentence reverses the letters too: you'd get `odnum le aloh`. You need to split into words."
+      },
+      "successMessage": {
+        "es": "Se invierte la lista de palabras, no la cadena.",
+        "en": "The list of words gets reversed, not the string."
+      },
+      "points": 10
+    }
+  ],
+  "steps": [
+    {
+      "id": "step-1-two-fer",
+      "title": {
+        "es": "Two Fer: devolver, no imprimir",
+        "en": "Two Fer: return, don't print"
+      },
+      "body": {
+        "es": "«Two Fer» es de los primeros ejercicios de Exercism, y parece tonto hasta que se mira lo que corrige: **devolver en vez de imprimir**.\n\nUna función en PHP se declara así:\n\n```php\nfunction saludar($quien)\n{\n    return \"Hola, $quien.\";\n}\n```\n\nLa tentación es poner un `echo` dentro y acabar antes. Y funciona… hasta que quieres esa frase en un correo, o en un JSON, o en un test. Una función que imprime solo sirve para una cosa; una que devuelve sirve para todas, porque quien la llama decide qué hacer con el valor.\n\nEs la misma razón por la que en una API el controlador no hace `echo`: construye una respuesta y otro la envía. Separar **calcular** de **mostrar** es lo que permite probar lo primero sin montar lo segundo.\n\n**Escribe `dosPorUno($nombre)` para que devuelva la frase.** El `echo` de abajo ya está puesto y no hay que tocarlo.",
+        "en": "\"Two Fer\" is one of Exercism's first exercises, and it looks silly until you see what it corrects: **returning instead of printing**.\n\nA PHP function is declared like this:\n\n```php\nfunction saludar($quien)\n{\n    return \"Hola, $quien.\";\n}\n```\n\nThe temptation is to put an `echo` inside and be done sooner. And it works… until you want that sentence in an email, or in JSON, or in a test. A function that prints is good for one thing; one that returns is good for all of them, because the caller decides what to do with the value.\n\nIt's the same reason a controller in an API doesn't `echo`: it builds a response and something else sends it. Separating **computing** from **showing** is what lets you test the first without setting up the second.\n\n**Write `dosPorUno($nombre)` so it returns the sentence.** The `echo` below is already there and shouldn't be touched."
+      },
+      "task": {
+        "es": "Declara `dosPorUno($nombre)` de forma que devuelva `Uno para Ada, uno para mí.` al llamarla con `'Ada'`.",
+        "en": "Declare `dosPorUno($nombre)` so it returns `Uno para Ada, uno para mí.` when called with `'Ada'`."
+      },
+      "focusFile": "funciones.php",
+      "ruleIds": [
+        "two-fer-con-nombre",
+        "devuelve-no-imprime"
+      ],
+      "xp": 30,
+      "hints": [
+        {
+          "id": "h-return",
+          "tier": 1,
+          "text": {
+            "es": "Comillas dobles para interpolar: `return \"Uno para $nombre, uno para mí.\";`",
+            "en": "Double quotes to interpolate: `return \"Uno para $nombre, uno para mí.\";`"
+          },
+          "xpPenalty": 6,
+          "autoOfferAfterSeconds": 70
+        }
+      ],
+      "solution": [
+        {
+          "path": "funciones.php",
+          "content": "<?php\n\nfunction dosPorUno($nombre)\n{\n    return \"Uno para $nombre, uno para mí.\";\n}\n\necho dosPorUno('Ada');\n"
+        }
+      ]
+    },
+    {
+      "id": "step-2-por-defecto",
+      "title": {
+        "es": "El caso sin nombre",
+        "en": "The nameless case"
+      },
+      "body": {
+        "es": "La segunda mitad del ejercicio: si no te dicen el nombre, la frase es `Uno para ti, uno para mí.`\n\nLa solución que sale sola es un `if`:\n\n```php\nfunction saludar($quien)\n{\n    if ($quien === null) {\n        return 'Hola, desconocido.';\n    }\n    return \"Hola, $quien.\";\n}\n```\n\nFunciona, y tiene dos problemas. Uno: la frase está escrita dos veces, así que cambiarla es acordarse de los dos sitios. Dos: quien lee la firma no se entera de que el parámetro es opcional — tiene que entrar en el cuerpo a averiguarlo.\n\nEl valor por defecto lo resuelve en la propia firma:\n\n```php\nfunction saludar($quien = 'desconocido')\n```\n\nUn solo `return`, y la firma cuenta toda la verdad. Detalle práctico: en PHP los parámetros con valor por defecto van **al final**; poner uno opcional antes de uno obligatorio obliga a pasar el opcional para llegar al siguiente, que es exactamente lo contrario de lo que se buscaba.\n\n**Haz que la función funcione con y sin argumento.**",
+        "en": "The second half of the exercise: if you aren't told a name, the sentence is `Uno para ti, uno para mí.`\n\nThe solution that comes out naturally is an `if`:\n\n```php\nfunction saludar($quien)\n{\n    if ($quien === null) {\n        return 'Hola, desconocido.';\n    }\n    return \"Hola, $quien.\";\n}\n```\n\nIt works, and it has two problems. One: the sentence is written twice, so changing it means remembering both places. Two: whoever reads the signature can't tell the parameter is optional — they have to go into the body to find out.\n\nA default value solves it in the signature itself:\n\n```php\nfunction saludar($quien = 'desconocido')\n```\n\nOne single `return`, and the signature tells the whole truth. Practical note: in PHP parameters with defaults go **last**; putting an optional one before a required one forces callers to pass it just to reach the next, which is the opposite of the point.\n\n**Make the function work with and without an argument.**"
+      },
+      "task": {
+        "es": "Dale a `$nombre` el valor por defecto `'ti'` y añade una segunda llamada sin argumentos, en su propia línea.",
+        "en": "Give `$nombre` the default value `'ti'` and add a second call with no arguments, on its own line."
+      },
+      "focusFile": "funciones.php",
+      "ruleIds": [
+        "two-fer-por-defecto",
+        "usa-valor-por-defecto"
+      ],
+      "xp": 35,
+      "hints": [
+        {
+          "id": "h-defecto",
+          "tier": 1,
+          "text": {
+            "es": "`function dosPorUno($nombre = 'ti')`, y abajo `echo dosPorUno('Ada'), PHP_EOL; echo dosPorUno();`",
+            "en": "`function dosPorUno($nombre = 'ti')`, and below `echo dosPorUno('Ada'), PHP_EOL; echo dosPorUno();`"
+          },
+          "xpPenalty": 8,
+          "autoOfferAfterSeconds": 80
+        }
+      ],
+      "solution": [
+        {
+          "path": "funciones.php",
+          "content": "<?php\n\nfunction dosPorUno($nombre = 'ti')\n{\n    return \"Uno para $nombre, uno para mí.\";\n}\n\necho dosPorUno('Ada'), PHP_EOL;\necho dosPorUno();\n"
+        }
+      ],
+      "bestPractice": {
+        "es": "**Estándar de la industria:** si un parámetro tiene un valor razonable por defecto, va en la firma. Un `if` al principio del cuerpo para cubrir el caso ausente duplica la lógica y esconde la información justo donde se busca primero.",
+        "en": "**Industry standard:** if a parameter has a sensible default, it belongs in the signature. An `if` at the top of the body to cover the missing case duplicates logic and hides the information exactly where people look first."
+      }
+    },
+    {
+      "id": "step-3-reversed-words",
+      "title": {
+        "es": "Reversed Words",
+        "en": "Reversed Words"
+      },
+      "body": {
+        "es": "Otro clásico de Codewars: **invertir el orden de las palabras de una frase**, dejando cada palabra como está.\n\n```\n'hola el mundo'  →  'mundo el hola'\n```\n\nEl primer intento de mucha gente es `strrev($frase)`, y sale `odnum le aloh`: eso invierte **letras**, no palabras. El enunciado pide otra cosa, y confundirlas es el fallo que este ejercicio existe para provocar.\n\nSe resuelve en tres movimientos, y PHP tiene una función para cada uno:\n\n```php\n$palabras = explode(' ', $frase);   // ['hola', 'el', 'mundo']\n$alReves  = array_reverse($palabras);\n$frase    = implode(' ', $alReves); // 'mundo el hola'\n```\n\n`explode` parte por un separador, `implode` junta con él. Se confunden constantemente porque los nombres no ayudan; el truco para acordarse es el orden de los argumentos: **el separador va primero en las dos**.\n\n**Escribe `invertirPalabras($frase)` y devuélvela invertida.**",
+        "en": "Another Codewars classic: **reverse the order of the words in a sentence**, leaving each word as it is.\n\n```\n'hola el mundo'  →  'mundo el hola'\n```\n\nMany people's first attempt is `strrev($frase)`, which gives `odnum le aloh`: that reverses **letters**, not words. The statement asks for something else, and mixing them up is the mistake this exercise exists to provoke.\n\nIt's solved in three moves, and PHP has a function for each:\n\n```php\n$palabras = explode(' ', $frase);   // ['hola', 'el', 'mundo']\n$alReves  = array_reverse($palabras);\n$frase    = implode(' ', $alReves); // 'mundo el hola'\n```\n\n`explode` splits on a separator, `implode` joins with it. People mix them up constantly because the names don't help; the trick to remember is the argument order: **the separator comes first in both**.\n\n**Write `invertirPalabras($frase)` and return it reversed.**"
+      },
+      "task": {
+        "es": "Declara `invertirPalabras($frase)` que devuelva las palabras en orden inverso, e imprime el resultado con `'hola el mundo'`.",
+        "en": "Declare `invertirPalabras($frase)` returning the words in reverse order, and print the result for `'hola el mundo'`."
+      },
+      "focusFile": "funciones.php",
+      "ruleIds": [
+        "palabras-al-reves",
+        "nada-de-strrev-entero"
+      ],
+      "xp": 40,
+      "hints": [
+        {
+          "id": "h-explode",
+          "tier": 1,
+          "text": {
+            "es": "`return implode(' ', array_reverse(explode(' ', $frase)));` — de dentro afuera: partir, invertir, juntar.",
+            "en": "`return implode(' ', array_reverse(explode(' ', $frase)));` — inside out: split, reverse, join."
+          },
+          "xpPenalty": 8,
+          "autoOfferAfterSeconds": 90
+        }
+      ],
+      "solution": [
+        {
+          "path": "funciones.php",
+          "content": "<?php\n\nfunction invertirPalabras($frase)\n{\n    return implode(' ', array_reverse(explode(' ', $frase)));\n}\n\necho invertirPalabras('hola el mundo');\n"
+        }
+      ],
+      "bestPractice": {
+        "es": "**Estándar de la industria:** antes de escribir la solución, léete el caso de prueba en voz alta. La mitad de los fallos de este ejercicio no son de código — son de haber resuelto un enunciado parecido pero distinto.",
+        "en": "**Industry standard:** before writing the solution, read the test case out loud. Half the failures in this exercise aren't code — they're from solving a similar but different statement."
+      }
+    }
+  ],
+  "drills": [],
+  "reward": {
+    "baseXp": 140,
+    "flawlessBonus": 50,
+    "noHintBonus": 30,
+    "comboMultiplierCap": 3,
+    "achievements": []
+  },
+  "solution": {
+    "files": [
+      {
+        "path": "funciones.php",
+        "content": "<?php\n\nfunction invertirPalabras($frase)\n{\n    return implode(' ', array_reverse(explode(' ', $frase)));\n}\n\necho invertirPalabras('hola el mundo');\n"
+      }
+    ],
+    "explanation": {
+      "es": "Dos ejercicios de compendio con la misma lección detrás: una función devuelve un valor y quien la llama decide qué hacer con él. El valor por defecto evita duplicar la frase, y `explode`/`array_reverse`/`implode` resuelven el segundo sin tocar una sola letra de las palabras.",
+      "en": "Two exercises from the usual compendiums with the same lesson behind them: a function returns a value and the caller decides what to do with it. The default value avoids duplicating the sentence, and `explode`/`array_reverse`/`implode` solve the second without touching a single letter inside the words."
+    }
+  }
+}

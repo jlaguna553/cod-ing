@@ -941,6 +941,61 @@ guía más larga que los archivos siguen a la vista sin que nadie se dibuje enci
 que es exactamente lo que hace un teclado virtual— y exige que el contador de pulsaciones
 se mueva.
 
+### ADR-20 · PHP interpretado, no compilado
+
+**Contexto.** PHP es de los lenguajes con más puestos de trabajo y no tenía motor aquí. La
+opción evidente era `@php-wasm`, el PHP de WordPress Playground: PHP completo, de verdad.
+
+**Por qué no.** Son **más de 10 MB** de descarga para enseñar `echo` y `foreach` —en una
+plataforma en la que la mayoría de las lecciones no son de PHP— y su licencia es
+**GPL-2.0-or-later**, que sobre una aplicación entera no es una decisión que se tome de
+pasada. Se usa **Uniter**: un intérprete de PHP escrito en JavaScript, **MIT y 1,1 MB**,
+que se carga solo en las lecciones que lo piden.
+
+**Es un intérprete, no un simulador.** Analiza el código del usuario y lo ejecuta:
+variables, arrays asociativos, `foreach`, funciones con valores por defecto y por
+referencia, closures, clases, excepciones, interpolación y heredoc se comportan como en
+PHP. No es la simulación del ADR-14 —donde el evaluador de C# interpreta un puñado de
+formas—: aquí el programa corre.
+
+**Y cubre un subconjunto, que se dice en voz alta.** La sintaxis es la de PHP 5.x con
+añadidos, así que no acepta expresiones flecha ni `**`; y su biblioteca estándar viene a
+medias: no trae `sort`, `print_r`, `json_encode`, `round` ni `printf`. Se completan en
+`php-prelude.ts` **escritas en PHP**, no en JavaScript, por dos razones: así son las de
+verdad —mismos parámetros, mismo paso por referencia— y se pueden leer, que para quien
+está aprendiendo es material, no deuda. Cada definición va detrás de un
+`if (!function_exists(...))`, porque parte de la biblioteca **sí** existe y redeclararla es
+un fatal.
+
+**El límite no es una promesa, es un test.** `tests/php-lessons.test.ts` ejecuta **cada
+solución de cada paso con el mismo motor que usa el navegador** y comprueba sus reglas
+contra la salida real. Una lección que use una función que no existe no llega a
+publicarse; sin esto, el borde del subconjunto lo descubriría el usuario a mitad de
+ejercicio. Ese test ya encontró dos fallos propios: una regla `regex-forbid` con falso
+positivo —`'a' . $precio . 'b'` encaja en «comilla, texto, variable, texto, comilla»— y
+otra que el archivo de partida cumplía sin escribir nada.
+
+**El error de PHP se enseña tal cual, con la línea corregida.** El prelude son ~250 líneas
+que van delante del código, así que un fallo en la línea 3 del ejercicio se reportaría en
+la 250. Se resta el desplazamiento y lo demás se deja intacto: «Parse error: unexpected…»
+dice exactamente qué pasa, y leerlo es parte de aprender el lenguaje.
+
+**Se carga por la rama CommonJS, no con un `<script>`.** El bundle es UMD y su primera
+comprobación es si existe `define.amd` — y en la pantalla de juego existe, porque Monaco
+trae su propio cargador AMD. Con un `<script>`, el intérprete se registraba como módulo
+anónimo de Monaco y nunca publicaba su global: el arranque fallaba **solo en la pantalla
+de juego**, y desde cualquier otra página cargaba perfectamente. Ahora se pide el archivo y
+se ejecuta con su propio `module`, que no depende de qué otro cargador haya en la página.
+
+**Su superficie es la consola.** PHP escribe en la salida estándar y no dibuja nada: una
+vista previa en blanco no informa, y una terminal prometería un intérprete interactivo que
+aquí no existe — hay un script que se ejecuta entero y termina.
+
+**Guardia.** Además del test de contenido, `e2e/php.spec.ts` comprueba en el navegador que
+el intérprete arranca y ejecuta lo que se escribe (`6 * 7` sale 42, y ese número no está
+en ningún enunciado), que las funciones del prelude están disponibles, y que un error de
+sintaxis aparece **con la línea del usuario**, no con la del prelude.
+
 ---
 
 ## 5. Modelo de datos de progreso (servidor)

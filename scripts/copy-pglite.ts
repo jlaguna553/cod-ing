@@ -87,5 +87,25 @@ function copyVue() {
   console.log(`✔ Vue → public/vendor (${(statSync(from).size / 1024).toFixed(0)} KB)`);
 }
 
+/**
+ * Intérprete de PHP, por el mismo motivo y con el mismo trato (ADR-20).
+ *
+ * 1,1 MB de bundle UMD ya construido. Servirlo desde nuestro origen evita el
+ * CDN de terceros y deja la versión clavada a la del `package.json`; no
+ * meterlo en el bundle evita que una lección de CSS cargue un intérprete de
+ * PHP que no va a usar.
+ */
+function copyPhp() {
+  const from = path.join(
+    path.dirname(require.resolve('uniter/package.json')),
+    'dist/uniter.js',
+  );
+  const target = path.resolve(import.meta.dirname, '../public/php');
+  mkdirSync(target, { recursive: true });
+  copyFileSync(from, path.join(target, 'uniter.js'));
+  console.log(`✔ PHP (Uniter) → public/php (${(statSync(from).size / 1024).toFixed(0)} KB)`);
+}
+
 main();
 copyVue();
+copyPhp();

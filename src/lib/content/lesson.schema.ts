@@ -60,6 +60,7 @@ export const RuntimeKindSchema = z.enum([
   'cli-sim',      // simulador determinista: docker, kubectl, git (ADR-03)
   'sql',          // Postgres de verdad en el navegador, vía PGlite (ADR-11)
   'vue',          // Vue 3 sin bundler ni terceros, autoalojado (ADR-13)
+  'php',          // PHP interpretado en JavaScript, autoalojado (ADR-20)
 ]);
 
 /**

@@ -122,6 +122,8 @@ export function languageOf(path: string): string {
       return 'go';
     case 'sql':
       return 'sql';
+    case 'php':
+      return 'php';
     case 'vue':
       // Monaco no trae gramática de Vue SFC; HTML es la aproximación menos
       // mala: colorea el template y no rompe el script.

@@ -43,6 +43,14 @@ export function surfacesFor(lesson: ClientLesson): Surfaces {
   if (kind === 'vue') return { preview: true, console: true, terminal: false };
 
   /*
+   * PHP escribe en la salida estándar y no dibuja nada: su superficie es la
+   * consola. Una vista previa en blanco al lado del código no informa de nada,
+   * y una terminal prometería algo que aquí no existe — no hay shell, hay un
+   * script que se ejecuta entero y termina.
+   */
+  if (kind === 'php') return { preview: false, console: true, terminal: false };
+
+  /*
    * En `cli-sim` la terminal ES la salida: no hay proceso aparte que imprima
    * por consola, así que ofrecer las dos sería ofrecer la misma cosa dos veces.
    */

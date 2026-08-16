@@ -17,6 +17,7 @@ import { RunnerBootError } from './types';
  * | `cli-sim`      | 3         | ✅ implementado                            |
  * | `sql`          | 3         | ✅ implementado — Postgres en WASM (ADR-11)|
  * | `vue`          | 3         | ✅ implementado — sin bundler (ADR-13)     |
+ * | `php`          | 3         | ✅ implementado — intérprete en JS (ADR-20)|
  * | `webcontainer` | 1         | ⏸️ bloqueado por la licencia (ADR-07)      |
  * | `pyodide`      | 0         | ⏸️ sin contenido que lo use                |
  * | `remote`       | 0         | ⏸️ sin contenido que lo use                |
@@ -49,6 +50,11 @@ export async function createRunner(kind: RuntimeKind, mount: HTMLElement): Promi
     case 'vue': {
       const { VueRunner } = await import('./vue');
       return new VueRunner(mount);
+    }
+
+    case 'php': {
+      const { PhpRunner } = await import('./php');
+      return new PhpRunner();
     }
 
     case 'webcontainer':

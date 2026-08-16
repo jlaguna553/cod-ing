@@ -757,6 +757,12 @@ Hoy no queda ninguna referencia rota: **toda lección citada como prerequisito e
 siguen sin motor: ningún runner actual los ejecuta, y esa decisión sigue abierta —
 runtime remoto con base efímera por petición, o Pyodide para el caso de Python.
 
+**PHP sí tiene motor** desde el ADR-20: un intérprete escrito en JavaScript (1,1 MB, MIT)
+en lugar de PHP compilado a WebAssembly (10 MB y GPL). Cubre un subconjunto —sintaxis de
+PHP 5.x y una biblioteca estándar que se completa con un prelude escrito en PHP— y las
+tres primeras lecciones se escriben dentro de él. El límite no es una promesa: cada
+solución se ejecuta con ese mismo motor en `tests/php-lessons.test.ts`.
+
 **Módulos cerrados: 6 de 8** (JavaScript, React, Vue, HTML, CSS y Docker). Todos con
 cadena completa desde su primera lección; React y Docker además con boss de entrevista.
 SQL queda abierto a propósito: tiene cadena completa y tema por delante.

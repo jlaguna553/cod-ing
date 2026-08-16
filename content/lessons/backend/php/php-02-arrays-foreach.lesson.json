@@ -1,0 +1,293 @@
+{
+  "$schema": "../../../schema/lesson.schema.json",
+  "schemaVersion": 1,
+  "id": "php-02-arrays-foreach",
+  "track": "backend",
+  "module": "php",
+  "order": 2,
+  "kind": "challenge",
+  "difficulty": "novice",
+  "estimatedMinutes": 20,
+  "title": {
+    "es": "Arrays: una lista y un diccionario con el mismo nombre",
+    "en": "Arrays: a list and a dictionary sharing one name"
+  },
+  "summary": {
+    "es": "El array de PHP hace de lista y de mapa a la vez. Se recorre con `foreach`, y de ahí sale el ejercicio clásico de sumar solo los positivos.",
+    "en": "PHP's array is a list and a map at once. You walk it with `foreach`, and that's where the classic sum-the-positives exercise comes from."
+  },
+  "concepts": [
+    "php",
+    "arrays",
+    "foreach",
+    "asociativos"
+  ],
+  "prerequisites": [
+    "php-01-echo-variables"
+  ],
+  "runtime": {
+    "kind": "php",
+    "dependencies": {},
+    "timeoutMs": 10000
+  },
+  "workspace": {
+    "entry": "carrito.php",
+    "allowCreate": false,
+    "allowDelete": false,
+    "files": [
+      {
+        "path": "carrito.php",
+        "active": true,
+        "content": "<?php\n\n$productos = ['Teclado', 'Monitor', 'Cable'];\n\n// Paso 1: imprime una línea por producto, en este formato:\n//   1. Teclado\n//   2. Monitor\n//   3. Cable\n"
+      }
+    ]
+  },
+  "rules": [
+    {
+      "id": "lista-numerada",
+      "kind": "stdout-match",
+      "equals": "1. Teclado\n2. Monitor\n3. Cable",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Deben salir las tres líneas numeradas, en el orden del array y con el formato `1. Teclado`.",
+        "en": "It must print the three numbered lines, in array order and formatted as `1. Teclado`."
+      },
+      "successMessage": {
+        "es": "Tres líneas, tres productos, en orden.",
+        "en": "Three lines, three products, in order."
+      },
+      "points": 30
+    },
+    {
+      "id": "recorre-con-foreach",
+      "kind": "regex-must",
+      "file": "carrito.php",
+      "pattern": "foreach\\s*\\(",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Tres `echo` seguidos dan la misma salida con tres productos y ninguna con trescientos: recórrelo con `foreach`.",
+        "en": "Three `echo` in a row give the same output for three products and none for three hundred: walk it with `foreach`."
+      },
+      "successMessage": {
+        "es": "Un bucle, no tres líneas copiadas.",
+        "en": "One loop, not three copied lines."
+      },
+      "points": 15
+    },
+    {
+      "id": "total-carrito",
+      "kind": "stdout-match",
+      "equals": "Teclado: 89.90\nMonitor: 199.00\nCable: 12.50\nTotal: 301.40",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Cada producto con su precio a dos decimales, y al final `Total: 301.40`.",
+        "en": "Each product with its price to two decimals, and `Total: 301.40` at the end."
+      },
+      "successMessage": {
+        "es": "El total sale de sumar, no de escribirlo.",
+        "en": "The total comes from adding up, not from typing it."
+      },
+      "points": 35
+    },
+    {
+      "id": "usa-clave-y-valor",
+      "kind": "regex-must",
+      "file": "carrito.php",
+      "pattern": "as\\s*\\$\\w+\\s*=>\\s*\\$\\w+",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "En un array asociativo hace falta la clave: `foreach ($carrito as $nombre => $precio)`.",
+        "en": "An associative array needs the key too: `foreach ($carrito as $nombre => $precio)`."
+      },
+      "successMessage": {
+        "es": "Clave y valor, que es lo que tiene dentro.",
+        "en": "Key and value, which is what it holds."
+      },
+      "points": 15
+    },
+    {
+      "id": "suma-positivos",
+      "kind": "stdout-match",
+      "equals": "15",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Debe imprimir `15`: la suma de 1, 2, 3, 4 y 5, dejando fuera los negativos.",
+        "en": "It must print `15`: the sum of 1, 2, 3, 4 and 5, leaving the negatives out."
+      },
+      "successMessage": {
+        "es": "Solo los positivos, y bien sumados.",
+        "en": "Positives only, correctly summed."
+      },
+      "points": 40
+    },
+    {
+      "id": "nada-de-numeros-magicos",
+      "kind": "regex-forbid",
+      "file": "carrito.php",
+      "pattern": "echo\\s+'?\"?15",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Imprimir `15` a mano pasa la prueba y no resuelve nada: el número tiene que salir del array.",
+        "en": "Printing `15` by hand passes the check and solves nothing: the number has to come from the array."
+      },
+      "successMessage": {
+        "es": "El resultado se calcula.",
+        "en": "The result is computed."
+      },
+      "points": 10
+    }
+  ],
+  "steps": [
+    {
+      "id": "step-1-lista",
+      "title": {
+        "es": "Recorrer una lista",
+        "en": "Walking a list"
+      },
+      "body": {
+        "es": "Un array de PHP se escribe con corchetes y se recorre con `foreach`:\n\n```php\n$productos = ['Teclado', 'Monitor', 'Cable'];\n\nforeach ($productos as $producto) {\n    echo $producto, PHP_EOL;\n}\n```\n\n`PHP_EOL` es el salto de línea del sistema. En una lección da igual usar `\"\\n\"`, pero la constante es lo que se ve en código de verdad.\n\nPara numerar hace falta la posición. En un array así, **la clave es el índice** —0, 1, 2— y se pide con la forma larga del bucle:\n\n```php\nforeach ($productos as $indice => $producto) {\n```\n\nOjo con el detalle que confunde a todo el mundo la primera vez: el primer índice es **0**, así que para enseñar «1.» hay que sumar uno. Un fallo de un elemento aquí es inofensivo; en un `for` que recorre un array por índice, el mismo despiste es el clásico *off-by-one* que se lleva por delante el último elemento.\n\n**Imprime la lista numerada desde 1.**",
+        "en": "A PHP array is written with brackets and walked with `foreach`:\n\n```php\n$productos = ['Teclado', 'Monitor', 'Cable'];\n\nforeach ($productos as $producto) {\n    echo $producto, PHP_EOL;\n}\n```\n\n`PHP_EOL` is the system newline. In a lesson `\"\\n\"` would do, but the constant is what you see in real code.\n\nTo number them you need the position. In an array like this **the key is the index** — 0, 1, 2 — and you ask for it with the long form of the loop:\n\n```php\nforeach ($productos as $indice => $producto) {\n```\n\nMind the detail that trips everyone the first time: the first index is **0**, so to show \"1.\" you add one. Being off by one here is harmless; in a `for` walking an array by index, the same slip is the classic off-by-one that eats the last element.\n\n**Print the list numbered from 1.**"
+      },
+      "task": {
+        "es": "Recorre `$productos` con `foreach` e imprime una línea por producto con el formato `1. Teclado`.",
+        "en": "Walk `$productos` with `foreach` and print one line per product formatted as `1. Teclado`."
+      },
+      "focusFile": "carrito.php",
+      "ruleIds": [
+        "lista-numerada",
+        "recorre-con-foreach"
+      ],
+      "xp": 30,
+      "hints": [
+        {
+          "id": "h-indice",
+          "tier": 1,
+          "text": {
+            "es": "`foreach ($productos as $i => $producto) { echo ($i + 1) . '. ' . $producto . PHP_EOL; }`",
+            "en": "`foreach ($productos as $i => $producto) { echo ($i + 1) . '. ' . $producto . PHP_EOL; }`"
+          },
+          "xpPenalty": 6,
+          "autoOfferAfterSeconds": 70
+        }
+      ],
+      "solution": [
+        {
+          "path": "carrito.php",
+          "content": "<?php\n\n$productos = ['Teclado', 'Monitor', 'Cable'];\n\nforeach ($productos as $i => $producto) {\n    echo ($i + 1) . '. ' . $producto . PHP_EOL;\n}\n"
+        }
+      ]
+    },
+    {
+      "id": "step-2-asociativo",
+      "title": {
+        "es": "El mismo array, ahora como diccionario",
+        "en": "The same array, now a dictionary"
+      },
+      "body": {
+        "es": "En PHP no hay dos tipos distintos para «lista» y «mapa»: **es el mismo array**. Si no das claves, se numeran solas; si las das, son las tuyas.\n\n```php\n$carrito = [\n    'Teclado' => 89.90,\n    'Monitor' => 199.00,\n    'Cable'   => 12.50,\n];\n```\n\nEsto es cómodo y tiene su precio: `count()` no distingue, `$carrito[0]` no existe aquí, y una función que espera una lista puede recibir un mapa sin que nada avise hasta que revienta. Por eso en PHP moderno se anota `array` en las firmas y, cuando importa, se documenta cuál de las dos cosas es.\n\nRecorrer un asociativo pide clave y valor:\n\n```php\nforeach ($carrito as $nombre => $precio) {\n```\n\n**Imprime cada producto con su precio a dos decimales y, al final, el total sumado.** El total se acumula en una variable dentro del bucle: empieza en 0 y va creciendo.",
+        "en": "In PHP there aren't two different types for \"list\" and \"map\": **it's the same array**. If you don't give keys, they're numbered for you; if you do, they're yours.\n\n```php\n$carrito = [\n    'Teclado' => 89.90,\n    'Monitor' => 199.00,\n    'Cable'   => 12.50,\n];\n```\n\nThat's convenient and it has a price: `count()` can't tell them apart, `$carrito[0]` doesn't exist here, and a function expecting a list can receive a map with nothing warning you until it breaks. That's why modern PHP annotates `array` in signatures and, when it matters, documents which of the two it is.\n\nWalking an associative array asks for key and value:\n\n```php\nforeach ($carrito as $nombre => $precio) {\n```\n\n**Print each product with its price to two decimals and, at the end, the summed total.** The total accumulates in a variable inside the loop: it starts at 0 and grows."
+      },
+      "task": {
+        "es": "Con el array asociativo, imprime `Teclado: 89.90` por producto y una última línea `Total: 301.40`.",
+        "en": "With the associative array, print `Teclado: 89.90` per product and a final line `Total: 301.40`."
+      },
+      "focusFile": "carrito.php",
+      "ruleIds": [
+        "total-carrito",
+        "usa-clave-y-valor"
+      ],
+      "xp": 35,
+      "hints": [
+        {
+          "id": "h-acumulador",
+          "tier": 1,
+          "text": {
+            "es": "`$total = 0;` antes del bucle, `$total += $precio;` dentro, y `number_format($precio, 2)` para imprimir.",
+            "en": "`$total = 0;` before the loop, `$total += $precio;` inside, and `number_format($precio, 2)` to print."
+          },
+          "xpPenalty": 8,
+          "autoOfferAfterSeconds": 80
+        }
+      ],
+      "solution": [
+        {
+          "path": "carrito.php",
+          "content": "<?php\n\n$carrito = [\n    'Teclado' => 89.90,\n    'Monitor' => 199.00,\n    'Cable'   => 12.50,\n];\n\n$total = 0;\n\nforeach ($carrito as $nombre => $precio) {\n    echo $nombre . ': ' . number_format($precio, 2) . PHP_EOL;\n    $total += $precio;\n}\n\necho 'Total: ' . number_format($total, 2);\n"
+        }
+      ],
+      "bestPractice": {
+        "es": "**Estándar de la industria:** el acumulador se inicializa fuera del bucle y siempre a un valor explícito. Confiar en que una variable «empieza vacía» funciona hasta que el bucle no entra ninguna vez y el total sale `null`.",
+        "en": "**Industry standard:** initialise the accumulator outside the loop and always to an explicit value. Trusting that a variable \"starts empty\" works until the loop never runs and the total comes out `null`."
+      }
+    },
+    {
+      "id": "step-3-suma-positivos",
+      "title": {
+        "es": "Sum of positive",
+        "en": "Sum of positive"
+      },
+      "body": {
+        "es": "Este es un ejercicio de Codewars, y cabe en una frase: **dada una lista de números, devuelve la suma de los positivos**.\n\n```\n[1, -4, 7, 12]  →  20\n```\n\nSe puede resolver de dos maneras y las dos son correctas:\n\n```php\n// A mano, con el bucle a la vista\n$suma = 0;\nforeach ($numeros as $n) {\n    if ($n > 0) { $suma += $n; }\n}\n\n// Declarativa: filtrar y sumar\n$suma = array_sum(array_filter($numeros, function ($n) { return $n > 0; }));\n```\n\nLa segunda dice *qué* quieres; la primera dice *cómo* se hace. En una revisión de código, la de arriba gana cuando la condición crece —tres reglas encadenadas dentro de un `array_filter` se leen fatal— y la de abajo gana cuando es una condición y ya.\n\nLo que **no** es aceptable en ninguna de las dos es lo que hace casi todo el mundo la primera vez: mirar el resultado esperado y escribirlo. La prueba pasa, el ejercicio no.\n\n**Suma los positivos de `$numeros` e imprime el resultado.**",
+        "en": "This one is a Codewars exercise and fits in a sentence: **given a list of numbers, return the sum of the positive ones**.\n\n```\n[1, -4, 7, 12]  →  20\n```\n\nThere are two ways to solve it and both are right:\n\n```php\n// By hand, with the loop in plain sight\n$suma = 0;\nforeach ($numeros as $n) {\n    if ($n > 0) { $suma += $n; }\n}\n\n// Declarative: filter, then sum\n$suma = array_sum(array_filter($numeros, function ($n) { return $n > 0; }));\n```\n\nThe second says *what* you want; the first says *how* it's done. In code review the top one wins when the condition grows — three chained rules inside an `array_filter` read terribly — and the bottom one wins when it's one condition and that's it.\n\nWhat is **not** acceptable in either is what almost everyone does first: read the expected result and type it. The check passes, the exercise doesn't.\n\n**Sum the positives in `$numeros` and print the result.**"
+      },
+      "task": {
+        "es": "Imprime la suma de los números positivos de `$numeros` (debe salir 15).",
+        "en": "Print the sum of the positive numbers in `$numeros` (it should be 15)."
+      },
+      "focusFile": "carrito.php",
+      "ruleIds": [
+        "suma-positivos",
+        "nada-de-numeros-magicos"
+      ],
+      "xp": 40,
+      "hints": [
+        {
+          "id": "h-filtro",
+          "tier": 1,
+          "text": {
+            "es": "Con bucle: `if ($n > 0) { $suma += $n; }`. Declarativa: `array_sum(array_filter($numeros, function ($n) { return $n > 0; }))`.",
+            "en": "With a loop: `if ($n > 0) { $suma += $n; }`. Declarative: `array_sum(array_filter($numeros, function ($n) { return $n > 0; }))`."
+          },
+          "xpPenalty": 8,
+          "autoOfferAfterSeconds": 90
+        }
+      ],
+      "solution": [
+        {
+          "path": "carrito.php",
+          "content": "<?php\n\n$numeros = [1, -2, 3, -4, 5, -6, 2, 4];\n\n$suma = 0;\n\nforeach ($numeros as $n) {\n    if ($n > 0) {\n        $suma += $n;\n    }\n}\n\necho $suma;\n"
+        }
+      ],
+      "bestPractice": {
+        "es": "**Estándar de la industria:** una función que suma no imprime, y una que imprime no suma. Aquí caben juntas porque el archivo es de tres líneas; en cuanto haya que probar el cálculo, separarlas es lo primero que hay que hacer.",
+        "en": "**Industry standard:** a function that sums doesn't print, and one that prints doesn't sum. They fit together here because the file is three lines long; the moment you need to test the calculation, splitting them is the first thing to do."
+      }
+    }
+  ],
+  "drills": [],
+  "reward": {
+    "baseXp": 120,
+    "flawlessBonus": 45,
+    "noHintBonus": 25,
+    "comboMultiplierCap": 3,
+    "achievements": []
+  },
+  "solution": {
+    "files": [
+      {
+        "path": "carrito.php",
+        "content": "<?php\n\n$numeros = [1, -2, 3, -4, 5, -6, 2, 4];\n\n$suma = 0;\n\nforeach ($numeros as $n) {\n    if ($n > 0) {\n        $suma += $n;\n    }\n}\n\necho $suma;\n"
+      }
+    ],
+    "explanation": {
+      "es": "El array de PHP es lista y mapa a la vez, y `foreach` lo recorre de las dos formas: solo valores, o clave y valor. Con eso ya se puede resolver el ejercicio de Codewars que cierra la lección, que es un acumulador con una condición dentro.",
+      "en": "PHP's array is both a list and a map, and `foreach` walks it both ways: values only, or key and value. That's enough to solve the Codewars exercise that closes the lesson, which is an accumulator with one condition inside."
+    }
+  }
+}
