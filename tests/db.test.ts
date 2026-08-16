@@ -235,7 +235,7 @@ test('⭐ aplicar el esquema dos veces no falla', async () => {
 
   assert.deepEqual(
     tables.rows.map((row) => row.table_name),
-    ['lesson_progress', 'user_achievements', 'user_stats', 'users'],
+    ['events', 'lesson_progress', 'user_achievements', 'user_stats', 'users'],
   );
 });
 

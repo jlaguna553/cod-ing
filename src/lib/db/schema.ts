@@ -5,6 +5,7 @@ import {
   jsonb,
   pgTable,
   primaryKey,
+  serial,
   text,
   timestamp,
   uniqueIndex,
@@ -124,6 +125,39 @@ export const userAchievements = pgTable(
   (table) => [primaryKey({ columns: [table.userId, table.achievementId] })],
 );
 
+/**
+ * Eventos de observabilidad.
+ *
+ * Es la única tabla que **no** es progreso: sirve para saber qué se rompe y
+ * dónde se atasca la gente, no para jugar. Por eso su `user_id` no tiene clave
+ * foránea — un evento sobrevive a que la cuenta anónima que lo generó se funda
+ * con otra o desaparezca, y perder la traza justo cuando alguien reclama su
+ * cuenta sería perderla en el momento más interesante.
+ *
+ * Lo que se guarda está acotado en el servidor: un tipo de una lista cerrada y
+ * un `payload` recortado. **Nunca el código del usuario**: puede contener
+ * cualquier cosa que haya tecleado, y para contar cuántos fallan un paso no
+ * hace falta.
+ */
+export const events = pgTable(
+  'events',
+  {
+    id: serial('id').primaryKey(),
+    kind: text('kind').notNull(),
+    /** Identidad anónima o reclamada. Sin FK: ver la nota de arriba. */
+    userId: text('user_id'),
+    lessonId: text('lesson_id'),
+    stepIndex: integer('step_index'),
+    payload: jsonb('payload').$type<Record<string, unknown>>().notNull().default({}),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index('events_kind_idx').on(table.kind, table.createdAt),
+    index('events_lesson_idx').on(table.lessonId, table.stepIndex),
+  ],
+);
+
+export type Event = typeof events.$inferSelect;
 export type User = typeof users.$inferSelect;
 export type UserStats = typeof userStats.$inferSelect;
 export type LessonProgress = typeof lessonProgress.$inferSelect;

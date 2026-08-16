@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { observarRuta } from '@/lib/observability/log';
 import { z } from 'zod';
 import { getDb } from '@/lib/db/client';
 import { ensureUser } from '@/lib/db/queries';
@@ -41,7 +42,7 @@ const Body = z.discriminatedUnion('action', [
   z.object({ action: z.literal('recover'), ...Credenciales, code: z.string().min(8).max(40) }),
 ]);
 
-export async function GET() {
+async function manejarGet() {
   const userId = await getUserId();
   if (!userId) return NextResponse.json({ email: null, anonymous: true });
 
@@ -52,7 +53,7 @@ export async function GET() {
   });
 }
 
-export async function POST(request: Request) {
+async function manejarPost(request: Request) {
   const parsed = Body.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
     /*
@@ -137,3 +138,14 @@ export async function POST(request: Request) {
       : {}),
   });
 }
+
+/*
+ * Cada ruta sale con su duración y su código en el log.
+ * Registrar solo los fallos deja «esto va lento» en una impresión: sin la
+ * línea del caso bueno no hay con qué comparar.
+ */
+export const GET = () =>
+  observarRuta('auth:GET', () => manejarGet());
+
+export const POST = (request: Request) =>
+  observarRuta('auth:POST', () => manejarPost(request));

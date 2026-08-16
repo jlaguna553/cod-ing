@@ -8,6 +8,7 @@ import { useLessonStore } from '@/stores/useLessonStore';
 import { useRunnerStore } from '@/stores/useRunnerStore';
 import { XtermPane } from '@/components/terminal/XtermPane';
 import { ConsolePane } from './ConsolePane';
+import { report } from '@/lib/observability/report';
 import { SqlResultGrid } from './SqlResultGrid';
 
 type Tab = 'preview' | 'console' | 'terminal';
@@ -48,6 +49,23 @@ export function RunnerSurface() {
 
   // Al cambiar de lección se vuelve a la superficie que esa lección necesita.
   useEffect(() => setTab(null), [lesson?.id]);
+
+  /*
+   * Un runtime que no arranca deja al usuario sin poder ejecutar nada, y hasta
+   * ahora se quedaba entre él y la pantalla. Se avisa una vez por fallo — el
+   * efecto depende del mensaje, así que reintentarlo y volver a fallar igual
+   * no lo repite.
+   */
+  useEffect(() => {
+    if (status !== 'error' || !lesson) return;
+    report({
+      kind: 'runner-error',
+      phase: 'boot',
+      runtime: lesson.runtime.kind,
+      message: (error ?? 'Fallo desconocido al arrancar el runtime').slice(0, 300),
+      lessonId: lesson.id,
+    });
+  }, [status, error, lesson]);
 
   useEffect(() => {
     if (!lesson || !mountRef.current) return;

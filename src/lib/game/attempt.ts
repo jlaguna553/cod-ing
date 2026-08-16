@@ -1,6 +1,7 @@
 import { useEvaluationStore } from '@/stores/useEvaluationStore';
 import { useLessonStore } from '@/stores/useLessonStore';
 import { useRunnerStore } from '@/stores/useRunnerStore';
+import { report } from '@/lib/observability/report';
 
 /**
  * Ejecutar y evaluar, en ese orden.
@@ -25,5 +26,32 @@ export async function runAndEvaluate(phase?: 'run') {
   await Promise.all(Object.entries(files).map(([path, content]) => syncFile(path, content)));
   await execute();
 
-  return useEvaluationStore.getState().evaluate(phase);
+  const resultados = useEvaluationStore.getState().evaluate(phase);
+
+  /*
+   * Solo la evaluación completa cuenta como intento.
+   *
+   * «Ejecutar» juzga a medias —lo que depende de haber ejecutado— y contarlo
+   * llenaría la estadística de intentos que el usuario no considera intentos.
+   * De lo que se manda no sale ni una línea de su código: qué lección, qué
+   * paso, si lo superó y **qué reglas fallaron por su id**. Con eso se
+   * distingue un paso difícil de un enunciado que no se entiende.
+   */
+  if (phase === undefined) {
+    const { lesson, stepIndex } = useLessonStore.getState();
+    if (lesson) {
+      report({
+        kind: 'step-attempt',
+        lessonId: lesson.id,
+        stepIndex,
+        passed: useEvaluationStore.getState().stepPassed,
+        failedRuleIds: resultados
+          .filter((resultado) => !resultado.passed)
+          .map((resultado) => resultado.ruleId)
+          .slice(0, 12),
+      });
+    }
+  }
+
+  return resultados;
 }

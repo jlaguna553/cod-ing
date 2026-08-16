@@ -99,6 +99,18 @@ CREATE TABLE IF NOT EXISTS lesson_progress (
 CREATE INDEX IF NOT EXISTS lesson_progress_user_idx ON lesson_progress (user_id);
 CREATE INDEX IF NOT EXISTS lesson_progress_track_idx ON lesson_progress (user_id, track);
 
+CREATE TABLE IF NOT EXISTS events (
+  id          SERIAL PRIMARY KEY,
+  kind        TEXT NOT NULL,
+  user_id     TEXT,
+  lesson_id   TEXT,
+  step_index  INTEGER,
+  payload     JSONB NOT NULL DEFAULT '{}'::jsonb,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS events_kind_idx ON events (kind, created_at);
+CREATE INDEX IF NOT EXISTS events_lesson_idx ON events (lesson_id, step_index);
+
 CREATE TABLE IF NOT EXISTS user_achievements (
   user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   achievement_id TEXT NOT NULL,

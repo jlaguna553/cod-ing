@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { observarRuta } from '@/lib/observability/log';
 import { z } from 'zod';
 import { getDb } from '@/lib/db/client';
 import {
@@ -35,7 +36,7 @@ const CompleteSchema = z.object({
   comboMultiplier: z.number().min(1).max(5),
 });
 
-export async function POST(request: Request) {
+async function manejarPost(request: Request) {
   const { id: userId } = await getOrCreateUserId();
 
   let body: unknown;
@@ -92,3 +93,11 @@ export async function POST(request: Request) {
     achievements: newly.filter((achievement) => granted.includes(achievement.id)),
   });
 }
+
+/*
+ * Cada ruta sale con su duración y su código en el log.
+ * Registrar solo los fallos deja «esto va lento» en una impresión: sin la
+ * línea del caso bueno no hay con qué comparar.
+ */
+export const POST = (request: Request) =>
+  observarRuta('progress/complete:POST', () => manejarPost(request));

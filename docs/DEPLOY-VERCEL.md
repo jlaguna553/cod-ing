@@ -39,6 +39,10 @@ provisionaremos desde su Marketplace, también en plan gratuito.
    openssl rand -base64 32
    ```
 
+   Opcionalmente, `INSIGHTS_TOKEN` (otro `openssl rand -base64 24`): es la
+   llave de `/api/insights`, el resumen de errores y de los pasos donde la
+   gente encalla. Sin esa variable la ruta responde 404 y no existe.
+
 5. Ahora sí, **Deploy**.
 
 El primer despliegue **va a fallar al abrir la web**, y es lo esperado: todavía
@@ -151,6 +155,28 @@ construir, así que después de tocar cualquiera hay que redesplegar.
 
 ---
 
+## Cómo mirar qué pasa, ya desplegado
+
+Tres sitios, ninguno de pago:
+
+| Dónde | Qué contesta |
+|---|---|
+| `GET /api/health` | Si la base responde, si el contenido cargó y **qué versión** está desplegada. Devuelve 503 cuando algo falla, así que sirve para un vigilante externo sin leer el cuerpo |
+| *Runtime Logs* de Vercel | Una línea JSON por petición (`event`, `route`, `status`, `ms`) y una por error del servidor, con el `digest` que ve el usuario en pantalla |
+| `GET /api/insights?token=…` | Errores repetidos del navegador y **los pasos donde la gente encalla**, con la regla que más falla en cada uno |
+
+El tercero necesita `INSIGHTS_TOKEN`; sin esa variable la ruta responde 404.
+Es lo que conviene mirar antes de escribir una lección nueva: un paso con muchos
+intentos y pocos aciertos no suele ser difícil, suele estar mal explicado.
+
+```bash
+curl -s https://TU-APP.vercel.app/api/health | jq
+curl -s -H "authorization: Bearer $INSIGHTS_TOKEN" \
+  https://TU-APP.vercel.app/api/insights?dias=7 | jq
+```
+
+---
+
 ## Qué cuesta esto
 
 Nada, con estos límites:
@@ -192,10 +218,11 @@ npm run check    # contenido + traducciones + 143 tests + build
 
 Tres cosas que están así a propósito, pero que conviene que sepas:
 
-- **El track de Backend está vacío** y su pantalla lo dice. Es lo primero que
-  vería alguien que entre por ahí.
-- **Si un usuario borra las cookies, pierde su progreso.** La identidad es
-  anónima y todavía no hay forma de reclamar la cuenta con un email.
-- **Las lecciones de React y Vue** descargan su compilador de un CDN externo la
-  primera vez. Tardan unos segundos en arrancar; las de HTML, CSS y JavaScript
-  son instantáneas.
+- **Node, Python y Go siguen sin motor.** El track de Backend ya tiene SQL, C#
+  y PHP; esos tres módulos aparecen en el mapa pero no se pueden ejecutar.
+- **Las lecciones de React descargan su compilador de un CDN externo** la
+  primera vez. Tardan unos segundos en arrancar; las de HTML, CSS, JavaScript,
+  Vue, SQL y PHP se sirven desde el propio dominio y son inmediatas.
+- **Quien no reclame su cuenta pierde el progreso al borrar las cookies.** El
+  aviso está en la portada y reclamarla son dos campos, pero nadie está
+  obligado.

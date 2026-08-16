@@ -4,6 +4,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 import type { Metadata } from 'next';
 import { routing } from '@/i18n/routing';
 import { PerformanceModeBoot } from '@/components/system/PerformanceModeBoot';
+import { Telemetry } from '@/components/system/Telemetry';
 import '../globals.css';
 
 type LocaleParams = { params: Promise<{ locale: string }> };
@@ -59,6 +60,7 @@ export default async function LocaleLayout({
       </head>
       <body className="min-h-dvh antialiased">
         <PerformanceModeBoot />
+        <Telemetry />
         <NextIntlClientProvider>{children}</NextIntlClientProvider>
       </body>
     </html>

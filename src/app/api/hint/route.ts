@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { observarRuta } from '@/lib/observability/log';
 import { hasLocale } from 'next-intl';
 import { getHintText } from '@/lib/content/loader';
 import { routing } from '@/i18n/routing';
@@ -14,7 +15,7 @@ import { routing } from '@/i18n/routing';
  * — pero el texto de la pista ya no lo es, que es lo que importa asegurar
  * primero: el secreto no se puede "des-filtrar" después.
  */
-export async function POST(request: Request) {
+async function manejarPost(request: Request) {
   let body: unknown;
   try {
     body = await request.json();
@@ -38,3 +39,11 @@ export async function POST(request: Request) {
 
   return NextResponse.json({ text });
 }
+
+/*
+ * Cada ruta sale con su duración y su código en el log.
+ * Registrar solo los fallos deja «esto va lento» en una impresión: sin la
+ * línea del caso bueno no hay con qué comparar.
+ */
+export const POST = (request: Request) =>
+  observarRuta('hint:POST', () => manejarPost(request));

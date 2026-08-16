@@ -1021,12 +1021,72 @@ porque el aviso se cierra solo a los seis segundos y la confirmación llega a lo
 foto tardía no encontraría nada y una temprana se perdería el duplicado. Verificado a la
 inversa deshaciendo el arreglo — con el código anterior el test cuenta dos.
 
+### ADR-22 · Observabilidad sin proveedor
+
+**Contexto.** En producción no había forma de saber nada. Un error en el navegador dejaba
+una pantalla en blanco y ningún rastro; un runtime que no arrancaba se quedaba entre el
+usuario y la pantalla; y la pregunta que más importa en una plataforma de aprendizaje
+—**dónde se atasca la gente**— no tenía dónde consultarse.
+
+**Sin Sentry ni Datadog, y no por tacañería.** Los dos resuelven esto y los dos son un
+proveedor más al que mandar datos de usuarios y una factura que crece con el tráfico. Lo
+que hace falta aquí cabe en lo que ya hay: `stdout` —que Vercel recoge e indexa sin
+cobrar— y una tabla en la base de datos que ya existe.
+
+**Tres piezas, tres preguntas distintas.**
+
+- **Log estructurado** (`log.ts`): una línea JSON por petición con ruta, código y
+  milisegundos, y una por error de servidor vía `instrumentation.ts`. Se registra también
+  el caso bueno: sin la línea de lo que funciona, «esto va lento» se queda en una
+  impresión. El `digest` de Next viaja en el log porque es el único hilo que une «me sale
+  un código raro» con la línea que lo explica.
+- **Tabla `events`**: lo que el navegador cuenta —errores, fallos de runtime, intentos de
+  paso y métricas de carga reales—. Es la única tabla que no es progreso, y por eso su
+  `user_id` no tiene clave foránea: un evento debe sobrevivir a que la cuenta anónima que
+  lo generó se funda con otra.
+- **`/api/insights`**: lo anterior ya agregado. Errores por repetición y **pasos por tasa
+  de acierto**, con la regla que más falla en cada uno. Un paso con muchos intentos y
+  pocos aciertos no suele ser difícil: suele estar mal explicado.
+
+**El cliente no decide qué se guarda.** Manda un `kind` de una lista cerrada y campos
+acotados por Zod; lo que no encaja se descarta. **Y nunca su código**: puede contener
+cualquier cosa que haya tecleado —una contraseña pegada por error en un ejercicio— y para
+saber qué regla falla basta su identificador. La identidad tampoco se acepta: sale de la
+cookie firmada, porque si el cliente mandara la suya podría atribuirle errores a otro.
+
+**La telemetría responde 204 siempre**, válida o no. Es un beacon: nadie espera la
+respuesta, y contestar «ese campo sobra» solo sirve para que alguien averigüe qué acepta
+el endpoint probando. Lo inválido se cuenta en el log, que es donde interesa.
+
+**Se manda con `sendBeacon`.** Es lo único que sobrevive a cerrar la pestaña — justo el
+momento del que más se quiere saber. Y va en lotes: escribir código genera eventos a
+ráfagas, y una petición por evento competiría con el autoguardado y con el runner.
+
+**Retención de 30 días, podada desde la propia escritura** (una de cada cincuenta). Más
+sería llenar el plan gratuito de la base; un cron sería otro servicio que mantener.
+
+**El resumen va con llave y la salud no.** `/api/insights` exige `INSIGHTS_TOKEN` y sin esa
+variable responde 404 — no existe, en vez de existir sin protección. `/api/health` es
+pública a propósito: dice si la base responde, si el contenido cargó y qué versión está
+desplegada, y **nada más** (ni la cadena de conexión ni su host). Un `/health` que exige una
+llave es un `/health` que nadie consulta.
+
+**Guardia.** `tests/observability.test.ts` prueba contra Postgres lo que hace segura esta
+puerta: tipos fuera de la lista rechazados, textos y lotes acotados, lo que se pregunta en
+columnas y no enterrado en el JSON, la agregación que señala el paso más duro con su regla,
+y la poda. `e2e/observabilidad.spec.ts` recorre el camino entero en el navegador —incluido
+un error de verdad sin capturar que llega solo al servidor— porque el beacon, la cookie, la
+ruta y la tabla solo fallan juntos. Ese test destapó de paso que `postData()` llega vacío
+en un beacon con cuerpo `Blob`: contaba cero mientras el servidor registraba el error sin
+falta.
+
 ---
 
 ## 5. Modelo de datos de progreso (servidor)
 
 ```
 users(id, email, password_hash, recovery_hash, anonymous, locale, created_at)
+events(id, kind, user_id, lesson_id, step_index, payload, created_at)   -- observabilidad
 user_stats(user_id, total_xp, level, total_keystrokes, best_combo, streak_days)
 lesson_progress(user_id, lesson_id, status, step_index, xp_earned,
                 hints_used, attempts, best_time_ms, code_snapshot, updated_at)
