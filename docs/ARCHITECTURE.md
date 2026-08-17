@@ -1080,6 +1080,50 @@ ruta y la tabla solo fallan juntos. Ese test destapó de paso que `postData()` l
 en un beacon con cuerpo `Blob`: contaba cero mientras el servidor registraba el error sin
 falta.
 
+### ADR-23 · El servidor comprueba lo que puede comprobar
+
+**Contexto.** Desde la Fase 6 el XP lo **calcula** el servidor: el cliente manda qué hizo,
+no cuánto merece. Pero se lo daba a quien dijera «he terminado». Una petición a
+`/api/progress/complete` desde la consola del navegador valía una lección entera — y no es
+teórico: los propios tests E2E la usaban así para tener XP con el que probar otras cosas.
+
+**Lo que no se va a hacer, y por qué.** Verificarlo del todo exige **ejecutar el código del
+usuario en el servidor**: una caja aislada por usuario y por petición. Eso cuesta dinero
+—el requisito de la casa es que no cueste— y abre una superficie de ataque que no compensa
+para una plataforma de aprendizaje. No se hace, y no se disimula que no se hace.
+
+**Lo que sí se puede hacer sin ejecutar nada: mirar el código enviado.** Si contiene lo que
+la lección pide, si no contiene lo que prohíbe, si su AST tiene la forma esperada, si el
+`Dockerfile` cumple. Con eso, reclamar el XP deja de ser una petición y pasa a ser *manda
+un código que pase las comprobaciones*, que es exactamente hacer el ejercicio.
+
+**Se verifica el último paso, no la lección entera.** Con un ejercicio por paso (ADR-12) el
+archivo final ya no cumple —ni debe— las reglas de los anteriores: el paso 3 pide otra cosa
+que el 1. Exigirlas todas suspendería a quien ha hecho la lección completa.
+
+**El código viaja en la petición, no se lee del autoguardado.** El autoguardado tiene 2,5 s
+de retardo, así que al terminar el último paso la base todavía guarda la versión anterior.
+Verificar contra ella suspendería justo a quien acaba de resolverlo bien.
+
+**Las cifras, sin redondear.** De 35 lecciones, **26** terminan en un paso con alguna regla
+que el servidor puede juzgar. Pero juzgar no es proteger: en 8 de ellas esas reglas son
+prohibiciones —«no imprimas el resultado a mano»— que el archivo de partida ya cumple sin
+haber hecho nada. **El filtro impide la reclamación falsa en 18 de 35**; en las 17 restantes
+la economía sigue apoyada en el cliente. La respuesta lo dice en `verified` y el log lo
+cuenta lección a lección, en vez de dejarlo en «ahora se verifica».
+
+**Y `hidden` por fin significa algo.** Las reglas ocultas nunca viajaban al cliente (el
+`loader` las recorta), pero tampoco se evaluaban en ningún sitio: eran decorativas. Ahora
+el servidor las evalúa como cualquier otra, así que una comprobación puede existir sin que
+esté en el bundle. Ninguna lección las usa todavía; la maquinaria ya está.
+
+**Guardia.** `tests/verificacion.test.ts` prueba el filtro y, sobre todo, **que la solución
+de cada lección lo pasa**: un filtro que rechaza la respuesta correcta no es un filtro, es
+un muro, y el único que se enteraría sería quien acabara de terminar. Ese test cubre las 26
+lecciones una a una, mide las dos coberturas y las fija con un suelo — una lección nueva
+que termine en una regla de ejecución es una decisión, no una deriva. En E2E se pide el XP
+sin código (422, con el id de la regla que falla) y con la solución (200 y `verified: true`).
+
 ---
 
 ## 5. Modelo de datos de progreso (servidor)

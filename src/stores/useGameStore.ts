@@ -13,6 +13,7 @@ import {
 import { emptyStats, findNewlyUnlocked, type PlayerStats } from '@/lib/game/achievements';
 import { levelFromXp, type LevelInfo } from '@/lib/game/xp';
 import { getSoundEngine } from '@/lib/audio/engine';
+import { useLessonStore } from './useLessonStore';
 import type { SoundPack } from '@/lib/audio/packs';
 
 /**
@@ -260,7 +261,16 @@ export const useGameStore = create<GameState>()(
           const response = await fetch('/api/progress/complete', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ ...input, comboMultiplier: get().combo.multiplier }),
+            /*
+             * El código viaja aquí y no se deja al autoguardado: el servidor
+             * verifica contra él lo que puede verificar, y el autoguardado
+             * llega 2,5 s tarde — la base todavía tendría la versión anterior.
+             */
+            body: JSON.stringify({
+              ...input,
+              comboMultiplier: get().combo.multiplier,
+              codeSnapshot: useLessonStore.getState().files,
+            }),
           });
           if (!response.ok) return null;
 

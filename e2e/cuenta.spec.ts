@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { solucionFinal } from './pasos';
 
 /**
  * Reclamar la cuenta anónima.
@@ -24,6 +25,9 @@ async function completarUnaLeccion(page: Page) {
    * jugar la lección entera. Lo que esta prueba tiene que demostrar es que el
    * progreso viaja con la cuenta; jugar de verdad ya se prueba en otros
    * archivos y aquí solo alargaría el tiempo de ejecución.
+   *
+   * El código va en la petición porque el servidor lo verifica antes de pagar
+   * (ADR-23): sin él, esto sería justo la reclamación falsa que ahora rechaza.
    */
   const respuesta = await page.request.post('/api/progress/complete', {
     data: {
@@ -33,6 +37,7 @@ async function completarUnaLeccion(page: Page) {
       hintPenalty: 0,
       flawless: true,
       comboMultiplier: 1,
+      codeSnapshot: solucionFinal('css-01-selectors'),
     },
   });
   expect(respuesta.ok()).toBeTruthy();

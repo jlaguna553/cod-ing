@@ -41,6 +41,24 @@ export function solucionDelPaso(lessonId: string, stepIndex: number): Solucion[]
   return solution;
 }
 
+/**
+ * El código con el que la lección se da por terminada.
+ *
+ * Lo pide el servidor para conceder el XP (ADR-23): terminar ya no es decir
+ * que has terminado, es mandar algo que pase las comprobaciones.
+ */
+export function solucionFinal(lessonId: string): Record<string, string> {
+  const lesson = JSON.parse(readFileSync(rutaDeLeccion(lessonId), 'utf8'));
+  const archivos: Record<string, string> = Object.fromEntries(
+    lesson.workspace.files.map((f: Solucion) => [f.path, f.content]),
+  );
+
+  for (const archivo of lesson.steps.at(-1)?.solution ?? lesson.solution?.files ?? []) {
+    archivos[archivo.path] = archivo.content;
+  }
+  return archivos;
+}
+
 /** Sustituye el contenido del editor de golpe (sin disparar el autocierre). */
 export async function escribirEnEditor(page: Page, text: string) {
   await page.locator('.monaco-editor').click({ position: { x: 100, y: 40 } });

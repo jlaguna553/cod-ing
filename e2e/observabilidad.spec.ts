@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { escribirEnEditor } from './pasos';
+import { escribirEnEditor, solucionFinal } from './pasos';
 
 /**
  * Observabilidad, comprobada donde tiene que funcionar.
@@ -140,4 +140,47 @@ test('⭐ un error del navegador no se pierde: se manda solo', async ({ page }) 
 
   const cuerpo = enviadas.find((c) => c.includes('estallido de prueba'))!;
   expect(cuerpo).toContain('app-error');
+});
+
+test('⭐ el XP no se reclama diciendo «he terminado»: hay que mandar el código', async ({
+  page,
+}) => {
+  await page.goto('/es');
+
+  /*
+   * `php-01` y no cualquiera: su último paso exige `number_format`, que es una
+   * regla que el servidor puede juzgar leyendo el código. En 9 de las 35
+   * lecciones el último paso solo se puede juzgar ejecutando, y ahí este
+   * filtro no protege nada — está medido en `tests/verificacion.test.ts` y
+   * dicho en el ADR-23, no redondeado.
+   */
+  const pedirXp = (codeSnapshot: Record<string, string>) =>
+    page.request.post('/api/progress/complete', {
+      data: {
+        lessonId: 'php-01-echo-variables',
+        seconds: 30,
+        usedHints: false,
+        hintPenalty: 0,
+        flawless: true,
+        comboMultiplier: 1,
+        codeSnapshot,
+      },
+    });
+
+  /*
+   * La petición que hasta ahora bastaba: sin código, o con el que la lección
+   * ya trae de partida. El servidor la rechaza con 422 y dice qué regla falla.
+   */
+  const aPelo = await pedirXp({});
+  expect(aPelo.status()).toBe(422);
+  expect((await aPelo.json()).failed.length).toBeGreaterThan(0);
+
+  // Y con la solución de verdad, cobra.
+  const conSolucion = await pedirXp(solucionFinal('php-01-echo-variables'));
+  expect(conSolucion.status()).toBe(200);
+
+  const datos = await conSolucion.json();
+  expect(datos.xpAwarded).toBeGreaterThan(0);
+  // `verified` no se adorna: dice si el servidor pudo comprobar algo.
+  expect(datos.verified).toBe(true);
 });

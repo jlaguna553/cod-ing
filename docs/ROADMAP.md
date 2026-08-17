@@ -460,6 +460,10 @@ inventarse el nivel 99. Ahora:
   terminar una lección sería una máquina de XP infinito. Probado.
 - **El track y el módulo salen del contenido**, no de la petición: aceptarlos de fuera
   permitiría falsear las estadísticas por track.
+- **Y desde el ADR-23, tampoco basta con decir «he terminado»**: hay que mandar el código,
+  y el servidor comprueba contra él las reglas del último paso que puede juzgar sin
+  ejecutar nada. Cierra la reclamación falsa en 18 de las 35 lecciones; en el resto el
+  último paso solo se puede juzgar ejecutando, y eso se dice en vez de fingirlo.
 - **Los contadores solo suben** (`GREATEST`): un cliente obsoleto no puede bajarlos.
   Contra los inflados no hay defensa sin instrumentar el editor, y no compensa.
 - **El logro «módulo completado» solo puede concederlo el servidor**, porque hace falta

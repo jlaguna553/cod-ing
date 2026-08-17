@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { resolverPaso } from './pasos';
+import { resolverPaso, solucionFinal } from './pasos';
 
 /**
  * E2E sobre el build de producción.
@@ -241,6 +241,9 @@ test('⭐ el servidor calcula el XP: no acepta la cifra del cliente', async ({ r
       comboMultiplier: 1,
       xpAwarded: 999999,
       totalXp: 999999,
+      // El código va aparte de la cifra inventada: el servidor verifica lo uno
+      // y recalcula lo otro (ADR-23).
+      codeSnapshot: solucionFinal('js-01-variables'),
     },
   });
 
@@ -258,6 +261,7 @@ test('⭐ completar dos veces no paga dos veces', async ({ request }) => {
     hintPenalty: 0,
     flawless: false,
     comboMultiplier: 1,
+    codeSnapshot: solucionFinal('js-02-functions'),
   };
 
   const first = await (await request.post('/api/progress/complete', { data: payload })).json();
@@ -650,16 +654,17 @@ test('⭐ un logro se celebra una sola vez, aunque lo confirme el servidor', asy
   await waitForEditor(page);
 
   /*
-   * Pegar una solución larga sube el combo por encima de 50 y desbloquea
+   * Sesenta pulsaciones seguidas suben el combo por encima de 50 y desbloquean
    * «Ninja de la sintaxis» en el cliente. Segundos después el autoguardado
    * responde con ese mismo logro concedido por el servidor — y ahí es donde
    * aparecía el segundo aviso, idéntico y con el mismo XP.
+   *
+   * Se teclea en vez de pegar: un pegado cuenta pulsaciones por su longitud y
+   * bajo carga eso llegaba a no disparar el logro, con lo que el test pasaba
+   * sin haber probado nada. Teclear es lento y determinista.
    */
-  await insertInEditor(
-    page,
-    "<?php\n\n$productos = ['Teclado', 'Monitor', 'Cable'];\n\nforeach ($productos as $i => $producto) {\n    echo ($i + 1) . '. ' . $producto . PHP_EOL;\n}\n",
-  );
-  await page.getByRole('button', { name: /^evaluar$/i }).click();
+  await page.locator('.monaco-editor').click({ position: { x: 100, y: 40 } });
+  for (let i = 0; i < 60; i++) await page.keyboard.press('a');
 
   const avisos = page.getByRole('button', { name: /logro desbloqueado/i });
   await expect(avisos.first()).toBeVisible({ timeout: 30_000 });
