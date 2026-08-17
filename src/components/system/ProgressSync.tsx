@@ -80,6 +80,13 @@ export function ProgressSync() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           lessonId,
+          /*
+           * La zona horaria viaja con el autoguardado y no en una petición
+           * aparte: es un dato que solo el navegador conoce y que el servidor
+           * necesita para cortar la racha a la medianoche del usuario, no a la
+           * de Londres. Va donde ya hay una petición.
+           */
+          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
           stepIndex,
           hintsUsed: revealedHints.length,
           damageTaken: 0,

@@ -1124,6 +1124,37 @@ lecciones una a una, mide las dos coberturas y las fija con un suelo — una lec
 que termine en una regla de ejecución es una decisión, no una deriva. En E2E se pide el XP
 sin código (422, con el id de la regla que falla) y con la solución (200 y `verified: true`).
 
+### ADR-24 · La racha corta a la medianoche del usuario
+
+**Contexto.** La racha diaria usaba el día **UTC**, y estaba anotado como simplificación
+consciente desde la Fase 7: «para un usuario en UTC-6 el día termina a las 18:00». Dicho
+así suena a detalle. Visto de cerca es que **quien juega a las siete de la tarde en México
+suma dos días de racha en la misma tarde**, y quien juega a las nueve y al día siguiente a
+las cinco la pierde sin haber fallado ni un día.
+
+**Decisión.** El día es el del calendario del usuario. El navegador declara su zona horaria
+IANA en el autoguardado y el servidor la guarda en `users.time_zone`.
+
+**Zona, no desfase en minutos.** Un desfase caduca dos veces al año: `America/Santiago` no
+significa lo mismo en enero que en julio, y el cambio de hora movería la frontera del día
+justo en la semana en que más raro resulta. `Intl` ya conoce esas reglas — aquí solo se le
+pregunta, con `en-CA`, que es el locale cuyo formato corto ya es ISO.
+
+**Se guarda, no se exige en cada petición.** La racha también se consulta desde la portada
+y desde el mapa, que no saben nada del navegador. Si allí se calculara en UTC y aquí en
+local, la misma racha se vería distinta según la pantalla desde la que se mirase.
+
+**Se cree lo que dice el navegador.** Mentir en la zona horaria sirve para regalarse un día
+de racha **a uno mismo**, y no afecta a nadie más: montar una defensa contra eso costaría
+más que el daño. Lo que sí se comprueba es que la zona exista, para que un valor inventado
+no reviente la petición ni deje al usuario sin zona guardada.
+
+**Guardia.** `tests/racha.test.ts` está escrito desde fuera de UTC a propósito, porque este
+es un fallo que solo sufre quien no vive en Londres y que quien lo escribe no ve nunca: dos
+sesiones en la misma tarde-noche mexicana cuentan como un día, el cambio de hora chileno lo
+resuelve la zona, viajar de Madrid a México no rompe la racha, y una zona inventada cae a
+UTC sin llevarse por delante la que ya estaba.
+
 ---
 
 ## 5. Modelo de datos de progreso (servidor)

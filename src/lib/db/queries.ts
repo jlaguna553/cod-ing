@@ -4,8 +4,9 @@ import type { Database } from './client';
 import { lessonProgress, userAchievements, users, userStats } from './schema';
 import type { PlayerStats } from '@/lib/game/achievements';
 import { levelFromXp } from '@/lib/game/xp';
+import { ZONA_POR_DEFECTO, diaAnterior, esZonaValida, localDay } from '@/lib/game/day';
 
-/** Día UTC en formato YYYY-MM-DD, la unidad de la racha. */
+/** Día UTC en formato YYYY-MM-DD. Solo para lo que no depende del usuario. */
 export function utcDay(at: Date = new Date()): string {
   return at.toISOString().slice(0, 10);
 }
@@ -24,30 +25,57 @@ export async function ensureUser(db: Database, userId: string, locale = 'es') {
 }
 
 /**
- * Actualiza la racha diaria.
+ * Actualiza la racha diaria, **en el calendario del usuario**.
  *
  * Tres casos: mismo día (no cambia), día consecutivo (+1) y hueco (vuelve a 1,
- * no a 0 — el día de hoy ya cuenta). Que el corte sea UTC es una simplificación
- * consciente: para un usuario en UTC-6 el día "termina" a las 18:00. Se
- * documenta aquí para que la decisión sea visible el día que alguien se queje.
+ * no a 0 — el día de hoy ya cuenta).
+ *
+ * El corte era medianoche **UTC**, que para quien juega en UTC-6 llega a las
+ * seis de la tarde: jugar a las siete contaba como el día siguiente. Ahora el
+ * día se calcula en la zona horaria que el navegador declara, y esa zona se
+ * guarda para que el cálculo no dependa de que la mande cada petición.
  */
-export async function touchStreak(db: Database, userId: string, today = utcDay()) {
+export async function touchStreak(db: Database, userId: string, today?: string) {
   const [current] = await db.select().from(userStats).where(eq(userStats.userId, userId));
   if (!current) return { streakDays: 0, changed: false };
 
-  if (current.lastActiveDay === today) {
+  const dia = today ?? localDay(await zonaDelUsuario(db, userId));
+
+  if (current.lastActiveDay === dia) {
     return { streakDays: current.streakDays, changed: false };
   }
 
-  const yesterday = utcDay(new Date(Date.parse(`${today}T00:00:00Z`) - 86_400_000));
-  const streakDays = current.lastActiveDay === yesterday ? current.streakDays + 1 : 1;
+  const ayer = diaAnterior(dia);
+  const streakDays = current.lastActiveDay === ayer ? current.streakDays + 1 : 1;
 
   await db
     .update(userStats)
-    .set({ streakDays, lastActiveDay: today, updatedAt: new Date() })
+    .set({ streakDays, lastActiveDay: dia, updatedAt: new Date() })
     .where(eq(userStats.userId, userId));
 
   return { streakDays, changed: true };
+}
+
+/** La última zona horaria que declaró este usuario. */
+export async function zonaDelUsuario(db: Database, userId: string): Promise<string> {
+  const [row] = await db
+    .select({ zona: users.timeZone })
+    .from(users)
+    .where(eq(users.id, userId));
+  return row?.zona ?? ZONA_POR_DEFECTO;
+}
+
+/**
+ * Recuerda la zona horaria del usuario.
+ *
+ * Se guarda en vez de exigirla en cada petición porque la racha se consulta
+ * también desde sitios que no la conocen —la portada, el mapa—, y un día
+ * calculado en UTC ahí y en local aquí daría rachas que bailan según la
+ * pantalla desde la que se miren.
+ */
+export async function rememberTimeZone(db: Database, userId: string, zona: string) {
+  if (!esZonaValida(zona)) return;
+  await db.update(users).set({ timeZone: zona }).where(eq(users.id, userId));
 }
 
 /** Guarda el avance dentro de una lección (autosave). */

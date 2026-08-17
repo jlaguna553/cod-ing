@@ -53,6 +53,7 @@ CREATE TABLE IF NOT EXISTS users (
   password_hash TEXT,
   recovery_hash TEXT,
   display_name TEXT,
+  time_zone TEXT,
   locale TEXT NOT NULL DEFAULT 'es',
   anonymous BOOLEAN NOT NULL DEFAULT TRUE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -65,6 +66,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS users_email_idx ON users (email);
 -- IF NOT EXISTS las hace idempotentes y sin efecto donde ya están.
 ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash TEXT;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS recovery_hash TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS time_zone TEXT;
 
 CREATE TABLE IF NOT EXISTS user_stats (
   user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,

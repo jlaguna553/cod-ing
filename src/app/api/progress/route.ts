@@ -10,6 +10,7 @@ import {
   loadProgress,
   saveProgress,
   syncCounters,
+  rememberTimeZone,
   touchStreak,
 } from '@/lib/db/queries';
 import { getOrCreateUserId } from '@/lib/auth/session';
@@ -29,6 +30,14 @@ import { unlockAchievements } from '@/lib/db/queries';
 
 const SaveSchema = z.object({
   lessonId: z.string().min(1),
+  /**
+   * Zona horaria del navegador (IANA). La racha corta a **su** medianoche.
+   *
+   * Se acepta lo que declare el cliente: mentir aquí sirve para regalarse un
+   * día de racha a uno mismo y no afecta a nadie más. Lo que sí se comprueba
+   * es que la zona exista.
+   */
+  timeZone: z.string().max(64).optional(),
   stepIndex: z.number().int().nonnegative(),
   hintsUsed: z.number().int().nonnegative(),
   damageTaken: z.number().int().nonnegative(),
@@ -87,6 +96,8 @@ async function manejarPost(request: Request) {
 
   const db = await getDb();
   await ensureUser(db, userId);
+
+  if (parsed.data.timeZone) await rememberTimeZone(db, userId, parsed.data.timeZone);
 
   await saveProgress(db, {
     userId,

@@ -45,6 +45,11 @@ export const users = pgTable(
      */
     recoveryHash: text('recovery_hash'),
     displayName: text('display_name'),
+    /**
+     * Zona horaria declarada por el navegador (IANA), para que la racha corte
+     * a la medianoche del usuario y no a la de Londres.
+     */
+    timeZone: text('time_zone'),
     locale: text('locale').notNull().default('es'),
     /** true mientras no haya reclamado la cuenta con un email. */
     anonymous: boolean('anonymous').notNull().default(true),
