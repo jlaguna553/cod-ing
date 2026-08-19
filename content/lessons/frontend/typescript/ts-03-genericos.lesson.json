@@ -1,0 +1,312 @@
+{
+  "$schema": "../../../schema/lesson.schema.json",
+  "schemaVersion": 1,
+  "id": "ts-03-genericos",
+  "track": "frontend",
+  "module": "typescript",
+  "order": 3,
+  "kind": "challenge",
+  "difficulty": "adept",
+  "estimatedMinutes": 24,
+  "title": {
+    "es": "Genéricos: una función, el tipo que le toque",
+    "en": "Generics: one function, whichever type fits"
+  },
+  "summary": {
+    "es": "`<T>` no es sintaxis decorativa: es la diferencia entre una función que funciona con todo y una que además sabe qué devolvió. Termina con el patrón `Resultado<T>`, que está en media base de código moderna.",
+    "en": "`<T>` isn't decorative syntax: it's the difference between a function that works with anything and one that also knows what it returned. Ends with the `Resultado<T>` pattern, which is in half of modern codebases."
+  },
+  "concepts": [
+    "typescript",
+    "genericos",
+    "restricciones",
+    "tipos-de-retorno"
+  ],
+  "prerequisites": [
+    "ts-02-uniones-y-narrowing"
+  ],
+  "runtime": {
+    "kind": "ts",
+    "dependencies": {},
+    "timeoutMs": 15000
+  },
+  "workspace": {
+    "entry": "main.ts",
+    "allowCreate": false,
+    "allowDelete": false,
+    "files": [
+      {
+        "path": "main.ts",
+        "active": true,
+        "content": "// Esta función acepta cualquier lista… y devuelve `any`.\n// Con `any`, quien la use pierde toda la ayuda del compilador.\n\nfunction primero(items: any[]): any {\n  return items[0];\n}\n\nconst nombres = ['Ada', 'Linus'];\nconsole.log(primero(nombres).toUpperCase());\n"
+      }
+    ]
+  },
+  "rules": [
+    {
+      "id": "declara-generico",
+      "kind": "regex-must",
+      "file": "main.ts",
+      "pattern": "function\\s+primero\\s*<\\s*T\\s*>",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Declara el parámetro de tipo: `function primero<T>(items: T[]): T | undefined`.",
+        "en": "Declare the type parameter: `function primero<T>(items: T[]): T | undefined`."
+      },
+      "successMessage": {
+        "es": "Con `<T>`, el tipo entra por la puerta y sale por la ventana.",
+        "en": "With `<T>`, the type comes in one end and out the other."
+      },
+      "points": 25
+    },
+    {
+      "id": "generico-sin-any",
+      "kind": "regex-forbid",
+      "file": "main.ts",
+      "pattern": ":\\s*any\\b|any\\[\\]",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Queda algún `any`. Es justo lo que el genérico viene a sustituir.",
+        "en": "There's still an `any`. That's exactly what the generic replaces."
+      },
+      "successMessage": {
+        "es": "Ni un `any`: el tipo viaja entero.",
+        "en": "Not one `any`: the type travels intact."
+      },
+      "points": 15
+    },
+    {
+      "id": "primero-imprime",
+      "kind": "stdout-match",
+      "equals": "ADA\n1",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Debe imprimir `ADA` (el primer nombre en mayúsculas) y `1` (el primer número).",
+        "en": "It must print `ADA` (the first name upper-cased) and `1` (the first number)."
+      },
+      "successMessage": {
+        "es": "La misma función, dos tipos, y los dos comprobados.",
+        "en": "Same function, two types, both checked."
+      },
+      "points": 30
+    },
+    {
+      "id": "restringe-el-generico",
+      "kind": "regex-must",
+      "file": "main.ts",
+      "pattern": "<\\s*T\\s+extends\\s+",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Restringe el genérico con `extends`: solo así el compilador sabe que `T` tiene ese campo.",
+        "en": "Constrain the generic with `extends`: only then does the compiler know `T` has that field."
+      },
+      "successMessage": {
+        "es": "`extends` es la promesa mínima que `T` tiene que cumplir.",
+        "en": "`extends` is the minimum promise `T` has to keep."
+      },
+      "points": 25
+    },
+    {
+      "id": "nombres-ordenados",
+      "kind": "stdout-match",
+      "equals": "Ada,Grace,Linus",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Debe imprimir los tres nombres ordenados y separados por comas.",
+        "en": "It must print the three names sorted and comma-separated."
+      },
+      "successMessage": {
+        "es": "Ordena por un campo que el compilador sabe que existe.",
+        "en": "Sorted by a field the compiler knows exists."
+      },
+      "points": 30
+    },
+    {
+      "id": "resultado-compila",
+      "kind": "type-error",
+      "expectNone": true,
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "No compila todavía. Con `Resultado<T>` hay que comprobar `ok` antes de tocar `valor`.",
+        "en": "Doesn't compile yet. With `Resultado<T>` you must check `ok` before touching `valor`."
+      },
+      "successMessage": {
+        "es": "Compila: el éxito y el fallo son dos formas distintas y el compilador lo sabe.",
+        "en": "It compiles: success and failure are two different shapes and the compiler knows it."
+      },
+      "points": 25
+    },
+    {
+      "id": "resultado-imprime",
+      "kind": "stdout-match",
+      "equals": "4\nNo es un número",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Debe imprimir `4` para la entrada válida y `No es un número` para la que falla.",
+        "en": "It must print `4` for the valid input and `No es un número` for the failing one."
+      },
+      "successMessage": {
+        "es": "Los dos caminos, sin una sola excepción lanzada.",
+        "en": "Both paths, without throwing a single exception."
+      },
+      "points": 35
+    }
+  ],
+  "steps": [
+    {
+      "id": "step-1-el-tipo-viaja",
+      "title": {
+        "es": "`any` funciona; el problema es lo que se lleva por delante",
+        "en": "`any` works; the problem is what it takes with it"
+      },
+      "body": {
+        "es": "La función de partida hace su trabajo: devuelve el primer elemento de cualquier lista. Y el precio está en el tipo de retorno.\n\nCon `any[]` entrando y `any` saliendo, **el compilador deja de saber nada** de lo que devuelve. `primero(nombres).toUpperCase()` compila; `primero(numeros).toUpperCase()` también, y revienta en ejecución. `any` no es «cualquier tipo»: es «deja de comprobar aquí».\n\nUn **genérico** es la forma de decir «no sé cuál, pero es *el mismo* a la entrada y a la salida»:\n\n```ts\nfunction ultimo<E>(lista: E[]): E | undefined {\n  return lista[lista.length - 1];\n}\n```\n\nLa `T` es un hueco que se rellena en cada llamada, y lo rellena el compilador solo: con `string[]` devuelve `string`, con `number[]` devuelve `number`. Nadie escribe `primero<string>(nombres)` salvo que haga falta desambiguar.\n\nY el `| undefined` no es pesimismo: una lista puede estar vacía, y `items[0]` sería `undefined`. Decirlo obliga a quien llama a tenerlo en cuenta — que es exactamente lo que se quiere.\n\n**Convierte `primero` en genérico y comprueba que funciona con nombres y con números.**",
+        "en": "The starting function does its job: it returns the first element of any list. The price is in the return type.\n\nWith `any[]` going in and `any` coming out, **the compiler stops knowing anything** about what comes back. `primero(nombres).toUpperCase()` compiles; so does `primero(numeros).toUpperCase()`, and it blows up at runtime. `any` isn't \"any type\": it's \"stop checking here\".\n\nA **generic** is how you say \"I don't know which, but it's *the same one* in and out\":\n\n```ts\nfunction ultimo<E>(lista: E[]): E | undefined {\n  return lista[lista.length - 1];\n}\n```\n\n`T` is a hole filled in at each call, and the compiler fills it by itself: with `string[]` it returns `string`, with `number[]` it returns `number`. Nobody writes `primero<string>(nombres)` unless disambiguation is needed.\n\nAnd the `| undefined` isn't pessimism: a list can be empty, and `items[0]` would be `undefined`. Saying so forces the caller to account for it — which is exactly the point.\n\n**Turn `primero` into a generic and check it works with names and with numbers.**"
+      },
+      "task": {
+        "es": "Haz `primero` genérico (sin `any`) e imprime el primer nombre en mayúsculas y el primer número de `[1, 2, 3]`.",
+        "en": "Make `primero` generic (no `any`) and print the first name upper-cased and the first number of `[1, 2, 3]`."
+      },
+      "focusFile": "main.ts",
+      "ruleIds": [
+        "declara-generico",
+        "generico-sin-any",
+        "primero-imprime"
+      ],
+      "xp": 30,
+      "hints": [
+        {
+          "id": "h-generico",
+          "tier": 1,
+          "text": {
+            "es": "`function primero<T>(items: T[]): T | undefined { return items[0]; }`. Para imprimir en mayúsculas hará falta contemplar el `undefined`: `primero(nombres)?.toUpperCase()`.",
+            "en": "`function primero<T>(items: T[]): T | undefined { return items[0]; }`. To upper-case it you'll need to handle the `undefined`: `primero(nombres)?.toUpperCase()`."
+          },
+          "xpPenalty": 8,
+          "autoOfferAfterSeconds": 80
+        }
+      ],
+      "solution": [
+        {
+          "path": "main.ts",
+          "content": "function primero<T>(items: T[]): T | undefined {\n  return items[0];\n}\n\nconst nombres = ['Ada', 'Linus'];\nconst numeros = [1, 2, 3];\n\nconsole.log(primero(nombres)?.toUpperCase());\nconsole.log(primero(numeros));\n"
+        }
+      ],
+      "bestPractice": {
+        "es": "**Estándar de la industria:** un genérico que aparece una sola vez en la firma no aporta nada — si `T` solo está en un parámetro y no en el retorno, `unknown` dice lo mismo con menos ruido. El genérico gana cuando **conecta** entrada y salida.",
+        "en": "**Industry standard:** a generic that appears once in the signature adds nothing — if `T` is only in a parameter and not the return, `unknown` says the same with less noise. Generics earn their keep when they **connect** input and output."
+      }
+    },
+    {
+      "id": "step-2-restricciones",
+      "title": {
+        "es": "Un genérico que no acepta cualquier cosa",
+        "en": "A generic that doesn't take anything"
+      },
+      "body": {
+        "es": "Un `T` a secas puede ser **cualquier** cosa, así que dentro de la función no se le puede hacer casi nada: ni leer un campo ni compararlo. Es lo correcto —el compilador no puede suponer— y es limitante.\n\n`extends` pone el suelo: «acepto lo que sea, **siempre que** tenga esto».\n\n```ts\nfunction porFecha<E extends { fecha: string }>(lista: E[]): E[] {\n  return [...lista].sort((a, b) => a.fecha.localeCompare(b.fecha));\n}\n```\n\nAhora dentro se puede usar `a.fecha` porque está garantizado, y fuera se conserva el tipo completo: si le pasas usuarios con `email`, lo que sale sigue teniendo `email`. Eso es lo que no consigue declarar el parámetro como `{ nombre: string }[]` a secas — devolvería objetos pelados y perderías todo lo demás.\n\nDetalle que salva revisiones: `[...items].sort(...)` copia antes de ordenar. `sort` **muta el array original**, y una función que dice devolver una lista ordenada no debería reordenar la que le prestaron.\n\n**Escribe `porNombre` y ordena tres personas.**",
+        "en": "A bare `T` can be **anything**, so inside the function you can barely do a thing with it: no reading a field, no comparing. That's correct — the compiler can't assume — and it's limiting.\n\n`extends` sets the floor: \"I accept whatever, **as long as** it has this\".\n\n```ts\nfunction porFecha<E extends { fecha: string }>(lista: E[]): E[] {\n  return [...lista].sort((a, b) => a.fecha.localeCompare(b.fecha));\n}\n```\n\nNow inside you can use `a.fecha` because it's guaranteed, and outside the full type survives: pass it users with `email` and what comes back still has `email`. That's what declaring the parameter as plain `{ nombre: string }[]` fails to do — it would return stripped objects and you'd lose everything else.\n\nA detail that saves code reviews: `[...items].sort(...)` copies before sorting. `sort` **mutates the original array**, and a function claiming to return a sorted list shouldn't reorder the one it was lent.\n\n**Write `porNombre` and sort three people.**"
+      },
+      "task": {
+        "es": "Escribe `porNombre<T extends { nombre: string }>` e imprime los nombres de Linus, Ada y Grace ordenados y unidos por comas.",
+        "en": "Write `porNombre<T extends { nombre: string }>` and print the names of Linus, Ada and Grace sorted and joined by commas."
+      },
+      "focusFile": "main.ts",
+      "ruleIds": [
+        "restringe-el-generico",
+        "nombres-ordenados",
+        "generico-sin-any"
+      ],
+      "xp": 35,
+      "hints": [
+        {
+          "id": "h-extends",
+          "tier": 1,
+          "text": {
+            "es": "`const gente = [{ nombre: 'Linus' }, { nombre: 'Ada' }, { nombre: 'Grace' }];` y luego `console.log(porNombre(gente).map((p) => p.nombre).join(','));`",
+            "en": "`const gente = [{ nombre: 'Linus' }, { nombre: 'Ada' }, { nombre: 'Grace' }];` then `console.log(porNombre(gente).map((p) => p.nombre).join(','));`"
+          },
+          "xpPenalty": 8,
+          "autoOfferAfterSeconds": 90
+        }
+      ],
+      "solution": [
+        {
+          "path": "main.ts",
+          "content": "function porNombre<T extends { nombre: string }>(items: T[]): T[] {\n  return [...items].sort((a, b) => a.nombre.localeCompare(b.nombre));\n}\n\nconst gente = [{ nombre: 'Linus' }, { nombre: 'Ada' }, { nombre: 'Grace' }];\n\nconsole.log(porNombre(gente).map((p) => p.nombre).join(','));\n"
+        }
+      ]
+    },
+    {
+      "id": "step-3-resultado",
+      "title": {
+        "es": "`Resultado<T>`: fallar sin lanzar",
+        "en": "`Resultado<T>`: failing without throwing"
+      },
+      "body": {
+        "es": "Junta lo de la lección anterior con lo de esta y sale el patrón que se ve en media base de código moderna: un genérico **discriminado** para lo que puede salir mal.\n\n```ts\ntype Respuesta<D> =\n  | { ok: true; dato: D }\n  | { ok: false; motivo: string };\n```\n\n(Ese es el molde; el ejercicio pide el tuyo, con sus propios nombres.)\n\nLa gracia no es el ahorro de `try/catch`: es que **el compilador obliga a mirar el error**. Con una excepción, olvidarse de capturarla compila perfectamente y revienta en producción. Con esto, tocar `.valor` sin haber comprobado `ok` es un error de compilación — el mismo estrechamiento del `typeof`, ahora sobre un campo booleano literal.\n\nEs la forma de `Result` de Rust, del `Either` de la programación funcional, y de lo que devuelven muchos SDK modernos precisamente porque no obliga a nadie a leerse la documentación para saber que algo puede fallar: está en el tipo.\n\n**Escribe `aNumero(texto: string): Resultado<number>`** que devuelva el número si se puede convertir y un error si no. Imprime el doble del resultado válido y el mensaje de error del inválido.",
+        "en": "Put the previous lesson together with this one and you get the pattern seen in half of modern codebases: a **discriminated** generic for what can go wrong.\n\n```ts\ntype Respuesta<D> =\n  | { ok: true; dato: D }\n  | { ok: false; motivo: string };\n```\n\n(That's the mould; the exercise asks for yours, with its own names.)\n\nThe point isn't saving a `try/catch`: it's that **the compiler forces you to look at the error**. With an exception, forgetting to catch it compiles perfectly and blows up in production. With this, touching `.valor` without having checked `ok` is a compile error — the same narrowing as `typeof`, now over a literal boolean field.\n\nIt's Rust's `Result`, functional programming's `Either`, and what many modern SDKs return precisely because it doesn't require anyone to read the docs to learn something can fail: it's in the type.\n\n**Write `aNumero(texto: string): Resultado<number>`** returning the number if it converts and an error if not. Print double the valid result and the error message of the invalid one."
+      },
+      "task": {
+        "es": "Escribe `aNumero(texto: string): Resultado<number>` e imprime `4` para `'2'` y `No es un número` para `'dos'`.",
+        "en": "Write `aNumero(texto: string): Resultado<number>` and print `4` for `'2'` and `No es un número` for `'dos'`."
+      },
+      "focusFile": "main.ts",
+      "ruleIds": [
+        "resultado-compila",
+        "resultado-imprime",
+        "generico-sin-any"
+      ],
+      "xp": 40,
+      "hints": [
+        {
+          "id": "h-resultado",
+          "tier": 1,
+          "text": {
+            "es": "`const n = Number(texto); return Number.isNaN(n) ? { ok: false, error: 'No es un número' } : { ok: true, valor: n };` y al usarlo: `if (r.ok) { ... } else { ... }`.",
+            "en": "`const n = Number(texto); return Number.isNaN(n) ? { ok: false, error: 'No es un número' } : { ok: true, valor: n };` and when using it: `if (r.ok) { ... } else { ... }`."
+          },
+          "xpPenalty": 10,
+          "autoOfferAfterSeconds": 100
+        }
+      ],
+      "solution": [
+        {
+          "path": "main.ts",
+          "content": "type Resultado<T> =\n  | { ok: true; valor: T }\n  | { ok: false; error: string };\n\nfunction aNumero(texto: string): Resultado<number> {\n  const n = Number(texto);\n  if (Number.isNaN(n)) {\n    return { ok: false, error: 'No es un número' };\n  }\n  return { ok: true, valor: n };\n}\n\nconst bueno = aNumero('2');\nif (bueno.ok) {\n  console.log(bueno.valor * 2);\n}\n\nconst malo = aNumero('dos');\nif (!malo.ok) {\n  console.log(malo.error);\n}\n"
+        }
+      ],
+      "bestPractice": {
+        "es": "**Estándar de la industria:** las excepciones para lo excepcional —quedarse sin memoria, perder la conexión— y un tipo de resultado para lo que sencillamente puede pasar: una validación que no cuadra, un usuario que no existe. Lo previsible no debería viajar por el canal de lo imprevisto.",
+        "en": "**Industry standard:** exceptions for the exceptional — running out of memory, losing the connection — and a result type for what can simply happen: a validation that doesn't hold, a user who doesn't exist. The expected shouldn't travel down the channel built for the unexpected."
+      }
+    }
+  ],
+  "drills": [],
+  "reward": {
+    "baseXp": 140,
+    "flawlessBonus": 50,
+    "noHintBonus": 30,
+    "comboMultiplierCap": 3,
+    "achievements": []
+  },
+  "solution": {
+    "files": [
+      {
+        "path": "main.ts",
+        "content": "type Resultado<T> =\n  | { ok: true; valor: T }\n  | { ok: false; error: string };\n\nfunction aNumero(texto: string): Resultado<number> {\n  const n = Number(texto);\n  if (Number.isNaN(n)) {\n    return { ok: false, error: 'No es un número' };\n  }\n  return { ok: true, valor: n };\n}\n\nconst bueno = aNumero('2');\nif (bueno.ok) {\n  console.log(bueno.valor * 2);\n}\n\nconst malo = aNumero('dos');\nif (!malo.ok) {\n  console.log(malo.error);\n}\n"
+      }
+    ],
+    "explanation": {
+      "es": "Un genérico conecta la entrada con la salida: lo que entra como `string[]` sale como `string`, y el compilador lo sabe sin que nadie lo escriba. `extends` pone el mínimo que `T` debe cumplir para poder trabajar con él sin perder lo demás. Y `Resultado<T>` junta las dos lecciones: un genérico discriminado que obliga a mirar el error antes de usar el valor.",
+      "en": "A generic connects input to output: what goes in as `string[]` comes out as `string`, and the compiler knows without anyone writing it down. `extends` sets the minimum `T` must meet so you can work with it without losing the rest. And `Resultado<T>` brings both lessons together: a discriminated generic that forces you to look at the error before using the value."
+    }
+  }
+}

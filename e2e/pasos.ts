@@ -59,11 +59,23 @@ export function solucionFinal(lessonId: string): Record<string, string> {
   return archivos;
 }
 
-/** Sustituye el contenido del editor de golpe (sin disparar el autocierre). */
+/**
+ * Sustituye el contenido del editor pegándolo de verdad.
+ *
+ * Con `insertText` Monaco **sí** autocierra: al llegar a un `{` añade su `}`,
+ * y el código quedaba con una llave de más al final. En JavaScript el destrozo
+ * pasaba desapercibido —el archivo seguía siendo válido—, pero en TypeScript
+ * el compilador lo cantaba: `TS1128: Declaration or statement expected` en una
+ * línea que el test creía haber escrito bien.
+ *
+ * Un pegado no dispara el autocierre porque no es una pulsación: es la misma
+ * ruta que usa una persona con Ctrl+V.
+ */
 export async function escribirEnEditor(page: Page, text: string) {
   await page.locator('.monaco-editor').click({ position: { x: 100, y: 40 } });
+  await page.evaluate((contenido) => navigator.clipboard.writeText(contenido), text);
   await page.keyboard.press('ControlOrMeta+a');
-  await page.keyboard.insertText(text);
+  await page.keyboard.press('ControlOrMeta+v');
 }
 
 /**

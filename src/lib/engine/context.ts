@@ -28,6 +28,22 @@ export interface EvaluationContext {
    * entre marcar en rojo y dejar en gris.
    */
   sql: SqlQueryResult | null;
+  /**
+   * Diagnósticos de TypeScript de la última compilación (ADR-25).
+   *
+   * `null` = todavía no se ha compilado nada; un array vacío = compiló limpio.
+   * La distinción es la de siempre: pendiente no es lo mismo que correcto, y
+   * dar por buena una lección de tipos que nadie ha compilado sería regalarla.
+   */
+  diagnostics: TsDiagnostic[] | null;
+}
+
+/** Un error del compilador, en lo que necesita una regla. */
+export interface TsDiagnostic {
+  code: number;
+  message: string;
+  line: number;
+  file: string;
 }
 
 /** Forma mínima que el evaluador necesita de un resultado SQL. */
@@ -47,6 +63,7 @@ export function emptyContext(partial: Partial<EvaluationContext> = {}): Evaluati
     document: null,
     transcript: [],
     sql: null,
+    diagnostics: null,
     ...partial,
   };
 }

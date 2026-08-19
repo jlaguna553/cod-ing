@@ -61,6 +61,7 @@ export const RuntimeKindSchema = z.enum([
   'sql',          // Postgres de verdad en el navegador, vía PGlite (ADR-11)
   'vue',          // Vue 3 sin bundler ni terceros, autoalojado (ADR-13)
   'php',          // PHP interpretado en JavaScript, autoalojado (ADR-20)
+  'ts',           // TypeScript: tipos con el compilador del editor (ADR-25)
 ]);
 
 /**
@@ -234,6 +235,24 @@ export const ValidationRuleSchema = z.discriminatedUnion('kind', [
    * Para lo que sí es sintaxis —«usa un JOIN, no una subconsulta»— ya está
    * `regex-must`.
    */
+  /**
+   * Diagnóstico del compilador de TypeScript (ADR-25).
+   *
+   * Se comprueba el **error**, no el texto del código: media lección de tipos
+   * consiste en provocar un fallo y leerlo, y otra media en que deje de
+   * fallar. `expectCode` fija cuál —`2322` es «este tipo no encaja»— y
+   * `expectNone` afirma lo contrario: que compila limpio.
+   */
+  z.object({
+    ...RuleBase,
+    kind: z.literal('type-error'),
+    /** Código de TypeScript esperado, sin el prefijo `TS`. */
+    expectCode: z.number().int().positive().optional(),
+    /** Fragmento que debe aparecer en el mensaje. */
+    messageContains: z.string().optional(),
+    /** `true` = no debe haber ningún error de tipos. */
+    expectNone: z.boolean().default(false),
+  }),
   z.object({
     ...RuleBase,
     kind: z.literal('sql-result'),

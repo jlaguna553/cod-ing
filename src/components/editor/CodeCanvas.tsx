@@ -13,6 +13,7 @@ import { runAndEvaluate } from '@/lib/game/attempt';
 import { Panel } from '@/components/layout/GameShell';
 import { PowerModeFX } from './PowerModeFX';
 import { defineMonacoTheme, languageOf, THEME_NAME } from './monaco-theme';
+import { setMonaco } from '@/lib/runners/monaco-bridge';
 import { useLayoutStore } from '@/stores/useLayoutStore';
 import { ComboCounter } from '@/components/gamification/ComboCounter';
 
@@ -155,6 +156,8 @@ export function CodeCanvas() {
   const handleMount: OnMount = useCallback((instance, monaco) => {
     editorRef.current = instance;
     monacoRef.current = monaco;
+    // El runner de TypeScript usa este mismo compilador: ver `monaco-bridge`.
+    setMonaco(monaco);
     setReady(true);
 
     /** Cuenta la pulsación y, si suma combo, emite partículas en el cursor. */
@@ -300,6 +303,15 @@ export function CodeCanvas() {
       <div ref={surfaceRef} className="relative h-full w-full overflow-hidden rounded">
         <Editor
           key={activeFile}
+          /*
+           * `path` le da al modelo una identidad estable: sin él, Monaco lo
+           * crea con una URI anónima y el runner de TypeScript acababa
+           * creando **otro** modelo del mismo archivo. Dos copias del mismo
+           * `.ts` en el mismo ámbito global son dos declaraciones de todo, y
+           * el compilador respondía «No overload matches this call» a una
+           * función que no tenía sobrecargas.
+           */
+          path={activeFile}
           height="100%"
           theme={THEME_NAME}
           language={languageOf(activeFile)}

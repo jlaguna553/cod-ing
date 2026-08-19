@@ -1,0 +1,296 @@
+{
+  "$schema": "../../../schema/lesson.schema.json",
+  "schemaVersion": 1,
+  "id": "ts-02-uniones-y-narrowing",
+  "track": "frontend",
+  "module": "typescript",
+  "order": 2,
+  "kind": "challenge",
+  "difficulty": "apprentice",
+  "estimatedMinutes": 22,
+  "title": {
+    "es": "Un valor, dos formas: uniones y estrechamiento",
+    "en": "One value, two shapes: unions and narrowing"
+  },
+  "summary": {
+    "es": "`string | number` es el tipo más honesto de una API real. El compilador no te deja usarlo hasta que demuestres cuál de los dos es — y ahí está toda la lección.",
+    "en": "`string | number` is the most honest type in a real API. The compiler won't let you use it until you prove which one it is — and that's the whole lesson."
+  },
+  "concepts": [
+    "typescript",
+    "uniones",
+    "narrowing",
+    "typeof"
+  ],
+  "prerequisites": [
+    "ts-01-tipos-que-fallan-antes"
+  ],
+  "runtime": {
+    "kind": "ts",
+    "dependencies": {},
+    "timeoutMs": 15000
+  },
+  "workspace": {
+    "entry": "main.ts",
+    "allowCreate": false,
+    "allowDelete": false,
+    "files": [
+      {
+        "path": "main.ts",
+        "active": true,
+        "content": "// Un identificador puede llegar como número (base de datos)\n// o como texto (una URL). Las dos cosas son legítimas.\n\ntype Id = string | number;\n\n// Paso 1: haz que esto compile SIN cambiar el tipo de Id.\nfunction describir(id: Id): string {\n  return 'ID de ' + id.length + ' caracteres';\n}\n\nconsole.log(describir('a1b2c3'));\n"
+      }
+    ]
+  },
+  "rules": [
+    {
+      "id": "compila-el-narrowing",
+      "kind": "type-error",
+      "expectNone": true,
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Sigue sin compilar. Sobre una unión solo se puede usar lo que existe en **las dos** ramas: hay que estrechar antes.",
+        "en": "It still doesn't compile. On a union you can only use what exists in **both** branches: narrow it first."
+      },
+      "successMessage": {
+        "es": "Compila: el compilador ya sabe qué es en cada rama.",
+        "en": "It compiles: the compiler now knows which one it is in each branch."
+      },
+      "points": 30
+    },
+    {
+      "id": "usa-typeof",
+      "kind": "regex-must",
+      "file": "main.ts",
+      "pattern": "typeof\\s+id\\s*===",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Estrecha con `typeof id === 'string'`. Un `as string` haría callar al compilador sin comprobar nada en ejecución.",
+        "en": "Narrow with `typeof id === 'string'`. An `as string` would silence the compiler without checking anything at runtime."
+      },
+      "successMessage": {
+        "es": "`typeof` comprueba de verdad, y además en ejecución.",
+        "en": "`typeof` genuinely checks — at runtime, too."
+      },
+      "points": 20
+    },
+    {
+      "id": "sin-as-string",
+      "kind": "regex-forbid",
+      "file": "main.ts",
+      "pattern": "as\\s+(string|number|any)\\b",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Nada de aserciones (`as`): son una promesa tuya, no una comprobación. Si te equivocas, el fallo vuelve a ejecución.",
+        "en": "No assertions (`as`): they're a promise from you, not a check. Get it wrong and the failure moves back to runtime."
+      },
+      "successMessage": {
+        "es": "Sin aserciones: el compilador sigue teniendo la última palabra.",
+        "en": "No assertions: the compiler still has the last word."
+      },
+      "points": 15
+    },
+    {
+      "id": "describe-las-dos",
+      "kind": "stdout-match",
+      "equals": "ID de 6 caracteres\nID numérico 42",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Deben salir las dos líneas: la de texto con su longitud y la numérica con su valor.",
+        "en": "Both lines must come out: the text one with its length and the numeric one with its value."
+      },
+      "successMessage": {
+        "es": "Las dos ramas hacen lo suyo.",
+        "en": "Both branches do their own thing."
+      },
+      "points": 30
+    },
+    {
+      "id": "exhaustivo-con-never",
+      "kind": "regex-must",
+      "file": "main.ts",
+      "pattern": ":\\s*never",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Cierra el `switch` con una comprobación exhaustiva: asigna el valor sobrante a algo de tipo `never`.",
+        "en": "Close the `switch` with an exhaustive check: assign the leftover value to something of type `never`."
+      },
+      "successMessage": {
+        "es": "Con `never`, añadir una forma nueva rompe la compilación en vez de pasar de largo.",
+        "en": "With `never`, adding a new shape breaks the build instead of slipping through."
+      },
+      "points": 25
+    },
+    {
+      "id": "formas-impresas",
+      "kind": "stdout-match",
+      "equals": "78.5\n144",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Debe imprimir el área del círculo (78.5) y la del cuadrado (144), una por línea.",
+        "en": "It must print the circle's area (78.5) and the square's (144), one per line."
+      },
+      "successMessage": {
+        "es": "Las dos áreas, cada una por su rama.",
+        "en": "Both areas, each through its own branch."
+      },
+      "points": 30
+    }
+  ],
+  "steps": [
+    {
+      "id": "step-1-estrechar",
+      "title": {
+        "es": "Lo que la unión no te deja hacer",
+        "en": "What the union won't let you do"
+      },
+      "body": {
+        "es": "`type Id = string | number` dice algo muy concreto: **es una de las dos, y no sabemos cuál**.\n\nPor eso el compilador solo permite usar lo que existe en las dos ramas. `id.length` no compila —los números no tienen `length`— y ese error es literalmente el fallo que en JavaScript aparecería como `undefined` a las tres semanas.\n\nLa forma de convencerlo se llama **estrechamiento** (*narrowing*): comprobar en ejecución cuál de las dos es. Y lo bonito es que no hay que aprender nada nuevo — se hace con el `typeof` de toda la vida:\n\n```ts\nif (typeof valor === 'string') {\n  // aquí dentro, para el compilador, valor ES string\n}\n```\n\nDentro del `if`, `valor.length` compila. Fuera, no. El compilador sigue el mismo razonamiento que harías tú leyendo el código, y esa es toda la idea.\n\nExiste el atajo `id as string`, y conviene saber por qué no vale: una aserción no comprueba nada, solo **afirma**. Si te equivocas, el compilador se calla y el error vuelve a ejecución — justo de donde veníamos.\n\n**Estrecha con `typeof` para que las dos llamadas funcionen.**",
+        "en": "`type Id = string | number` says something very specific: **it's one of the two, and we don't know which**.\n\nThat's why the compiler only lets you use what exists in both branches. `id.length` doesn't compile — numbers have no `length` — and that error is literally the failure that in JavaScript would show up as `undefined` three weeks later.\n\nThe way to convince it is called **narrowing**: checking at runtime which one it is. And the nice part is there's nothing new to learn — you do it with plain old `typeof`:\n\n```ts\nif (typeof valor === 'string') {\n  // in here, as far as the compiler is concerned, valor IS a string\n}\n```\n\nInside the `if`, `valor.length` compiles. Outside, it doesn't. The compiler follows the same reasoning you would while reading the code, and that's the whole idea.\n\nThere's a shortcut, `id as string`, and it's worth knowing why it won't do: an assertion doesn't check anything, it **claims**. Get it wrong and the compiler goes quiet while the error moves back to runtime — exactly where we came from.\n\n**Narrow with `typeof` so both calls work.**"
+      },
+      "task": {
+        "es": "Haz que `describir` compile y añade `console.log(describir(42));`. Debe imprimir `ID de 6 caracteres` y `ID numérico 42`.",
+        "en": "Make `describir` compile and add `console.log(describir(42));`. It must print `ID de 6 caracteres` and `ID numérico 42`."
+      },
+      "focusFile": "main.ts",
+      "ruleIds": [
+        "compila-el-narrowing",
+        "usa-typeof",
+        "sin-as-string",
+        "describe-las-dos"
+      ],
+      "xp": 35,
+      "hints": [
+        {
+          "id": "h-typeof",
+          "tier": 1,
+          "text": {
+            "es": "`if (typeof id === 'string') { return 'ID de ' + id.length + ' caracteres'; }` y después el caso numérico.",
+            "en": "`if (typeof id === 'string') { return 'ID de ' + id.length + ' caracteres'; }` and then the numeric case."
+          },
+          "xpPenalty": 8,
+          "autoOfferAfterSeconds": 80
+        }
+      ],
+      "solution": [
+        {
+          "path": "main.ts",
+          "content": "type Id = string | number;\n\nfunction describir(id: Id): string {\n  if (typeof id === 'string') {\n    return 'ID de ' + id.length + ' caracteres';\n  }\n  return 'ID numérico ' + id;\n}\n\nconsole.log(describir('a1b2c3'));\nconsole.log(describir(42));\n"
+        }
+      ],
+      "bestPractice": {
+        "es": "**Estándar de la industria:** una aserción `as` es una excepción que se justifica en el mensaje del commit, no una herramienta de uso diario. Cada `as` es un sitio donde el compilador ya no te cubre.",
+        "en": "**Industry standard:** an `as` assertion is an exception you justify in the commit message, not a daily tool. Every `as` is one more place where the compiler no longer covers you."
+      }
+    },
+    {
+      "id": "step-2-uniones-discriminadas",
+      "title": {
+        "es": "Uniones con etiqueta",
+        "en": "Tagged unions"
+      },
+      "body": {
+        "es": "Con objetos, `typeof` ya no sirve: todos son `'object'`. La solución que usa todo el ecosistema es la **unión discriminada**: un campo literal que dice de cuál se trata.\n\n```ts\ntype Circulo = { forma: 'circulo'; radio: number };\ntype Cuadrado = { forma: 'cuadrado'; lado: number };\ntype Figura = Circulo | Cuadrado;\n```\n\nEse `forma: 'circulo'` no es un `string` cualquiera: es un **tipo literal**, un tipo con un solo valor posible. Y eso permite al compilador razonar: dentro de `case 'circulo'`, la figura tiene `radio` — y no tiene `lado`, así que usarlo es un error.\n\nEs la misma forma que tienen las acciones de Redux, los eventos de un `WebSocket` o las respuestas de una API que puede fallar (`{ ok: true, datos } | { ok: false, error }`). Reconocerla es reconocer media base de código moderna.\n\n**Escribe `area(figura: Figura): number` con un `switch` sobre `figura.forma`** y calcula las dos: un círculo de radio 5 —usa `3.14`, que da 78.5— y un cuadrado de lado 12.",
+        "en": "With objects, `typeof` is no help: they're all `'object'`. The solution the whole ecosystem uses is the **discriminated union**: a literal field saying which one it is.\n\n```ts\ntype Circulo = { forma: 'circulo'; radio: number };\ntype Cuadrado = { forma: 'cuadrado'; lado: number };\ntype Figura = Circulo | Cuadrado;\n```\n\nThat `forma: 'circulo'` isn't just a `string`: it's a **literal type**, a type with a single possible value. And that lets the compiler reason: inside `case 'circulo'`, the shape has `radio` — and doesn't have `lado`, so using it is an error.\n\nIt's the same shape Redux actions have, or `WebSocket` events, or an API response that can fail (`{ ok: true, datos } | { ok: false, error }`). Recognising it is recognising half of a modern codebase.\n\n**Write `area(figura: Figura): number` with a `switch` on `figura.forma`** and compute both: a circle of radius 5 — use `3.14`, which gives 78.5 — and a square of side 12."
+      },
+      "task": {
+        "es": "Escribe `area(figura: Figura)` con un `switch` sobre `figura.forma` e imprime el área de un círculo de radio 5 y la de un cuadrado de lado 12.",
+        "en": "Write `area(figura: Figura)` with a `switch` on `figura.forma` and print the area of a circle with radius 5 and a square of side 12."
+      },
+      "focusFile": "main.ts",
+      "ruleIds": [
+        "formas-impresas",
+        "compila-el-narrowing"
+      ],
+      "xp": 35,
+      "hints": [
+        {
+          "id": "h-switch",
+          "tier": 1,
+          "text": {
+            "es": "`switch (figura.forma) { case 'circulo': return 3.14 * figura.radio * figura.radio; case 'cuadrado': return figura.lado * figura.lado; }`",
+            "en": "`switch (figura.forma) { case 'circulo': return 3.14 * figura.radio * figura.radio; case 'cuadrado': return figura.lado * figura.lado; }`"
+          },
+          "xpPenalty": 8,
+          "autoOfferAfterSeconds": 90
+        }
+      ],
+      "solution": [
+        {
+          "path": "main.ts",
+          "content": "type Circulo = { forma: 'circulo'; radio: number };\ntype Cuadrado = { forma: 'cuadrado'; lado: number };\ntype Figura = Circulo | Cuadrado;\n\nfunction area(figura: Figura): number {\n  switch (figura.forma) {\n    case 'circulo':\n      return 3.14 * figura.radio * figura.radio;\n    case 'cuadrado':\n      return figura.lado * figura.lado;\n  }\n}\n\nconsole.log(area({ forma: 'circulo', radio: 5 }));\nconsole.log(area({ forma: 'cuadrado', lado: 12 }));\n"
+        }
+      ]
+    },
+    {
+      "id": "step-3-never",
+      "title": {
+        "es": "El caso que todavía no existe",
+        "en": "The case that doesn't exist yet"
+      },
+      "body": {
+        "es": "Queda el problema de verdad, que no es de hoy sino de dentro de seis meses: **alguien añade `Triangulo` a la unión**. Tu `switch` sigue compilando —le faltan casos, pero eso no es un error— y devuelve `undefined` por una rama que nadie escribió.\n\nEl truco que resuelve esto usa `never`, el tipo del valor que no puede existir:\n\n```ts\ndefault: {\n  const imposible: never = figura;\n  throw new Error('Figura sin manejar: ' + imposible);\n}\n```\n\nSi el `switch` cubre todas las formas, en el `default` a `figura` no le queda ningún tipo posible: es `never`, y la asignación compila. En cuanto alguien añade una forma nueva sin su `case`, `figura` sí tiene un tipo ahí —el nuevo— y `never` lo rechaza: **el compilador te manda al sitio exacto que hay que actualizar**.\n\nEs de las pocas técnicas que convierten un tipo en una red de seguridad para el futuro en vez de en documentación del presente.\n\n**Añade la comprobación exhaustiva.** Las dos áreas deben seguir imprimiéndose igual.",
+        "en": "The real problem is left, and it isn't today's — it's six months from now: **somebody adds `Triangulo` to the union**. Your `switch` still compiles — it's missing cases, but that's not an error — and returns `undefined` through a branch nobody wrote.\n\nThe trick that fixes this uses `never`, the type of the value that cannot exist:\n\n```ts\ndefault: {\n  const imposible: never = figura;\n  throw new Error('Unhandled shape: ' + imposible);\n}\n```\n\nIf the `switch` covers every shape, by the `default` there's no type left for `figura`: it's `never`, and the assignment compiles. The moment somebody adds a new shape without its `case`, `figura` does have a type there — the new one — and `never` rejects it: **the compiler sends you to the exact spot that needs updating**.\n\nIt's one of the few techniques that turn a type into a safety net for the future instead of documentation of the present.\n\n**Add the exhaustive check.** Both areas must still print the same."
+      },
+      "task": {
+        "es": "Añade al `switch` un `default` con `const imposible: never = figura;` conservando la misma salida.",
+        "en": "Add a `default` to the `switch` with `const imposible: never = figura;`, keeping the same output."
+      },
+      "focusFile": "main.ts",
+      "ruleIds": [
+        "exhaustivo-con-never",
+        "formas-impresas",
+        "compila-el-narrowing"
+      ],
+      "xp": 30,
+      "hints": [
+        {
+          "id": "h-never",
+          "tier": 1,
+          "text": {
+            "es": "En el `default`: `const imposible: never = figura; throw new Error('Figura sin manejar: ' + imposible);`",
+            "en": "In the `default`: `const imposible: never = figura; throw new Error('Unhandled shape: ' + imposible);`"
+          },
+          "xpPenalty": 8,
+          "autoOfferAfterSeconds": 90
+        }
+      ],
+      "solution": [
+        {
+          "path": "main.ts",
+          "content": "type Circulo = { forma: 'circulo'; radio: number };\ntype Cuadrado = { forma: 'cuadrado'; lado: number };\ntype Figura = Circulo | Cuadrado;\n\nfunction area(figura: Figura): number {\n  switch (figura.forma) {\n    case 'circulo':\n      return 3.14 * figura.radio * figura.radio;\n    case 'cuadrado':\n      return figura.lado * figura.lado;\n    default: {\n      const imposible: never = figura;\n      throw new Error('Figura sin manejar: ' + imposible);\n    }\n  }\n}\n\nconsole.log(area({ forma: 'circulo', radio: 5 }));\nconsole.log(area({ forma: 'cuadrado', lado: 12 }));\n"
+        }
+      ],
+      "bestPractice": {
+        "es": "**Estándar de la industria:** toda unión discriminada que se recorre con `switch` lleva su comprobación exhaustiva. Cuesta tres líneas y convierte «se nos olvidó actualizar ese switch» en un error de compilación.",
+        "en": "**Industry standard:** every discriminated union walked with a `switch` carries its exhaustive check. It costs three lines and turns \"we forgot to update that switch\" into a compile error."
+      }
+    }
+  ],
+  "drills": [],
+  "reward": {
+    "baseXp": 130,
+    "flawlessBonus": 50,
+    "noHintBonus": 25,
+    "comboMultiplierCap": 3,
+    "achievements": []
+  },
+  "solution": {
+    "files": [
+      {
+        "path": "main.ts",
+        "content": "type Circulo = { forma: 'circulo'; radio: number };\ntype Cuadrado = { forma: 'cuadrado'; lado: number };\ntype Figura = Circulo | Cuadrado;\n\nfunction area(figura: Figura): number {\n  switch (figura.forma) {\n    case 'circulo':\n      return 3.14 * figura.radio * figura.radio;\n    case 'cuadrado':\n      return figura.lado * figura.lado;\n    default: {\n      const imposible: never = figura;\n      throw new Error('Figura sin manejar: ' + imposible);\n    }\n  }\n}\n\nconsole.log(area({ forma: 'circulo', radio: 5 }));\nconsole.log(area({ forma: 'cuadrado', lado: 12 }));\n"
+      }
+    ],
+    "explanation": {
+      "es": "Una unión obliga a demostrar de cuál se trata antes de usarla, y eso se hace comprobando en ejecución —`typeof` para primitivos, un campo literal para objetos—, no afirmando con `as`. La comprobación exhaustiva con `never` es lo que hace que la unión siga protegiendo cuando alguien la amplíe dentro de seis meses.",
+      "en": "A union forces you to prove which one it is before using it, and you do that by checking at runtime — `typeof` for primitives, a literal field for objects — not by claiming with `as`. The exhaustive check with `never` is what keeps the union protecting you when somebody extends it six months from now."
+    }
+  }
+}

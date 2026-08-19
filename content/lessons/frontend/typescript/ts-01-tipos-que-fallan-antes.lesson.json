@@ -1,0 +1,292 @@
+{
+  "$schema": "../../../schema/lesson.schema.json",
+  "schemaVersion": 1,
+  "id": "ts-01-tipos-que-fallan-antes",
+  "track": "frontend",
+  "module": "typescript",
+  "order": 1,
+  "kind": "concept",
+  "difficulty": "apprentice",
+  "estimatedMinutes": 20,
+  "title": {
+    "es": "El error que llega antes de ejecutar",
+    "en": "The error that arrives before you run"
+  },
+  "summary": {
+    "es": "Qué compra TypeScript exactamente: que el fallo aparezca al escribir y no en producción. Con el compilador de verdad, los mismos errores que subraya el editor.",
+    "en": "What TypeScript actually buys you: the failure shows up as you type, not in production. With the real compiler — the same errors the editor underlines."
+  },
+  "concepts": [
+    "typescript",
+    "tipos",
+    "inferencia",
+    "compilador"
+  ],
+  "prerequisites": [
+    "js-02-functions"
+  ],
+  "runtime": {
+    "kind": "ts",
+    "dependencies": {},
+    "timeoutMs": 15000
+  },
+  "workspace": {
+    "entry": "main.ts",
+    "allowCreate": false,
+    "allowDelete": false,
+    "files": [
+      {
+        "path": "main.ts",
+        "active": true,
+        "content": "// Paso 1: haz que esto NO compile.\n// Cambia el 42 por un texto y ejecuta para leer el error.\n\nfunction doble(n: number): number {\n  return n * 2;\n}\n\nconsole.log(doble(42));\n"
+      }
+    ]
+  },
+  "rules": [
+    {
+      "id": "provoca-2345",
+      "kind": "type-error",
+      "expectCode": 2345,
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Todavía no hay error. Pásale a `doble` algo que no sea un número —una cadena entre comillas— y ejecuta.",
+        "en": "No error yet. Pass `doble` something that isn't a number — a quoted string — and run."
+      },
+      "successMessage": {
+        "es": "TS2345: el argumento no encaja con el parámetro. Ese es el error que buscabas.",
+        "en": "TS2345: the argument doesn't match the parameter. That's the error you were after."
+      },
+      "points": 30
+    },
+    {
+      "id": "compila-limpio",
+      "kind": "type-error",
+      "expectNone": true,
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Sigue habiendo errores de tipos. Léelos en la consola: dicen qué esperaba y qué recibió.",
+        "en": "There are still type errors. Read them in the console: they say what was expected and what arrived."
+      },
+      "successMessage": {
+        "es": "Compila limpio.",
+        "en": "Compiles clean."
+      },
+      "points": 25
+    },
+    {
+      "id": "imprime-el-doble",
+      "kind": "stdout-match",
+      "equals": "84",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Con los tipos en orden, ejecutar debe imprimir `84`.",
+        "en": "With the types sorted out, running must print `84`."
+      },
+      "successMessage": {
+        "es": "Compila y además hace lo que promete.",
+        "en": "It compiles, and it also does what it promised."
+      },
+      "points": 25
+    },
+    {
+      "id": "anota-el-parametro",
+      "kind": "regex-must",
+      "file": "main.ts",
+      "pattern": "precio\\s*:\\s*number",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Anota el parámetro: `precio: number`. Sin anotación, TypeScript lo trata como `any` y deja de comprobarlo.",
+        "en": "Annotate the parameter: `precio: number`. Without it, TypeScript treats it as `any` and stops checking."
+      },
+      "successMessage": {
+        "es": "Anotado: a partir de aquí el compilador vigila.",
+        "en": "Annotated: from here on the compiler is watching."
+      },
+      "points": 20
+    },
+    {
+      "id": "iva-correcto",
+      "kind": "stdout-match",
+      "equals": "121",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Debe imprimir `121`: 100 con un 21% de IVA.",
+        "en": "It must print `121`: 100 with 21% VAT."
+      },
+      "successMessage": {
+        "es": "Los tipos cuadran y la cuenta también.",
+        "en": "The types add up, and so does the arithmetic."
+      },
+      "points": 30
+    },
+    {
+      "id": "sin-any",
+      "kind": "regex-forbid",
+      "file": "main.ts",
+      "pattern": ":\\s*any\\b",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "`any` apaga el compilador justo donde hace falta. Resuélvelo con el tipo correcto.",
+        "en": "`any` switches the compiler off exactly where you need it. Solve it with the right type."
+      },
+      "successMessage": {
+        "es": "Ni un `any`: el compilador sigue trabajando.",
+        "en": "Not one `any`: the compiler is still working."
+      },
+      "points": 15
+    }
+  ],
+  "steps": [
+    {
+      "id": "step-1-provocar-el-error",
+      "title": {
+        "es": "Rómpelo a propósito",
+        "en": "Break it on purpose"
+      },
+      "body": {
+        "es": "Antes de aprender a evitar los errores de tipos conviene ver uno. Y verlo **donde aparece**: no al ejecutar, sino al compilar.\n\nEsta función dice qué acepta y qué devuelve:\n\n```ts\nfunction doble(n: number): number {\n  return n * 2;\n}\n```\n\nEso no es documentación: es una promesa que alguien comprueba. En JavaScript, `doble('42')` devolvería `84` —porque `'42' * 2` funciona por conversión automática— y `doble('hola')` devolvería `NaN` sin quejarse ni una vez. El fallo aparecería tres pantallas más allá, cuando ese `NaN` llegue a una factura.\n\nTypeScript lo corta antes: el compilador compara lo que pasas con lo que la función pide, y si no encaja **no genera nada**.\n\nAquí ejecutar significa dos cosas, en este orden: **primero se comprueban los tipos y solo si están bien se ejecuta el código**. Es lo mismo que hace un proyecto real en su `build`.\n\n**Pásale a `doble` una cadena de texto y ejecuta.** El error que sale es el que hay que aprender a leer.",
+        "en": "Before learning to avoid type errors it helps to see one. And to see it **where it appears**: not when running, but when compiling.\n\nThis function states what it accepts and what it returns:\n\n```ts\nfunction doble(n: number): number {\n  return n * 2;\n}\n```\n\nThat isn't documentation: it's a promise somebody checks. In JavaScript, `doble('42')` would return `84` — because `'42' * 2` works through automatic conversion — and `doble('hola')` would return `NaN` without complaining once. The failure would surface three screens later, when that `NaN` reaches an invoice.\n\nTypeScript cuts it off earlier: the compiler compares what you pass with what the function asks for, and if they don't match **it emits nothing**.\n\nHere, running means two things in this order: **types are checked first, and only if they're right does the code run**. Same as any real project's build.\n\n**Pass `doble` a string and run.** The error that comes out is the one to learn to read."
+      },
+      "task": {
+        "es": "Cambia el argumento de `doble` por una cadena de texto y ejecuta para provocar el error TS2345.",
+        "en": "Change `doble`'s argument to a string and run to trigger error TS2345."
+      },
+      "focusFile": "main.ts",
+      "ruleIds": [
+        "provoca-2345"
+      ],
+      "xp": 30,
+      "hints": [
+        {
+          "id": "h-cadena",
+          "tier": 1,
+          "text": {
+            "es": "`console.log(doble('cuarenta y dos'));` — y pulsa Ejecutar para que el compilador se pronuncie.",
+            "en": "`console.log(doble('cuarenta y dos'));` — then hit Run so the compiler speaks up."
+          },
+          "xpPenalty": 5,
+          "autoOfferAfterSeconds": 60
+        }
+      ],
+      "solution": [
+        {
+          "path": "main.ts",
+          "content": "function doble(n: number): number {\n  return n * 2;\n}\n\nconsole.log(doble('cuarenta y dos'));\n"
+        }
+      ]
+    },
+    {
+      "id": "step-2-arreglarlo",
+      "title": {
+        "es": "Leer el error y arreglarlo",
+        "en": "Read the error and fix it"
+      },
+      "body": {
+        "es": "El mensaje que acabas de ver tiene tres partes, y las tres importan:\n\n```\nmain.ts(7): error TS2345: Argument of type 'string' is not\nassignable to parameter of type 'number'.\n```\n\n- **Dónde**: archivo y línea.\n- **Qué código**: `TS2345`. Cuando el texto no baste, ese número pegado en un buscador lleva directo a la explicación — los errores de TypeScript están catalogados uno a uno.\n- **Qué esperaba y qué llegó**: `number` esperado, `string` recibido. Casi todos los errores de tipos se leen así.\n\nHay dos formas de callar a este compilador y solo una es buena. La mala es `doble('42' as any)`, que le dice «cállate y confía»: el error desaparece y `NaN` vuelve a estar en el menú. La buena es arreglar el dato o el tipo.\n\n**Devuelve el argumento a un número, ejecuta, y comprueba que imprime 84.**",
+        "en": "The message you just saw has three parts, and all three matter:\n\n```\nmain.ts(7): error TS2345: Argument of type 'string' is not\nassignable to parameter of type 'number'.\n```\n\n- **Where**: file and line.\n- **Which code**: `TS2345`. When the text isn't enough, that number in a search engine goes straight to the explanation — TypeScript errors are catalogued one by one.\n- **What was expected and what arrived**: `number` expected, `string` received. Nearly every type error reads like this.\n\nThere are two ways to silence this compiler and only one is good. The bad one is `doble('42' as any)`, which tells it \"shut up and trust me\": the error goes away and `NaN` is back on the menu. The good one is fixing the data or the type.\n\n**Put a number back as the argument, run, and check it prints 84.**"
+      },
+      "task": {
+        "es": "Arregla la llamada para que compile sin errores e imprima `84`.",
+        "en": "Fix the call so it compiles with no errors and prints `84`."
+      },
+      "focusFile": "main.ts",
+      "ruleIds": [
+        "compila-limpio",
+        "imprime-el-doble"
+      ],
+      "xp": 25,
+      "hints": [
+        {
+          "id": "h-numero",
+          "tier": 1,
+          "text": {
+            "es": "`doble(42)`: el 42 sin comillas es un número; con comillas es texto que se le parece.",
+            "en": "`doble(42)`: 42 without quotes is a number; with quotes it's text that looks like one."
+          },
+          "xpPenalty": 5,
+          "autoOfferAfterSeconds": 60
+        }
+      ],
+      "solution": [
+        {
+          "path": "main.ts",
+          "content": "function doble(n: number): number {\n  return n * 2;\n}\n\nconsole.log(doble(42));\n"
+        }
+      ],
+      "bestPractice": {
+        "es": "**Estándar de la industria:** `as any` para acallar un error es deuda con intereses. Lo que el compilador estaba señalando no desaparece — solo deja de avisarte, y reaparece en ejecución donde cuesta diez veces más encontrarlo.",
+        "en": "**Industry standard:** `as any` to silence an error is debt with interest. What the compiler was pointing at doesn't go away — it just stops warning you, and comes back at runtime where it costs ten times more to find."
+      }
+    },
+    {
+      "id": "step-3-anotar",
+      "title": {
+        "es": "Lo que no anotas, no se comprueba",
+        "en": "What you don't annotate isn't checked"
+      },
+      "body": {
+        "es": "TypeScript **infiere** casi todo. Si escribes `const precio = 100`, ya sabe que es un `number` sin que se lo digas, y a partir de ahí lo vigila.\n\nDonde no puede inferir es en los **parámetros de una función**: quien la llama todavía no existe cuando se declara. Por eso, un parámetro sin anotar es `any` — y `any` significa «no compruebes nada aquí».\n\n```ts\nfunction conIva(precio) {   // precio es any: barra libre\n  return precio * 1.21;\n}\n\nconIva('gratis');           // sin error, y devuelve NaN\n```\n\nEse es el hueco por el que se cuela en producción exactamente el mismo fallo que TypeScript venía a evitar. Con la anotación puesta, la llamada de arriba ni compila.\n\n> En un proyecto real esto se cierra de una vez con `\"strict\": true` en el `tsconfig.json`, que incluye `noImplicitAny`: un parámetro sin tipo pasa a ser un error en lugar de un permiso.\n\n**Escribe `conIva` con su parámetro anotado y usa `Math.round` para imprimir 121.**",
+        "en": "TypeScript **infers** nearly everything. Write `const precio = 100` and it already knows it's a `number` without being told, and from then on it watches it.\n\nWhere it can't infer is in a function's **parameters**: whoever calls it doesn't exist yet when it's declared. So an unannotated parameter is `any` — and `any` means \"don't check anything here\".\n\n```ts\nfunction conIva(precio) {   // precio is any: anything goes\n  return precio * 1.21;\n}\n\nconIva('gratis');           // no error, returns NaN\n```\n\nThat's the gap through which the very failure TypeScript came to prevent reaches production. With the annotation in place, the call above doesn't even compile.\n\n> In a real project this is closed once and for all with `\"strict\": true` in `tsconfig.json`, which includes `noImplicitAny`: an untyped parameter becomes an error instead of a permission.\n\n**Write `conIva` with its parameter annotated and use `Math.round` to print 121.**"
+      },
+      "task": {
+        "es": "Declara `conIva(precio: number)` que devuelva el precio con un 21% de IVA, e imprime `Math.round(conIva(100))` — debe salir 121. Sin usar `any`.",
+        "en": "Declare `conIva(precio: number)` returning the price with 21% VAT, and print `Math.round(conIva(100))` — it must be 121. Without using `any`."
+      },
+      "focusFile": "main.ts",
+      "ruleIds": [
+        "anota-el-parametro",
+        "iva-correcto",
+        "sin-any"
+      ],
+      "xp": 35,
+      "hints": [
+        {
+          "id": "h-firma",
+          "tier": 1,
+          "text": {
+            "es": "`function conIva(precio: number): number { return precio * 1.21; }` y luego `console.log(Math.round(conIva(100)));`",
+            "en": "`function conIva(precio: number): number { return precio * 1.21; }` then `console.log(Math.round(conIva(100)));`"
+          },
+          "xpPenalty": 8,
+          "autoOfferAfterSeconds": 80
+        }
+      ],
+      "solution": [
+        {
+          "path": "main.ts",
+          "content": "function conIva(precio: number): number {\n  return precio * 1.21;\n}\n\nconsole.log(Math.round(conIva(100)));\n"
+        }
+      ],
+      "bestPractice": {
+        "es": "**Estándar de la industria:** anota lo que entra y lo que sale de una función; deja que infiera todo lo de dentro. Anotar cada variable local llena el archivo de ruido que el compilador ya sabía, y no comprueba nada más.",
+        "en": "**Industry standard:** annotate what goes into and out of a function; let it infer everything inside. Annotating every local variable fills the file with noise the compiler already knew, and checks nothing extra."
+      }
+    }
+  ],
+  "drills": [],
+  "reward": {
+    "baseXp": 120,
+    "flawlessBonus": 45,
+    "noHintBonus": 25,
+    "comboMultiplierCap": 3,
+    "achievements": []
+  },
+  "solution": {
+    "files": [
+      {
+        "path": "main.ts",
+        "content": "function conIva(precio: number): number {\n  return precio * 1.21;\n}\n\nconsole.log(Math.round(conIva(100)));\n"
+      }
+    ],
+    "explanation": {
+      "es": "Tres pasos y una idea: en TypeScript el fallo llega antes de ejecutar. Provocarlo a propósito enseña a leer el diagnóstico —dónde, qué código, qué esperaba—, arreglarlo enseña que `as any` no es arreglar, y anotar el parámetro enseña dónde el compilador deja de mirar si no se lo pides.",
+      "en": "Three steps, one idea: in TypeScript the failure arrives before you run. Triggering it on purpose teaches you to read the diagnostic — where, which code, what was expected —, fixing it teaches that `as any` isn't fixing, and annotating the parameter teaches where the compiler stops looking unless you ask it to."
+    }
+  }
+}

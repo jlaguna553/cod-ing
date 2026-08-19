@@ -757,9 +757,13 @@ Los **ciclos sí son error**: un track sin punto de entrada no se puede empezar.
 
 Hoy no queda ninguna referencia rota: **toda lección citada como prerequisito existe**.
 
-**Sin empezar:** TypeScript y Next.js (módulos completos). En Backend, Node y Python
-siguen sin motor: ningún runner actual los ejecuta, y esa decisión sigue abierta —
+**Sin empezar:** Next.js (módulo completo). En Backend, Node y Python siguen sin motor: ningún runner actual los ejecuta, y esa decisión sigue abierta —
 runtime remoto con base efímera por petición, o Pyodide para el caso de Python.
+
+**TypeScript ya tiene módulo y motor** (ADR-25): tres lecciones —el error que llega antes
+de ejecutar, uniones con estrechamiento, y genéricos hasta `Resultado<T>`— sobre el
+compilador que Monaco ya carga para subrayar el editor. Comprueba tipos primero y solo
+ejecuta si compila.
 
 **PHP sí tiene motor** desde el ADR-20: un intérprete escrito en JavaScript (1,1 MB, MIT)
 en lugar de PHP compilado a WebAssembly (10 MB y GPL). Cubre un subconjunto —sintaxis de

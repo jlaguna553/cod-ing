@@ -1155,6 +1155,60 @@ sesiones en la misma tarde-noche mexicana cuentan como un día, el cambio de hor
 resuelve la zona, viajar de Madrid a México no rompe la racha, y una zona inventada cae a
 UTC sin llevarse por delante la que ya estaba.
 
+### ADR-25 · TypeScript con el compilador que ya está cargado
+
+**Contexto.** El módulo de TypeScript llevaba desde el principio en el temario y sin
+empezar, por una razón concreta: **media lección de tipos es un error que no aparece al
+ejecutar**. Sandpack y esbuild borran los tipos sin comprobarlos, así que una lección
+montada sobre ellos enseñaría a escribir anotaciones que no significan nada.
+
+**Decisión.** El compilador sale del editor. Monaco trae su propio TypeScript para dibujar
+los subrayados rojos y expone su servicio de lenguaje: diagnósticos y emisión. Cargar el
+paquete `typescript` aparte serían ocho megas más para dar **la misma** respuesta.
+
+**Y hay una razón mejor que el peso.** Con dos compiladores distintos cabría que el editor
+no dijera nada mientras la comprobación de la lección falla — la forma más desconcertante
+posible de suspender a alguien. Así, **el error que juzga la lección es exactamente el que
+está subrayado en pantalla**.
+
+**Comprobar y luego ejecutar, en ese orden.** Si hay errores de tipos **no se ejecuta
+nada**: se imprimen como los imprime `tsc` —archivo, línea, código y mensaje— y ahí acaba.
+Es lo que hace un `build` real y es justo lo que la lección enseña. Si compila, el
+JavaScript emitido corre en el mismo iframe aislado de las lecciones de JavaScript; no se
+reimplementa el runner, se delega en él.
+
+**Regla `type-error`.** Juzga el diagnóstico, no el texto del código: `expectCode: 2345`
+para exigir un error concreto —hay pasos cuyo ejercicio es *provocarlo* y leerlo— y
+`expectNone` para exigir que compile limpio.
+
+**Tres cosas que costó descubrir, y las tres son de las que no se ven:**
+
+- **Dos modelos del mismo archivo.** El editor creaba el suyo con una URI anónima y el
+  runner otro con `file://`. Para TypeScript eso son dos copias en el mismo ámbito global,
+  es decir cada función declarada dos veces — y el compilador respondía «No overload
+  matches this call» a una función sin sobrecargas. Se arregla dándole al editor un `path`
+  estable y reutilizando ese modelo.
+- **El worker se sincroniza al pedirlo.** `getTypeScriptWorker()(...uris)` es lo que sube
+  los modelos al worker; pasando solo la entrada, los demás archivos se quedaban en la
+  versión anterior y los errores salían con líneas de un archivo que ya no existía.
+- **Monaco arranca su TypeScript sin `strict`.** Sin `strictNullChecks` el estrechamiento
+  sobre un booleano literal deja de funcionar y `if (!resultado.ok) resultado.error` —el
+  patrón `Resultado<T>` de manual— no compila. Se descubrió con la solución de una lección
+  en la mano: la respuesta correcta era rechazada. Ahora se configura `strict: true`, que
+  además es lo que hay que enseñar.
+
+**El detector de sintaxis deja en paz a los `.ts`.** Usa acorn, que analiza JavaScript: se
+atragantaba en los dos puntos de `function doble(n: number)` y anunciaba «tu código no
+compila» con un error inventado mientras el compilador de verdad decía otra cosa mucho más
+útil.
+
+**Guardia, y dónde vive.** Estas lecciones **no tienen test de Node**, y no por dejadez: el
+compilador que las juzga solo existe dentro de un navegador, y comprobarlas con el paquete
+`typescript` de `node_modules` sería comprobar *otro* compilador — el instalado es la 7,
+que ya ni expone la API de JavaScript. Así que `e2e/typescript.spec.ts` hace lo que hace el
+test de PHP pero donde toca: cada paso de cada lección con su solución, más que un error se
+enseña con su código y su línea correcta, y que **lo que no compila no se ejecuta**.
+
 ---
 
 ## 5. Modelo de datos de progreso (servidor)

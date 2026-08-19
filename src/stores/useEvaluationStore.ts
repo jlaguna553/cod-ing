@@ -38,6 +38,7 @@ function buildContext() {
   const active = getActiveRunner() as {
     getDocument?: () => Document | null;
     getSqlResult?: () => import('@/lib/engine/context').SqlQueryResult | null;
+    getDiagnostics?: () => import('@/lib/engine/context').TsDiagnostic[];
   } | null;
 
   /*
@@ -70,13 +71,28 @@ function buildContext() {
     document: active?.getDocument?.() ?? null,
     transcript: getTranscript(),
     sql: active?.getSqlResult?.() ?? null,
+    /*
+     * `null` mientras no se haya compilado nunca: un array vacío significaría
+     * «compila limpio» y daría por buena una lección de tipos que nadie ha
+     * llegado a ejecutar.
+     */
+    diagnostics: runner.lastResult === null ? null : (active?.getDiagnostics?.() ?? null),
   });
 }
 
 /** Busca un error de sintaxis en el archivo abierto. */
 function detectSyntaxError() {
   const { activeFile, files } = useLessonStore.getState();
-  if (!activeFile || !/\.(js|jsx|mjs|ts|tsx)$/.test(activeFile)) return null;
+  /*
+   * TypeScript se queda fuera a propósito.
+   *
+   * Este detector usa acorn, que analiza JavaScript: ante un `function
+   * doble(n: number)` se atraganta en los dos puntos y reporta «Unexpected
+   * token (1:16)». La lección salía con un «tu código no compila» inventado
+   * mientras el compilador de verdad decía otra cosa muy distinta y mucho más
+   * útil. Los `.ts` los diagnostica el compilador del editor (ADR-25).
+   */
+  if (!activeFile || !/\.(js|jsx|mjs)$/.test(activeFile)) return null;
 
   const failure = findSyntaxError(files[activeFile] ?? '');
   return failure ? { ...failure, file: activeFile } : null;
