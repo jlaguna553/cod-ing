@@ -1,0 +1,308 @@
+{
+  "$schema": "../../../schema/lesson.schema.json",
+  "schemaVersion": 1,
+  "id": "node-03-servidor-http",
+  "track": "backend",
+  "module": "node",
+  "order": 3,
+  "kind": "challenge",
+  "difficulty": "adept",
+  "estimatedMinutes": 24,
+  "title": {
+    "es": "Un servidor HTTP sin framework",
+    "en": "An HTTP server with no framework"
+  },
+  "summary": {
+    "es": "`http.createServer` a pelo: enrutar a mano, devolver JSON con su cabecera y contestar 404 a lo que no existe. Después de esto, lo que hace Express deja de ser magia.",
+    "en": "Bare `http.createServer`: routing by hand, returning JSON with its header, and answering 404 to what doesn't exist. After this, what Express does stops being magic."
+  },
+  "concepts": [
+    "node",
+    "http",
+    "rutas",
+    "json"
+  ],
+  "prerequisites": [
+    "node-02-asincronia"
+  ],
+  "runtime": {
+    "kind": "node",
+    "dependencies": {},
+    "timeoutMs": 10000,
+    "requests": [
+      {
+        "method": "GET",
+        "url": "/"
+      },
+      {
+        "method": "GET",
+        "url": "/api/usuarios"
+      },
+      {
+        "method": "GET",
+        "url": "/no-existe"
+      },
+      {
+        "method": "POST",
+        "url": "/api/usuarios"
+      }
+    ]
+  },
+  "workspace": {
+    "entry": "main.js",
+    "allowCreate": false,
+    "allowDelete": false,
+    "files": [
+      {
+        "path": "main.js",
+        "active": true,
+        "content": "// Paso 1: crea el servidor y responde 'Hola' a todo.\n// Al llamar a listen se lanzan tres peticiones: /, /api/usuarios y /no-existe.\n\nconst http = require('http');\n\nconsole.log('todavía no hay servidor');\n"
+      }
+    ]
+  },
+  "rules": [
+    {
+      "id": "responde-a-todo",
+      "kind": "stdout-match",
+      "equals": "Servidor escuchando en el puerto 3000\nGET / -> 200 Hola\nGET /api/usuarios -> 200 Hola\nGET /no-existe -> 200 Hola\nPOST /api/usuarios -> 200 Hola",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Las tres peticiones deben contestar `200 Hola`. Todavía no hay rutas: eso es el paso siguiente.",
+        "en": "All three requests must answer `200 Hola`. No routes yet: that's the next step."
+      },
+      "successMessage": {
+        "es": "Un servidor que contesta. Sin framework, sin dependencias.",
+        "en": "A server that answers. No framework, no dependencies."
+      },
+      "points": 30
+    },
+    {
+      "id": "usa-create-server",
+      "kind": "regex-must",
+      "file": "main.js",
+      "pattern": "http\\.createServer",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Crea el servidor con `http.createServer((req, res) => { … })` y arráncalo con `.listen(3000)`.",
+        "en": "Create the server with `http.createServer((req, res) => { … })` and start it with `.listen(3000)`."
+      },
+      "successMessage": {
+        "es": "El módulo `http` del núcleo, sin nada encima.",
+        "en": "The core `http` module, with nothing on top."
+      },
+      "points": 15
+    },
+    {
+      "id": "rutas-y-404",
+      "kind": "stdout-match",
+      "equals": "Servidor escuchando en el puerto 3000\nGET / -> 200 Bienvenido\nGET /api/usuarios -> 200 [{\"id\":1,\"nombre\":\"Ada\"}]\nGET /no-existe -> 404 {\"error\":\"No encontrado\"}\nPOST /api/usuarios -> 200 [{\"id\":1,\"nombre\":\"Ada\"}]",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Cada ruta con su respuesta: texto en `/`, la lista en JSON en `/api/usuarios`, y un 404 con `{\"error\":\"No encontrado\"}` para el resto.",
+        "en": "Each route with its answer: text on `/`, the JSON list on `/api/usuarios`, and a 404 with `{\"error\":\"No encontrado\"}` for the rest."
+      },
+      "successMessage": {
+        "es": "Tres rutas, tres respuestas, y lo desconocido con su 404.",
+        "en": "Three routes, three answers, and the unknown with its 404."
+      },
+      "points": 40
+    },
+    {
+      "id": "json-con-cabecera",
+      "kind": "regex-must",
+      "file": "main.js",
+      "pattern": "application/json",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Al devolver JSON hay que decirlo: `Content-Type: application/json`. Sin esa cabecera, quien lo reciba trata la respuesta como texto plano.",
+        "en": "When returning JSON you have to say so: `Content-Type: application/json`. Without that header, the receiver treats the response as plain text."
+      },
+      "successMessage": {
+        "es": "Con su cabecera: el cliente sabe qué está recibiendo.",
+        "en": "With its header: the client knows what it's receiving."
+      },
+      "points": 20
+    },
+    {
+      "id": "404-de-verdad",
+      "kind": "regex-must",
+      "file": "main.js",
+      "pattern": "404",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Lo que no existe se contesta con **404**, no con un 200 que diga «no encontrado». El código de estado es la respuesta que leen las máquinas.",
+        "en": "What doesn't exist answers with **404**, not a 200 saying \"not found\". The status code is the answer machines read."
+      },
+      "successMessage": {
+        "es": "El estado dice la verdad, no solo el cuerpo.",
+        "en": "The status tells the truth, not just the body."
+      },
+      "points": 15
+    },
+    {
+      "id": "metodo-no-permitido",
+      "kind": "stdout-match",
+      "equals": "Servidor escuchando en el puerto 3000\nGET / -> 200 Bienvenido\nGET /api/usuarios -> 200 [{\"id\":1,\"nombre\":\"Ada\"}]\nGET /no-existe -> 404 {\"error\":\"No encontrado\"}\nPOST /api/usuarios -> 405 {\"error\":\"Método no permitido\"}",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "El `POST /api/usuarios` debe contestar 405 con `{\"error\":\"Método no permitido\"}`, y las otras tres seguir igual.",
+        "en": "`POST /api/usuarios` must answer 405 with `{\"error\":\"Método no permitido\"}`, and the other three stay as they were."
+      },
+      "successMessage": {
+        "es": "405: la ruta existe, el verbo no.",
+        "en": "405: the route exists, the verb doesn't."
+      },
+      "points": 35
+    }
+  ],
+  "steps": [
+    {
+      "id": "step-1-crear",
+      "title": {
+        "es": "Un servidor en cinco líneas",
+        "en": "A server in five lines"
+      },
+      "body": {
+        "es": "En Node no hace falta instalar nada para levantar un servidor HTTP: viene en el núcleo.\n\n```js\nconst http = require('http');\n\nhttp\n  .createServer((peticion, respuesta) => respuesta.end('lo que sea'))\n  .listen(8080);\n```\n\nLa función que le pasas se ejecuta **una vez por petición**, con dos objetos:\n\n- `req`: lo que pide el cliente — `req.method` (`GET`, `POST`…), `req.url`, `req.headers`.\n- `res`: lo que le vas a devolver. Y aquí está la regla que hay que grabarse: **hay que llamar a `res.end()`**. Si no, la petición se queda abierta y el cliente espera hasta que se le acabe la paciencia. No hay error, no hay aviso: solo una petición colgada.\n\n> Aquí no hay red. Al llamar a `listen`, la lección lanza tres peticiones declaradas —`/`, `/api/usuarios` y `/no-existe`— y las respuestas salen por la consola. Es una simulación, y por eso es determinista: mismas peticiones, mismo orden, misma salida.\n\n**Crea el servidor y contesta `Hola` a todo.**",
+        "en": "In Node you don't need to install anything to bring up an HTTP server: it's in the core.\n\n```js\nconst http = require('http');\n\nhttp\n  .createServer((peticion, respuesta) => respuesta.end('whatever'))\n  .listen(8080);\n```\n\nThe function you hand it runs **once per request**, with two objects:\n\n- `req`: what the client asks for — `req.method` (`GET`, `POST`…), `req.url`, `req.headers`.\n- `res`: what you're going to send back. And here's the rule to burn in: **you must call `res.end()`**. Otherwise the request stays open and the client waits until it runs out of patience. No error, no warning: just a hung request.\n\n> There's no network here. On `listen`, the lesson fires three declared requests — `/`, `/api/usuarios` and `/no-existe` — and the responses come out on the console. It's a simulation, and that's why it's deterministic: same requests, same order, same output.\n\n**Create the server and answer `Hola` to everything.**"
+      },
+      "task": {
+        "es": "Crea el servidor con `http.createServer`, responde `Hola` a las cuatro peticiones y escucha en el puerto 3000.",
+        "en": "Create the server with `http.createServer`, answer `Hola` to all four requests and listen on port 3000."
+      },
+      "focusFile": "main.js",
+      "ruleIds": [
+        "responde-a-todo",
+        "usa-create-server"
+      ],
+      "xp": 30,
+      "hints": [
+        {
+          "id": "h-servidor",
+          "tier": 1,
+          "text": {
+            "es": "`const servidor = http.createServer((req, res) => { res.end('Hola'); }); servidor.listen(3000);`",
+            "en": "`const servidor = http.createServer((req, res) => { res.end('Hola'); }); servidor.listen(3000);`"
+          },
+          "xpPenalty": 6,
+          "autoOfferAfterSeconds": 70
+        }
+      ],
+      "solution": [
+        {
+          "path": "main.js",
+          "content": "const http = require('http');\n\nconst servidor = http.createServer(function (req, res) {\n  res.end('Hola');\n});\n\nservidor.listen(3000);\n"
+        }
+      ]
+    },
+    {
+      "id": "step-2-rutas",
+      "title": {
+        "es": "Enrutar es un `if`",
+        "en": "Routing is an `if`"
+      },
+      "body": {
+        "es": "No hay magia debajo de un framework: enrutar es mirar `req.url` y `req.method` y decidir. Express, Fastify o Nest hacen esto mismo con mejor sintaxis, más comprobaciones y un montón de casos límite resueltos — pero esto.\n\n```js\nif (peticion.url === '/salud') {\n  respuesta.writeHead(200, { 'Content-Type': 'application/json' });\n  respuesta.end(JSON.stringify({ ok: true }));\n  return;\n}\n```\n\nTres cosas que separan un servidor de un ejemplo:\n\n- **`writeHead` va antes de escribir el cuerpo.** Las cabeceras viajan primero; después de mandar contenido ya no se pueden cambiar, y Node lo dice con un `ERR_HTTP_HEADERS_SENT` de los que asustan.\n- **El `Content-Type` no es opcional.** Devolver JSON sin declararlo hace que el otro lado lo trate como texto: nadie te lo va a parsear por adivinación.\n- **El `return` después de `end`.** Sin él, el código sigue y acabas llamando a `end` dos veces. Es el mismo `ERR_HTTP_HEADERS_SENT`, ahora por otra vía.\n\n**Devuelve `Bienvenido` en `/`, la lista de usuarios en JSON en `/api/usuarios`, y un 404 con `{\"error\":\"No encontrado\"}` en todo lo demás.**",
+        "en": "There's no magic under a framework: routing is looking at `req.url` and `req.method` and deciding. Express, Fastify or Nest do this same thing with nicer syntax, more checks and a pile of edge cases solved — but this.\n\n```js\nif (peticion.url === '/salud') {\n  respuesta.writeHead(200, { 'Content-Type': 'application/json' });\n  respuesta.end(JSON.stringify({ ok: true }));\n  return;\n}\n```\n\nThree things that separate a server from an example:\n\n- **`writeHead` goes before writing the body.** Headers travel first; once you've sent content they can't be changed, and Node says so with one of those alarming `ERR_HTTP_HEADERS_SENT`.\n- **`Content-Type` isn't optional.** Returning JSON without declaring it makes the other side treat it as text: nobody will parse it by guesswork.\n- **The `return` after `end`.** Without it the code carries on and you end up calling `end` twice. Same `ERR_HTTP_HEADERS_SENT`, by another route.\n\n**Return `Bienvenido` on `/`, the user list as JSON on `/api/usuarios`, and a 404 with `{\"error\":\"No encontrado\"}` for everything else.**"
+      },
+      "task": {
+        "es": "Enruta: `/` devuelve `Bienvenido`; `/api/usuarios` devuelve `[{\"id\":1,\"nombre\":\"Ada\"}]` como JSON; el resto, 404 con `{\"error\":\"No encontrado\"}`.",
+        "en": "Route it: `/` returns `Bienvenido`; `/api/usuarios` returns `[{\"id\":1,\"nombre\":\"Ada\"}]` as JSON; everything else, 404 with `{\"error\":\"No encontrado\"}`."
+      },
+      "focusFile": "main.js",
+      "ruleIds": [
+        "rutas-y-404",
+        "json-con-cabecera",
+        "404-de-verdad"
+      ],
+      "xp": 40,
+      "hints": [
+        {
+          "id": "h-rutas",
+          "tier": 1,
+          "text": {
+            "es": "Tres ramas y un `return` en cada una. Para el JSON: `res.writeHead(200, { 'Content-Type': 'application/json' }); res.end(JSON.stringify([{ id: 1, nombre: 'Ada' }]));`",
+            "en": "Three branches and a `return` in each. For the JSON: `res.writeHead(200, { 'Content-Type': 'application/json' }); res.end(JSON.stringify([{ id: 1, nombre: 'Ada' }]));`"
+          },
+          "xpPenalty": 10,
+          "autoOfferAfterSeconds": 90
+        }
+      ],
+      "solution": [
+        {
+          "path": "main.js",
+          "content": "const http = require('http');\n\nconst servidor = http.createServer(function (req, res) {\n  if (req.url === '/') {\n    res.writeHead(200, { 'Content-Type': 'text/plain' });\n    res.end('Bienvenido');\n    return;\n  }\n\n  if (req.url === '/api/usuarios') {\n    res.writeHead(200, { 'Content-Type': 'application/json' });\n    res.end(JSON.stringify([{ id: 1, nombre: 'Ada' }]));\n    return;\n  }\n\n  res.writeHead(404, { 'Content-Type': 'application/json' });\n  res.end(JSON.stringify({ error: 'No encontrado' }));\n});\n\nservidor.listen(3000);\n"
+        }
+      ],
+      "bestPractice": {
+        "es": "**Estándar de la industria:** el código de estado es parte de la respuesta, no un adorno. Un 200 con `{\"error\":\"no encontrado\"}` dentro obliga a cada cliente, cada proxy y cada panel de métricas a leerse el cuerpo para saber si algo salió mal.",
+        "en": "**Industry standard:** the status code is part of the answer, not decoration. A 200 with `{\"error\":\"not found\"}` inside forces every client, every proxy and every metrics dashboard to read the body to find out whether something went wrong."
+      }
+    },
+    {
+      "id": "step-3-metodo",
+      "title": {
+        "es": "El método también forma parte de la ruta",
+        "en": "The method is part of the route too"
+      },
+      "body": {
+        "es": "`/api/usuarios` no es una ruta: son varias. `GET /api/usuarios` lista, `POST /api/usuarios` crea, y son operaciones distintas con respuestas distintas — la de crear devuelve **201**, no 200.\n\nEsa es la parte de REST que se nota en el día a día: el verbo dice qué haces y el estado dice cómo fue.\n\n| Código | Cuándo |\n|---|---|\n| 200 | Aquí tienes lo que pediste |\n| 201 | Creado; suele venir con `Location` |\n| 400 | Lo que mandaste no vale |\n| 404 | Eso no existe |\n| 405 | Existe, pero no con ese método |\n\nEse **405** es el que casi nadie usa y el que más ayuda: no es lo mismo «esta URL no existe» que «esta URL existe pero no acepta DELETE». Al que depura le ahorra media hora.\n\n**Contesta 405 al `POST /api/usuarios`**, dejando el resto igual. La lección lanza esa petición además de las tres anteriores.",
+        "en": "`/api/usuarios` isn't one route: it's several. `GET /api/usuarios` lists, `POST /api/usuarios` creates, and they're different operations with different answers — creating returns **201**, not 200.\n\nThat's the part of REST you feel day to day: the verb says what you're doing and the status says how it went.\n\n| Code | When |\n|---|---|\n| 200 | Here's what you asked for |\n| 201 | Created; usually with a `Location` |\n| 400 | What you sent isn't valid |\n| 404 | That doesn't exist |\n| 405 | It exists, but not with that method |\n\nThat **405** is the one almost nobody uses and the one that helps most: \"this URL doesn't exist\" is not the same as \"this URL exists but doesn't take DELETE\". It saves whoever is debugging half an hour.\n\n**Answer 405 to `POST /api/usuarios`**, leaving the rest as it is. The lesson fires that request on top of the previous three."
+      },
+      "task": {
+        "es": "Añade la comprobación del método: `POST /api/usuarios` debe contestar 405 con `{\"error\":\"Método no permitido\"}`.",
+        "en": "Add the method check: `POST /api/usuarios` must answer 405 with `{\"error\":\"Método no permitido\"}`."
+      },
+      "focusFile": "main.js",
+      "ruleIds": [
+        "metodo-no-permitido",
+        "json-con-cabecera"
+      ],
+      "xp": 35,
+      "hints": [
+        {
+          "id": "h-405",
+          "tier": 1,
+          "text": {
+            "es": "Dentro de la rama de `/api/usuarios`: `if (req.method !== 'GET') { res.writeHead(405, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ error: 'Método no permitido' })); return; }`",
+            "en": "Inside the `/api/usuarios` branch: `if (req.method !== 'GET') { res.writeHead(405, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ error: 'Método no permitido' })); return; }`"
+          },
+          "xpPenalty": 8,
+          "autoOfferAfterSeconds": 90
+        }
+      ],
+      "solution": [
+        {
+          "path": "main.js",
+          "content": "const http = require('http');\n\nconst servidor = http.createServer(function (req, res) {\n  if (req.url === '/') {\n    res.writeHead(200, { 'Content-Type': 'text/plain' });\n    res.end('Bienvenido');\n    return;\n  }\n\n  if (req.url === '/api/usuarios') {\n    if (req.method !== 'GET') {\n      res.writeHead(405, { 'Content-Type': 'application/json' });\n      res.end(JSON.stringify({ error: 'Método no permitido' }));\n      return;\n    }\n\n    res.writeHead(200, { 'Content-Type': 'application/json' });\n    res.end(JSON.stringify([{ id: 1, nombre: 'Ada' }]));\n    return;\n  }\n\n  res.writeHead(404, { 'Content-Type': 'application/json' });\n  res.end(JSON.stringify({ error: 'No encontrado' }));\n});\n\nservidor.listen(3000);\n"
+        }
+      ]
+    }
+  ],
+  "drills": [],
+  "reward": {
+    "baseXp": 140,
+    "flawlessBonus": 50,
+    "noHintBonus": 30,
+    "comboMultiplierCap": 3,
+    "achievements": []
+  },
+  "solution": {
+    "files": [
+      {
+        "path": "main.js",
+        "content": "const http = require('http');\n\nconst servidor = http.createServer(function (req, res) {\n  if (req.url === '/') {\n    res.writeHead(200, { 'Content-Type': 'text/plain' });\n    res.end('Bienvenido');\n    return;\n  }\n\n  if (req.url === '/api/usuarios') {\n    if (req.method !== 'GET') {\n      res.writeHead(405, { 'Content-Type': 'application/json' });\n      res.end(JSON.stringify({ error: 'Método no permitido' }));\n      return;\n    }\n\n    res.writeHead(200, { 'Content-Type': 'application/json' });\n    res.end(JSON.stringify([{ id: 1, nombre: 'Ada' }]));\n    return;\n  }\n\n  res.writeHead(404, { 'Content-Type': 'application/json' });\n  res.end(JSON.stringify({ error: 'No encontrado' }));\n});\n\nservidor.listen(3000);\n"
+      }
+    ],
+    "explanation": {
+      "es": "Un servidor HTTP en Node es una función que recibe `req` y `res` y **tiene que llamar a `end`**. Enrutar es mirar la URL y el método; el resto —`Content-Type`, el código de estado correcto, el 405 cuando la ruta existe pero el verbo no— es lo que separa una respuesta que se entiende de una que obliga a leerse el cuerpo para saber si falló.",
+      "en": "An HTTP server in Node is a function receiving `req` and `res` that **must call `end`**. Routing is looking at the URL and the method; the rest — `Content-Type`, the right status code, the 405 when the route exists but the verb doesn't — is what separates an answer you can understand from one that forces you to read the body to find out whether it failed."
+    }
+  }
+}

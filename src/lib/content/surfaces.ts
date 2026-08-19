@@ -50,6 +50,10 @@ export function surfacesFor(lesson: ClientLesson): Surfaces {
    */
   if (kind === 'php') return { preview: false, console: true, terminal: false };
 
+  // Node tampoco dibuja: su superficie es la consola, como en una terminal
+  // real cuando ejecutas `node main.js`.
+  if (kind === 'node') return { preview: false, console: true, terminal: false };
+
   /*
    * En `cli-sim` la terminal ES la salida: no hay proceso aparte que imprima
    * por consola, así que ofrecer las dos sería ofrecer la misma cosa dos veces.

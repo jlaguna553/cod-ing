@@ -62,6 +62,7 @@ export const RuntimeKindSchema = z.enum([
   'vue',          // Vue 3 sin bundler ni terceros, autoalojado (ADR-13)
   'php',          // PHP interpretado en JavaScript, autoalojado (ADR-20)
   'ts',           // TypeScript: tipos con el compilador del editor (ADR-25)
+  'node',         // Node simulado: módulos, fs, http deterministas (ADR-26)
 ]);
 
 /**
@@ -93,6 +94,23 @@ export const RuntimeSpecSchema = z.object({
   language: z.string().optional(),
   /** Solo `cli-sim`: guion de comandos reconocidos y sus salidas. */
   cliScenario: z.string().optional(),
+  /**
+   * Solo `node`: peticiones que se lanzan contra el servidor al llamar a
+   * `listen`.
+   *
+   * Aquí no hay red ni navegador que visite una URL, así que un servidor sin
+   * esto sería un `createServer` que no se ejecuta jamás y una lección sin
+   * salida que comprobar. Declararlas en la lección las hace además
+   * deterministas: mismas peticiones, mismo orden, misma salida.
+   */
+  requests: z
+    .array(
+      z.object({
+        method: z.string().default('GET'),
+        url: z.string(),
+      }),
+    )
+    .default([]),
   timeoutMs: z.number().int().positive().default(10_000),
 });
 

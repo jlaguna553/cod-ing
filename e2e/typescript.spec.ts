@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { escribirEnEditor, solucionDelPaso } from './pasos';
+import { avanzarPaso, escribirEnEditor, solucionDelPaso } from './pasos';
 
 /**
  * TypeScript con el compilador de verdad (ADR-25).
@@ -97,9 +97,7 @@ for (const leccion of LECCIONES) {
         `el paso ${paso + 1} de ${leccion} no pasa con su propia solución`,
       ).toBeVisible({ timeout: 60_000 });
 
-      if (paso < pasos - 1) {
-        await page.getByRole('button', { name: /^siguiente$/i }).click();
-      }
+      if (paso < pasos - 1) await avanzarPaso(page, paso + 2, pasos);
     }
   });
 }

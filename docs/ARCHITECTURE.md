@@ -1209,6 +1209,52 @@ que ya ni expone la API de JavaScript. Así que `e2e/typescript.spec.ts` hace lo
 test de PHP pero donde toca: cada paso de cada lección con su solución, más que un error se
 enseña con su código y su línea correcta, y que **lo que no compila no se ejecuta**.
 
+### ADR-26 · Node simulado, con las costuras a la vista
+
+**Contexto.** Node era el módulo más pedido y el que no tenía motor. Node de verdad en el
+navegador existe —WebContainers— y su licencia comercial es el bloqueo declarado en el
+ADR-07; la otra salida sería un runtime remoto, que cuesta dinero y añade un viaje de red
+al bucle donde más se itera.
+
+**La observación que lo desbloquea: JavaScript es JavaScript.** El bucle de eventos, las
+promesas, los closures y el modelo de módulos se comportan igual en el navegador que en
+Node porque **el motor es el mismo**. Lo que falta no es el lenguaje: son las APIs del
+sistema. Y de esas se implementa un subconjunto acotado en `node-prelude.ts` — CommonJS
+con su caché, `path`, `events`, un `fs` en memoria, `http` con peticiones deterministas y
+`process`.
+
+**Lo que no hay, se dice.** No hay red, ni hilos, ni sistema de archivos real, ni
+`child_process`, ni npm. Un `require('express')` no falla con un `undefined is not a
+function` tres líneas más abajo: falla diciendo **«aquí no hay npm»** y enumerando lo que
+sí existe.
+
+**Un servidor que no escucha en ningún puerto.** `listen` no abre nada: anuncia y atiende
+las peticiones que **declara la lección** (`runtime.requests`). Sin eso, un
+`createServer` en el navegador sería código que no se ejecuta jamás y una lección sin
+salida que comprobar. Como contrapartida es determinista: mismas peticiones, mismo orden,
+misma salida.
+
+**La prueba es la comparación, no la promesa.** `tests/node-runtime.test.ts` ejecuta el
+prelude **en Node** con `new Function` —igual que lo ejecutará el iframe— y compara sus
+respuestas con las de los módulos originales, importados en el mismo archivo: `path.join`
+contra `path.join`, `EventEmitter` contra `EventEmitter`. Eso destapó el fallo que más
+importaba: `process.nextTick` implementado como `Promise.resolve().then(...)` **parece**
+equivalente y no lo es — cae en la cola de las promesas, así que iba detrás de ellas. La
+lección enseña el orden de Node y la simulación enseñaba otro. Ahora `nextTick` tiene cola
+propia y se vacía al terminar el código síncrono, que es cuando la vacía Node.
+
+**Esperar al silencio antes de juzgar.** `node main.js` no termina en la última línea:
+sigue vivo mientras queden temporizadores. Aquí la ejecución se resolvía al cargar el
+documento, así que una lección con un `setTimeout` de 10 ms se evaluaba **antes** de que
+su salida existiera — fallaba sobre código correcto y pasaba al segundo intento. Se espera
+a que la salida se quede en silencio, con la marca puesta a cero al empezar cada ejecución
+(sin eso, la segunda ejecución heredaba el silencio de la primera y no esperaba nada).
+
+**Guardia.** Los diez tests de Node comparan con el original; `e2e/node.spec.ts` recorre
+las tres lecciones paso a paso con sus soluciones y comprueba, además, que el error de npm
+explica qué hay y que un servidor contesta lo que su código dice —un 418 que no aparece en
+ningún enunciado— y no lo que la plataforma quisiera oír.
+
 ---
 
 ## 5. Modelo de datos de progreso (servidor)

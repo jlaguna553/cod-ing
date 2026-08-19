@@ -1,0 +1,277 @@
+{
+  "$schema": "../../../schema/lesson.schema.json",
+  "schemaVersion": 1,
+  "id": "node-02-asincronia",
+  "track": "backend",
+  "module": "node",
+  "order": 2,
+  "kind": "challenge",
+  "difficulty": "adept",
+  "estimatedMinutes": 22,
+  "title": {
+    "es": "El orden en que pasan las cosas",
+    "en": "The order things actually happen in"
+  },
+  "summary": {
+    "es": "Un solo hilo y una cola. Por qué tu `console.log` sale antes que el resultado, por qué `nextTick` se cuela delante de todo, y cómo se sale del infierno de los callbacks.",
+    "en": "One thread and a queue. Why your `console.log` prints before the result, why `nextTick` jumps the queue, and how to climb out of callback hell."
+  },
+  "concepts": [
+    "node",
+    "bucle-de-eventos",
+    "callbacks",
+    "promesas"
+  ],
+  "prerequisites": [
+    "node-01-modulos"
+  ],
+  "runtime": {
+    "kind": "node",
+    "dependencies": {},
+    "timeoutMs": 10000
+  },
+  "workspace": {
+    "entry": "main.js",
+    "allowCreate": false,
+    "allowDelete": false,
+    "files": [
+      {
+        "path": "main.js",
+        "active": true,
+        "content": "// Paso 1: predice el orden y luego ejecútalo.\n// Escribe los cuatro console.log para que salga: 1, 4, 3, 2\n\nconsole.log('todavía nada');\n"
+      },
+      {
+        "path": "usuarios.js",
+        "content": "// Un almacén que tarda en contestar, como cualquier base de datos.\n// La versión de callbacks es la que había antes de las promesas.\n\nconst DATOS = { 1: 'Ada', 2: 'Grace' };\n\nfunction buscarCallback(id, callback) {\n  setTimeout(function () {\n    const nombre = DATOS[id];\n    if (!nombre) {\n      callback(new Error('No existe el usuario ' + id));\n      return;\n    }\n    callback(null, nombre);\n  }, 10);\n}\n\nmodule.exports = { buscarCallback };\n"
+      }
+    ]
+  },
+  "rules": [
+    {
+      "id": "orden-correcto",
+      "kind": "stdout-match",
+      "equals": "1\n4\n3\n2",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "El orden todavía no es `1, 4, 3, 2`. Lo síncrono va primero; después `nextTick`; después las promesas; y `setTimeout` el último.",
+        "en": "The order isn't `1, 4, 3, 2` yet. Synchronous first; then `nextTick`; then promises; and `setTimeout` last."
+      },
+      "successMessage": {
+        "es": "Ese es el orden real: no lo decide el archivo, lo decide la cola.",
+        "en": "That's the real order: the file doesn't decide it, the queue does."
+      },
+      "points": 35
+    },
+    {
+      "id": "usa-settimeout",
+      "kind": "regex-must",
+      "file": "main.js",
+      "pattern": "setTimeout",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Los cuatro mensajes tienen que salir de sitios distintos: uno síncrono, uno en `process.nextTick`, uno en una promesa y uno en `setTimeout`.",
+        "en": "The four messages must come from different places: one synchronous, one in `process.nextTick`, one in a promise and one in `setTimeout`."
+      },
+      "successMessage": {
+        "es": "Cuatro orígenes, cuatro momentos.",
+        "en": "Four origins, four moments."
+      },
+      "points": 15
+    },
+    {
+      "id": "callback-encadenado",
+      "kind": "stdout-match",
+      "equals": "Ada\nGrace\nNo existe el usuario 99",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Deben salir los dos nombres en orden y, al final, el mensaje del error del usuario 99.",
+        "en": "Both names must come out in order and, at the end, the error message for user 99."
+      },
+      "successMessage": {
+        "es": "Encadenado y con el error atendido, que es la mitad que casi nadie escribe.",
+        "en": "Chained, with the error handled — the half almost nobody writes."
+      },
+      "points": 35
+    },
+    {
+      "id": "usa-promesas",
+      "kind": "regex-must",
+      "file": "main.js",
+      "pattern": "async|\\.then\\s*\\(",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Este paso pide promesas: `async/await` o `.then()`. Con callbacks anidados ya se hizo el paso anterior.",
+        "en": "This step asks for promises: `async/await` or `.then()`. Nested callbacks were the previous step."
+      },
+      "successMessage": {
+        "es": "La escalera de callbacks se convirtió en una lista de pasos.",
+        "en": "The callback staircase turned into a list of steps."
+      },
+      "points": 20
+    },
+    {
+      "id": "promisify-correcto",
+      "kind": "regex-must",
+      "file": "main.js",
+      "pattern": "new\\s+Promise",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Envuelve `buscarCallback` en `new Promise(...)` dentro de `main.js`: es exactamente lo que hace `util.promisify` por dentro.",
+        "en": "Wrap `buscarCallback` in `new Promise(...)` inside `main.js`: it is exactly what `util.promisify` does under the hood."
+      },
+      "successMessage": {
+        "es": "Una promesa por fuera, el callback por dentro.",
+        "en": "A promise on the outside, the callback on the inside."
+      },
+      "points": 20
+    }
+  ],
+  "steps": [
+    {
+      "id": "step-1-orden",
+      "title": {
+        "es": "Un hilo, varias colas",
+        "en": "One thread, several queues"
+      },
+      "body": {
+        "es": "Node ejecuta tu código en **un solo hilo**. Lo que parece paralelo es una cola: cuando algo tarda —leer un archivo, esperar a la red— no se bloquea, se apunta la continuación y sigue.\n\nEl orden en que se vacían esas colas no es el orden del archivo, y saberlo de memoria evita media tarde de depuración:\n\n1. **Todo lo síncrono**, hasta la última línea del archivo.\n2. **`process.nextTick`**, que se cuela antes que ninguna promesa.\n3. **Las promesas** (`.then`, lo que sigue a un `await`) — los llamados *microtasks*.\n4. **`setTimeout` / `setInterval`**, aunque el retardo sea `0`.\n\nEse `setTimeout(fn, 0)` que no se ejecuta «ya» es la sorpresa clásica: `0` no significa ahora, significa **en cuanto se vacíe todo lo demás**.\n\nY la consecuencia práctica que importa en un servidor: si tu código síncrono tarda 200 ms, **nadie más es atendido durante esos 200 ms**. Un bucle pesado no es lento para quien lo lanza, es lento para todos los que estaban conectados.\n\n**Escribe cuatro `console.log` —uno de cada categoría— para que la salida sea exactamente `1`, `4`, `3`, `2`.**",
+        "en": "Node runs your code on **a single thread**. What looks parallel is a queue: when something takes time — reading a file, waiting on the network — it doesn't block, it notes down the continuation and moves on.\n\nThe order those queues drain in is not the order of the file, and knowing it by heart saves half an afternoon of debugging:\n\n1. **Everything synchronous**, down to the last line of the file.\n2. **`process.nextTick`**, which jumps ahead of any promise.\n3. **Promises** (`.then`, whatever follows an `await`) — the so-called microtasks.\n4. **`setTimeout` / `setInterval`**, even with a delay of `0`.\n\nThat `setTimeout(fn, 0)` which doesn't run \"right now\" is the classic surprise: `0` doesn't mean now, it means **as soon as everything else is drained**.\n\nAnd the practical consequence that matters on a server: if your synchronous code takes 200 ms, **nobody else is served during those 200 ms**. A heavy loop isn't slow for whoever launched it, it's slow for everyone connected.\n\n**Write four `console.log` — one from each category — so the output is exactly `1`, `4`, `3`, `2`.**"
+      },
+      "task": {
+        "es": "Imprime `1` de forma síncrona, `2` con `setTimeout`, `3` desde una promesa y `4` con `process.nextTick`. La salida debe ser 1, 4, 3, 2.",
+        "en": "Print `1` synchronously, `2` with `setTimeout`, `3` from a promise and `4` with `process.nextTick`. The output must be 1, 4, 3, 2."
+      },
+      "focusFile": "main.js",
+      "ruleIds": [
+        "orden-correcto",
+        "usa-settimeout"
+      ],
+      "xp": 35,
+      "hints": [
+        {
+          "id": "h-orden",
+          "tier": 1,
+          "text": {
+            "es": "`console.log(1); setTimeout(() => console.log(2), 0); Promise.resolve().then(() => console.log(3)); process.nextTick(() => console.log(4));`",
+            "en": "`console.log(1); setTimeout(() => console.log(2), 0); Promise.resolve().then(() => console.log(3)); process.nextTick(() => console.log(4));`"
+          },
+          "xpPenalty": 8,
+          "autoOfferAfterSeconds": 80
+        }
+      ],
+      "solution": [
+        {
+          "path": "main.js",
+          "content": "console.log(1);\n\nsetTimeout(function () {\n  console.log(2);\n}, 0);\n\nPromise.resolve().then(function () {\n  console.log(3);\n});\n\nprocess.nextTick(function () {\n  console.log(4);\n});\n"
+        }
+      ]
+    },
+    {
+      "id": "step-2-callbacks",
+      "title": {
+        "es": "El estilo que había antes: callbacks",
+        "en": "The style that came before: callbacks"
+      },
+      "body": {
+        "es": "Antes de las promesas, todo lo asíncrono en Node se escribía así, y todavía te lo encuentras en bibliotecas antiguas y en `fs`:\n\n```js\nleer('a', function (error, datos) {\n  if (error) { /* … */ }\n});\n```\n\nDos convenciones que no son opcionales:\n\n- **El error va primero.** Es el *error-first callback*, y está así para que no haya forma de ignorarlo sin verlo.\n- **El callback se llama una vez.** Con error o con resultado, nunca las dos cosas.\n\nEl problema aparece al encadenar: cada paso que depende del anterior se mete dentro del anterior, y a la tercera llamada el código se va hacia la derecha. Eso es la *pirámide de la muerte*, y no es solo feo: **cada nivel necesita su propio `if (error)`**, y olvidar uno hace que el fallo desaparezca sin dejar rastro.\n\n`usuarios.js` trae `buscarCallback(id, cb)`. **Busca el 1, luego el 2, y luego el 99 —que no existe— e imprime su error.** Con callbacks, tal cual: es el paso que hace que el siguiente se agradezca.",
+        "en": "Before promises, everything asynchronous in Node was written like this, and you still meet it in old libraries and in `fs`:\n\n```js\nleer('a', function (error, datos) {\n  if (error) { /* … */ }\n});\n```\n\nTwo conventions that aren't optional:\n\n- **The error comes first.** It's the error-first callback, built that way so there's no way to ignore it without seeing it.\n- **The callback is called once.** With an error or with a result, never both.\n\nThe problem shows up when chaining: each step that depends on the previous one nests inside it, and by the third call the code drifts rightwards. That's the pyramid of doom, and it isn't just ugly: **every level needs its own `if (error)`**, and forgetting one makes the failure vanish without a trace.\n\n`usuarios.js` provides `buscarCallback(id, cb)`. **Look up 1, then 2, then 99 — which doesn't exist — and print its error.** With callbacks, as-is: it's the step that makes the next one feel like a gift."
+      },
+      "task": {
+        "es": "Con `buscarCallback`, imprime el nombre del usuario 1, luego el del 2, y luego el mensaje de error del 99.",
+        "en": "With `buscarCallback`, print user 1's name, then user 2's, then user 99's error message."
+      },
+      "focusFile": "main.js",
+      "ruleIds": [
+        "callback-encadenado"
+      ],
+      "xp": 30,
+      "hints": [
+        {
+          "id": "h-anidado",
+          "tier": 1,
+          "text": {
+            "es": "Cada llamada dentro del callback de la anterior. Para el error: `if (error) { console.log(error.message); return; }`.",
+            "en": "Each call inside the previous one's callback. For the error: `if (error) { console.log(error.message); return; }`."
+          },
+          "xpPenalty": 8,
+          "autoOfferAfterSeconds": 90
+        }
+      ],
+      "solution": [
+        {
+          "path": "main.js",
+          "content": "const { buscarCallback } = require('./usuarios');\n\nbuscarCallback(1, function (error, nombre) {\n  if (error) {\n    console.log(error.message);\n    return;\n  }\n  console.log(nombre);\n\n  buscarCallback(2, function (error2, nombre2) {\n    if (error2) {\n      console.log(error2.message);\n      return;\n    }\n    console.log(nombre2);\n\n    buscarCallback(99, function (error3, nombre3) {\n      if (error3) {\n        console.log(error3.message);\n        return;\n      }\n      console.log(nombre3);\n    });\n  });\n});\n"
+        }
+      ]
+    },
+    {
+      "id": "step-3-promesas",
+      "title": {
+        "es": "La misma cadena, en línea recta",
+        "en": "The same chain, in a straight line"
+      },
+      "body": {
+        "es": "Una promesa es la misma espera con otra forma: en vez de pasar qué hacer después, se devuelve un objeto que **representa el resultado futuro**. Convertir un callback en promesa es envolverlo:\n\n```js\nfunction leerAsync(ruta) {\n  return new Promise((ok, falla) => {\n    leer(ruta, (fallo, datos) => (fallo ? falla(fallo) : ok(datos)));\n  });\n}\n```\n\nEso es exactamente lo que hace `util.promisify` en Node, y por eso `fs.promises` existe: es la misma API envuelta una vez por todas.\n\nLo que se gana no es estética. Con `async/await` el código vuelve a leerse de arriba abajo, **un solo `try/catch` cubre toda la cadena** —en vez de un `if (error)` por nivel— y los errores se propagan solos hasta quien pueda hacer algo con ellos, igual que en código síncrono.\n\nLa trampa que queda: `await` **solo** funciona dentro de una función `async`, y olvidarlo no da error de sintaxis en el sitio equivocado sino una promesa sin resolver que se imprime como `Promise { <pending> }`.\n\n**Escribe `buscar(id)` en `main.js` envolviendo `buscarCallback`, y repite la misma secuencia con `async/await` y un solo `try/catch`.**",
+        "en": "A promise is the same wait in another shape: instead of passing what to do next, you return an object that **represents the future result**. Turning a callback into a promise means wrapping it:\n\n```js\nfunction leerAsync(ruta) {\n  return new Promise((ok, falla) => {\n    leer(ruta, (fallo, datos) => (fallo ? falla(fallo) : ok(datos)));\n  });\n}\n```\n\nThat's exactly what `util.promisify` does in Node, and why `fs.promises` exists: the same API wrapped once and for all.\n\nWhat you gain isn't aesthetics. With `async/await` the code reads top to bottom again, **a single `try/catch` covers the whole chain** — instead of one `if (error)` per level — and errors propagate on their own up to whoever can do something about them, just like in synchronous code.\n\nThe remaining trap: `await` **only** works inside an `async` function, and forgetting it doesn't give you a syntax error in the right place but an unresolved promise that prints as `Promise { <pending> }`.\n\n**Write `buscar(id)` in `main.js` wrapping `buscarCallback`, and repeat the same sequence with `async/await` and a single `try/catch`.**"
+      },
+      "task": {
+        "es": "En `main.js`, envuelve `buscarCallback` en una promesa y repite la secuencia (1, 2, 99) con `async/await` y un solo `try/catch`.",
+        "en": "In `main.js`, wrap `buscarCallback` in a promise and repeat the sequence (1, 2, 99) with `async/await` and a single `try/catch`."
+      },
+      "focusFile": "main.js",
+      "ruleIds": [
+        "callback-encadenado",
+        "usa-promesas",
+        "promisify-correcto"
+      ],
+      "xp": 40,
+      "hints": [
+        {
+          "id": "h-async",
+          "tier": 1,
+          "text": {
+            "es": "En `main.js`: `function buscar(id) { return new Promise((ok, mal) => buscarCallback(id, (e, n) => (e ? mal(e) : ok(n)))); }` y luego una función `async` que se llama al final.",
+            "en": "In `main.js`: `function buscar(id) { return new Promise((ok, mal) => buscarCallback(id, (e, n) => (e ? mal(e) : ok(n)))); }` then an `async` function called at the end."
+          },
+          "xpPenalty": 10,
+          "autoOfferAfterSeconds": 100
+        }
+      ],
+      "solution": [
+        {
+          "path": "main.js",
+          "content": "const { buscarCallback } = require('./usuarios');\n\nfunction buscar(id) {\n  return new Promise(function (resolver, rechazar) {\n    buscarCallback(id, function (error, nombre) {\n      if (error) rechazar(error);\n      else resolver(nombre);\n    });\n  });\n}\n\nasync function principal() {\n  try {\n    console.log(await buscar(1));\n    console.log(await buscar(2));\n    console.log(await buscar(99));\n  } catch (error) {\n    console.log(error.message);\n  }\n}\n\nprincipal();\n"
+        }
+      ],
+      "bestPractice": {
+        "es": "**Estándar de la industria:** una promesa sin `catch` es un error que desaparece. En Node moderno un rechazo sin capturar **tumba el proceso**, y eso es lo bueno: prefiere caerse a seguir sirviendo peticiones con la mitad del estado a medias.",
+        "en": "**Industry standard:** a promise without a `catch` is an error that vanishes. In modern Node an unhandled rejection **kills the process**, and that's the good news: better to crash than to keep serving requests with half the state in limbo."
+      }
+    }
+  ],
+  "drills": [],
+  "reward": {
+    "baseXp": 130,
+    "flawlessBonus": 50,
+    "noHintBonus": 25,
+    "comboMultiplierCap": 3,
+    "achievements": []
+  },
+  "solution": {
+    "files": [
+      {
+        "path": "main.js",
+        "content": "const { buscarCallback } = require('./usuarios');\n\nfunction buscar(id) {\n  return new Promise(function (resolver, rechazar) {\n    buscarCallback(id, function (error, nombre) {\n      if (error) rechazar(error);\n      else resolver(nombre);\n    });\n  });\n}\n\nasync function principal() {\n  try {\n    console.log(await buscar(1));\n    console.log(await buscar(2));\n    console.log(await buscar(99));\n  } catch (error) {\n    console.log(error.message);\n  }\n}\n\nprincipal();\n"
+      }
+    ],
+    "explanation": {
+      "es": "Un hilo y varias colas: lo síncrono, `nextTick`, las promesas y los temporizadores, en ese orden. Los callbacks resuelven la espera pero se apilan hacia la derecha y obligan a comprobar el error en cada nivel; una promesa es la misma espera devuelta como valor, y con `async/await` la cadena vuelve a leerse en línea recta con un solo `try/catch`.",
+      "en": "One thread and several queues: synchronous code, `nextTick`, promises and timers, in that order. Callbacks solve the waiting but stack rightwards and force an error check at every level; a promise is the same wait returned as a value, and with `async/await` the chain reads in a straight line again with a single `try/catch`."
+    }
+  }
+}

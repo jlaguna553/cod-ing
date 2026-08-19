@@ -1,0 +1,295 @@
+{
+  "$schema": "../../../schema/lesson.schema.json",
+  "schemaVersion": 1,
+  "id": "node-01-modulos",
+  "track": "backend",
+  "module": "node",
+  "order": 1,
+  "kind": "concept",
+  "difficulty": "apprentice",
+  "estimatedMinutes": 20,
+  "title": {
+    "es": "Módulos: lo que exportas es lo único que existe fuera",
+    "en": "Modules: what you export is all that exists outside"
+  },
+  "summary": {
+    "es": "`require` y `module.exports`, la caché de módulos que casi nadie sabe que existe, y el error clásico de reasignar `exports` que deja un objeto vacío al otro lado.",
+    "en": "`require` and `module.exports`, the module cache almost nobody knows exists, and the classic mistake of reassigning `exports` that leaves an empty object on the other side."
+  },
+  "concepts": [
+    "node",
+    "commonjs",
+    "modulos",
+    "require"
+  ],
+  "prerequisites": [
+    "js-02-functions"
+  ],
+  "runtime": {
+    "kind": "node",
+    "dependencies": {},
+    "timeoutMs": 10000
+  },
+  "workspace": {
+    "entry": "main.js",
+    "allowCreate": false,
+    "allowDelete": false,
+    "files": [
+      {
+        "path": "main.js",
+        "active": true,
+        "content": "// Paso 1: importa `sumar` desde ./calculadora y usa el resultado.\n// El archivo ya existe: ábrelo en la lista de la izquierda.\n\nconsole.log('todavía no importo nada');\n"
+      },
+      {
+        "path": "calculadora.js",
+        "content": "// Este archivo declara dos funciones. Solo una sale de aquí.\n\nfunction sumar(a, b) {\n  return a + b;\n}\n\nfunction secreta() {\n  return 'no deberías poder llamarme';\n}\n\nmodule.exports = { sumar };\n"
+      },
+      {
+        "path": "contador.js",
+        "content": "console.log('cargando config');\n\nlet veces = 0;\n\nmodule.exports = {\n  sumarUno: function () {\n    veces = veces + 1;\n  },\n  valor: function () {\n    return veces;\n  },\n};\n"
+      },
+      {
+        "path": "roto.js",
+        "content": "// Paso 3: este archivo no exporta nada. Arréglalo.\n\nfunction doble(n) {\n  return n * 2;\n}\n\nexports = { doble };\n"
+      }
+    ]
+  },
+  "rules": [
+    {
+      "id": "usa-require",
+      "kind": "regex-must",
+      "file": "main.js",
+      "pattern": "require\\s*\\(\\s*['\"]\\./calculadora['\"]\\s*\\)",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Importa el módulo con `require('./calculadora')`. El `./` no es decorativo: sin él, Node busca un paquete de npm.",
+        "en": "Import the module with `require('./calculadora')`. The `./` isn't decorative: without it, Node looks for an npm package."
+      },
+      "successMessage": {
+        "es": "Importado desde el archivo, no desde npm.",
+        "en": "Imported from the file, not from npm."
+      },
+      "points": 20
+    },
+    {
+      "id": "suma-impresa",
+      "kind": "stdout-match",
+      "equals": "7",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Debe imprimir `7`: el resultado de sumar 3 y 4 con la función importada.",
+        "en": "It must print `7`: the result of adding 3 and 4 with the imported function."
+      },
+      "successMessage": {
+        "es": "La función cruzó el límite del módulo.",
+        "en": "The function crossed the module boundary."
+      },
+      "points": 25
+    },
+    {
+      "id": "cache-de-modulos",
+      "kind": "stdout-match",
+      "equals": "cargando config\n1\n1\ntrue",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Debe salir `cargando config` **una sola vez**, luego los dos contadores y `true`: es el mismo objeto las dos veces.",
+        "en": "`cargando config` must appear **once**, then both counters and `true`: it's the same object both times."
+      },
+      "successMessage": {
+        "es": "Un módulo se ejecuta una vez; lo demás son referencias al mismo objeto.",
+        "en": "A module runs once; everything else is a reference to the same object."
+      },
+      "points": 30
+    },
+    {
+      "id": "arregla-exports",
+      "kind": "stdout-match",
+      "equals": "8",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Sigue sin funcionar. Reasignar `exports` no cambia lo que se exporta: hay que tocar `module.exports`.",
+        "en": "Still broken. Reassigning `exports` doesn't change what gets exported: you have to touch `module.exports`."
+      },
+      "successMessage": {
+        "es": "`module.exports` es el que manda.",
+        "en": "`module.exports` is the one in charge."
+      },
+      "points": 35
+    },
+    {
+      "id": "sin-tocar-el-consumidor",
+      "kind": "regex-must",
+      "file": "roto.js",
+      "pattern": "module\\.exports",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "El arreglo va en `roto.js`, que es donde está el fallo — no en quien lo importa.",
+        "en": "The fix belongs in `roto.js`, where the bug is — not in whoever imports it."
+      },
+      "successMessage": {
+        "es": "Arreglado donde estaba roto.",
+        "en": "Fixed where it was broken."
+      },
+      "points": 15
+    }
+  ],
+  "steps": [
+    {
+      "id": "step-1-require",
+      "title": {
+        "es": "Importar lo que otro exporta",
+        "en": "Importing what someone else exports"
+      },
+      "body": {
+        "es": "En Node, **cada archivo es un módulo con su propio ámbito**. Lo que declaras dentro no existe fuera: no hay variables globales por accidente, que es exactamente lo contrario de lo que pasa con dos `<script>` en una página.\n\nPara que algo salga hay que exportarlo:\n\n```js\nfunction dividir(a, b) { return a / b; }\nmodule.exports = { dividir };\n```\n\nY para usarlo, importarlo:\n\n```js\nconst { dividir } = require('./matematicas');\n```\n\nDos detalles que cuestan un rato la primera vez:\n\n- **El `./` importa.** `require('./calculadora')` busca un archivo tuyo; `require('calculadora')` busca un paquete instalado en `node_modules`. Es el mismo error que escribir mal una ruta relativa, con un mensaje que no lo parece.\n- **La extensión sobra.** `require('./calculadora')` encuentra `calculadora.js` — y también `calculadora/index.js`, que es de donde viene la costumbre de los `index.js`.\n\nAbre `calculadora.js` a la izquierda: exporta `sumar` y **no** exporta `secreta`. Esa segunda función existe, funciona, y es inalcanzable desde fuera. Eso es un módulo.\n\n**Importa `sumar` y imprime el resultado de sumar 3 y 4.**",
+        "en": "In Node, **every file is a module with its own scope**. What you declare inside doesn't exist outside: no accidental globals, which is exactly the opposite of what happens with two `<script>` tags on a page.\n\nFor something to get out, you export it:\n\n```js\nfunction dividir(a, b) { return a / b; }\nmodule.exports = { dividir };\n```\n\nAnd to use it, you import it:\n\n```js\nconst { dividir } = require('./matematicas');\n```\n\nTwo details that cost you a while the first time:\n\n- **The `./` matters.** `require('./calculadora')` looks for a file of yours; `require('calculadora')` looks for a package installed in `node_modules`. Same mistake as a mistyped relative path, with an error message that doesn't look like it.\n- **The extension is optional.** `require('./calculadora')` finds `calculadora.js` — and also `calculadora/index.js`, which is where the `index.js` habit comes from.\n\nOpen `calculadora.js` on the left: it exports `sumar` and does **not** export `secreta`. That second function exists, works, and is unreachable from outside. That's a module.\n\n**Import `sumar` and print the result of adding 3 and 4.**"
+      },
+      "task": {
+        "es": "Importa `sumar` desde `./calculadora` e imprime `sumar(3, 4)`.",
+        "en": "Import `sumar` from `./calculadora` and print `sumar(3, 4)`."
+      },
+      "focusFile": "main.js",
+      "ruleIds": [
+        "usa-require",
+        "suma-impresa"
+      ],
+      "xp": 25,
+      "hints": [
+        {
+          "id": "h-require",
+          "tier": 1,
+          "text": {
+            "es": "`const { sumar } = require('./calculadora');` y luego `console.log(sumar(3, 4));`",
+            "en": "`const { sumar } = require('./calculadora');` then `console.log(sumar(3, 4));`"
+          },
+          "xpPenalty": 5,
+          "autoOfferAfterSeconds": 60
+        }
+      ],
+      "solution": [
+        {
+          "path": "main.js",
+          "content": "const { sumar } = require('./calculadora');\n\nconsole.log(sumar(3, 4));\n"
+        }
+      ]
+    },
+    {
+      "id": "step-2-cache",
+      "title": {
+        "es": "Un módulo se ejecuta una sola vez",
+        "en": "A module runs exactly once"
+      },
+      "body": {
+        "es": "Esto es lo que casi nadie sabe hasta que le muerde: **`require` cachea**. La primera vez ejecuta el archivo entero; a partir de ahí devuelve *el mismo objeto* sin volver a ejecutar nada.\n\nNo es una optimización invisible: cambia cómo se comportan los módulos con estado.\n\n```js\n// config.js\nconsole.log('cargando config');\nmodule.exports = { veces: 0 };\n```\n\nSi diez archivos hacen `require('./config')`, «cargando config» sale **una vez** y los diez comparten el mismo objeto. Modificarlo desde uno lo modifica para todos.\n\nDe ahí salen las dos caras de esto:\n\n- **La buena**: es lo que hace que un módulo de configuración, un pool de conexiones a la base de datos o un logger sean únicos en toda la aplicación sin inventar nada. El patrón *singleton* en Node es, sencillamente, un módulo.\n- **La mala**: un módulo con estado mutable es estado global con otro nombre. Y en los tests se nota — por eso existe `jest.resetModules()`.\n\n`contador.js` ya está preparado. **Impórtalo dos veces, incrementa una vez, e imprime lo que ves.**",
+        "en": "This is what almost nobody knows until it bites: **`require` caches**. The first time it runs the whole file; from then on it returns *the same object* without running anything again.\n\nIt isn't an invisible optimisation: it changes how stateful modules behave.\n\n```js\n// config.js\nconsole.log('cargando config');\nmodule.exports = { veces: 0 };\n```\n\nIf ten files `require('./config')`, \"cargando config\" prints **once** and all ten share the same object. Changing it from one changes it for everyone.\n\nHence the two faces of this:\n\n- **The good one**: it's what makes a config module, a database connection pool or a logger unique across the whole application without inventing anything. The singleton pattern in Node is, simply, a module.\n- **The bad one**: a module with mutable state is global state by another name. And it shows up in tests — that's why `jest.resetModules()` exists.\n\n`contador.js` is ready. **Import it twice, increment once, and print what you see.**"
+      },
+      "task": {
+        "es": "Importa `./contador` dos veces, llama a `sumarUno()` una vez, e imprime el valor de cada copia y si son el mismo objeto.",
+        "en": "Import `./contador` twice, call `sumarUno()` once, and print each copy's value and whether they're the same object."
+      },
+      "focusFile": "main.js",
+      "ruleIds": [
+        "cache-de-modulos"
+      ],
+      "xp": 30,
+      "hints": [
+        {
+          "id": "h-cache",
+          "tier": 1,
+          "text": {
+            "es": "`const a = require('./contador'); const b = require('./contador'); a.sumarUno(); console.log(a.valor()); console.log(b.valor()); console.log(a === b);`",
+            "en": "`const a = require('./contador'); const b = require('./contador'); a.sumarUno(); console.log(a.valor()); console.log(b.valor()); console.log(a === b);`"
+          },
+          "xpPenalty": 8,
+          "autoOfferAfterSeconds": 80
+        }
+      ],
+      "solution": [
+        {
+          "path": "main.js",
+          "content": "const a = require('./contador');\nconst b = require('./contador');\n\na.sumarUno();\n\nconsole.log(a.valor());\nconsole.log(b.valor());\nconsole.log(a === b);\n"
+        }
+      ],
+      "bestPractice": {
+        "es": "**Estándar de la industria:** un módulo que guarda estado mutable es estado global. Vale para una conexión o un logger —cosas que de verdad deben ser únicas— y es una trampa para todo lo demás, empezando por los tests, que dejan de estar aislados sin que nadie lo haya decidido.",
+        "en": "**Industry standard:** a module holding mutable state is global state. Fine for a connection or a logger — things that genuinely must be unique — and a trap for everything else, starting with tests, which stop being isolated without anyone deciding it."
+      }
+    },
+    {
+      "id": "step-3-exports-roto",
+      "title": {
+        "es": "El error de `exports` que todo el mundo comete una vez",
+        "en": "The `exports` mistake everyone makes once"
+      },
+      "body": {
+        "es": "`exports` y `module.exports` empiezan apuntando al **mismo objeto**. Node envuelve cada archivo en una función que, más o menos, empieza así:\n\n```js\nfunction (require, module, exports) {\n  // tu archivo\n}\n```\n\nY al terminar devuelve **`module.exports`**, no `exports`. Toda la confusión sale de ahí:\n\n```js\nexports.sumar = fn;        // ✅ modifica el objeto compartido\nmodule.exports = { sumar }; // ✅ cambia lo que se devuelve\nexports = { sumar };        // ❌ reapunta una variable local y nada más\n```\n\nLa tercera compila, no avisa, y quien importe recibe `{}`. El error llega tres líneas después, en el `sumar is not a function` de quien lo usa — y ahí no hay nada que arreglar, porque el fallo está en el otro archivo.\n\n`roto.js` tiene exactamente ese bug. **Impórtalo desde `main.js`, imprime `doble(4)` y arregla la exportación** — el arreglo va en `roto.js`, que es donde está el fallo.",
+        "en": "`exports` and `module.exports` start out pointing at the **same object**. Node wraps every file in a function that roughly starts like this:\n\n```js\nfunction (require, module, exports) {\n  // your file\n}\n```\n\nAnd on finishing it returns **`module.exports`**, not `exports`. All the confusion comes from that:\n\n```js\nexports.sumar = fn;        // ✅ mutates the shared object\nmodule.exports = { sumar }; // ✅ changes what gets returned\nexports = { sumar };        // ❌ re-points a local variable and nothing else\n```\n\nThe third one compiles, warns nobody, and whoever imports gets `{}`. The error lands three lines later, in the `sumar is not a function` of whoever uses it — and there's nothing to fix there, because the bug is in the other file.\n\n`roto.js` has exactly that bug. **Import it from `main.js`, print `doble(4)` and fix the export** — the fix belongs in `roto.js`, where the bug is."
+      },
+      "task": {
+        "es": "Importa `doble` desde `./roto` en `main.js`, imprime `doble(4)`, y arregla la exportación de `roto.js` para que salga `8`.",
+        "en": "Import `doble` from `./roto` in `main.js`, print `doble(4)`, and fix `roto.js`'s export so it prints `8`."
+      },
+      "focusFile": "roto.js",
+      "ruleIds": [
+        "arregla-exports",
+        "sin-tocar-el-consumidor"
+      ],
+      "xp": 35,
+      "hints": [
+        {
+          "id": "h-module-exports",
+          "tier": 1,
+          "text": {
+            "es": "En `main.js`: `const { doble } = require('./roto'); console.log(doble(4));`. En `roto.js`, cambia `exports = { doble }` por `module.exports = { doble }`.",
+            "en": "In `main.js`: `const { doble } = require('./roto'); console.log(doble(4));`. In `roto.js`, change `exports = { doble }` to `module.exports = { doble }`."
+          },
+          "xpPenalty": 8,
+          "autoOfferAfterSeconds": 70
+        }
+      ],
+      "solution": [
+        {
+          "path": "main.js",
+          "content": "const { doble } = require('./roto');\n\nconsole.log(doble(4));\n"
+        },
+        {
+          "path": "roto.js",
+          "content": "function doble(n) {\n  return n * 2;\n}\n\nmodule.exports = { doble };\n"
+        }
+      ],
+      "bestPractice": {
+        "es": "**Estándar de la industria:** usa `module.exports` y olvídate de `exports`. La forma corta ahorra siete caracteres y cuesta una tarde la primera vez que alguien la reasigna.",
+        "en": "**Industry standard:** use `module.exports` and forget `exports` exists. The short form saves seven characters and costs an afternoon the first time somebody reassigns it."
+      }
+    }
+  ],
+  "drills": [],
+  "reward": {
+    "baseXp": 120,
+    "flawlessBonus": 45,
+    "noHintBonus": 25,
+    "comboMultiplierCap": 3,
+    "achievements": []
+  },
+  "solution": {
+    "files": [
+      {
+        "path": "main.js",
+        "content": "const { doble } = require('./roto');\n\nconsole.log(doble(4));\n"
+      },
+      {
+        "path": "roto.js",
+        "content": "function doble(n) {\n  return n * 2;\n}\n\nmodule.exports = { doble };\n"
+      }
+    ],
+    "explanation": {
+      "es": "Cada archivo es un módulo con su ámbito, y lo único que existe fuera es lo que se exporta. `require` cachea, así que un módulo se ejecuta una vez y todos comparten su objeto — de ahí que un módulo con estado sea un singleton, para bien y para mal. Y `exports` es solo un atajo al objeto que `module.exports` devuelve: reasignarlo lo rompe en silencio.",
+      "en": "Every file is a module with its own scope, and the only thing that exists outside is what you export. `require` caches, so a module runs once and everyone shares its object — which is why a stateful module is a singleton, for better and worse. And `exports` is just a shortcut to the object `module.exports` returns: reassigning it breaks things silently."
+    }
+  }
+}

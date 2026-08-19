@@ -302,7 +302,6 @@ export function CodeCanvas() {
     >
       <div ref={surfaceRef} className="relative h-full w-full overflow-hidden rounded">
         <Editor
-          key={activeFile}
           /*
            * `path` le da al modelo una identidad estable: sin él, Monaco lo
            * crea con una URI anónima y el runner de TypeScript acababa
@@ -310,6 +309,12 @@ export function CodeCanvas() {
            * `.ts` en el mismo ámbito global son dos declaraciones de todo, y
            * el compilador respondía «No overload matches this call» a una
            * función que no tenía sobrecargas.
+           *
+           * Y con `path` sobra el `key`: era él quien **remontaba** el editor
+           * en cada cambio de archivo, y en ese hueco lo que se escribía se le
+           * atribuía al archivo anterior — el contenido de uno acababa dentro
+           * del otro. Ahora Monaco cambia de modelo sin destruir nada, que es
+           * además lo que conserva el scroll y el deshacer de cada archivo.
            */
           path={activeFile}
           height="100%"

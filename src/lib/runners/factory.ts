@@ -19,6 +19,7 @@ import { RunnerBootError } from './types';
  * | `vue`          | 3         | ✅ implementado — sin bundler (ADR-13)     |
  * | `php`          | 3         | ✅ implementado — intérprete en JS (ADR-20)|
  * | `ts`           | 3         | ✅ implementado — compilador del editor (ADR-25)|
+ * | `node`         | 3         | ✅ simulado — módulos, fs y http (ADR-26)  |
  * | `webcontainer` | 1         | ⏸️ bloqueado por la licencia (ADR-07)      |
  * | `pyodide`      | 0         | ⏸️ sin contenido que lo use                |
  * | `remote`       | 0         | ⏸️ sin contenido que lo use                |
@@ -61,6 +62,11 @@ export async function createRunner(kind: RuntimeKind, mount: HTMLElement): Promi
     case 'ts': {
       const { TsRunner } = await import('./ts');
       return new TsRunner(mount);
+    }
+
+    case 'node': {
+      const { NodeRunner } = await import('./node');
+      return new NodeRunner(mount);
     }
 
     case 'webcontainer':

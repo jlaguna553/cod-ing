@@ -757,8 +757,12 @@ Los **ciclos sí son error**: un track sin punto de entrada no se puede empezar.
 
 Hoy no queda ninguna referencia rota: **toda lección citada como prerequisito existe**.
 
-**Sin empezar:** Next.js (módulo completo). En Backend, Node y Python siguen sin motor: ningún runner actual los ejecuta, y esa decisión sigue abierta —
+**Sin empezar:** Next.js y NestJS. En Backend, Python sigue sin motor: ningún runner actual los ejecuta, y esa decisión sigue abierta —
 runtime remoto con base efímera por petición, o Pyodide para el caso de Python.
+
+**Node ya tiene módulo y motor** (ADR-26): tres lecciones —módulos y caché, el orden del
+bucle de eventos, y un servidor HTTP sin framework— sobre un subconjunto simulado que se
+compara con el Node real en los tests. WebContainers sigue bloqueado por licencia.
 
 **TypeScript ya tiene módulo y motor** (ADR-25): tres lecciones —el error que llega antes
 de ejecutar, uniones con estrechamiento, y genéricos hasta `Resultado<T>`— sobre el
