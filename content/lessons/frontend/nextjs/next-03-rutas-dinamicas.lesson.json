@@ -1,0 +1,338 @@
+{
+  "$schema": "../../../schema/lesson.schema.json",
+  "schemaVersion": 1,
+  "id": "next-03-rutas-dinamicas",
+  "track": "frontend",
+  "module": "nextjs",
+  "order": 3,
+  "kind": "challenge",
+  "difficulty": "adept",
+  "estimatedMinutes": 26,
+  "title": {
+    "es": "Una carpeta con corchetes",
+    "en": "A folder in brackets"
+  },
+  "summary": {
+    "es": "Rutas que no se sabe cuántas son hasta que alguien las pide, el parámetro que ahora llega como promesa, y la función que convierte una ruta dinámica en páginas prerenderizadas.",
+    "en": "Routes you don't know the count of until somebody asks for one, the parameter that now arrives as a promise, and the function that turns a dynamic route into prerendered pages."
+  },
+  "concepts": [
+    "nextjs",
+    "app-router",
+    "rutas-dinamicas",
+    "prerenderizado"
+  ],
+  "prerequisites": [
+    "next-02-servidor-y-cliente"
+  ],
+  "runtime": {
+    "kind": "cli-sim",
+    "dependencies": {},
+    "timeoutMs": 15000,
+    "terminal": {
+      "enabled": true,
+      "allowedCommands": [
+        "next",
+        "ls",
+        "cat",
+        "cd",
+        "pwd",
+        "echo",
+        "clear"
+      ],
+      "greeting": {
+        "es": "`next build` imprime las rutas con ○ si se prerenderizan y ƒ si se hacen por petición.",
+        "en": "`next build` prints routes with ○ when prerendered and ƒ when rendered on demand."
+      }
+    }
+  },
+  "workspace": {
+    "entry": "app/page.tsx",
+    "allowCreate": true,
+    "allowDelete": false,
+    "files": [
+      {
+        "path": "app/page.tsx",
+        "active": true,
+        "content": "export default function Page() {\n  return <h1>Blog</h1>;\n}\n"
+      },
+      {
+        "path": "app/layout.tsx",
+        "content": "export default function RootLayout({ children }) {\n  return (\n    <html lang=\"es\">\n      <body>{children}</body>\n    </html>\n  );\n}\n"
+      },
+      {
+        "path": "package.json",
+        "readOnly": true,
+        "content": "{\n  \"name\": \"blog\",\n  \"scripts\": { \"build\": \"next build\" }\n}\n"
+      }
+    ]
+  },
+  "rules": [
+    {
+      "id": "existe-ruta-dinamica",
+      "kind": "file-exists",
+      "file": "app/blog/[slug]/page.tsx",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Crea `app/blog/[slug]/page.tsx` — con los corchetes en el nombre de la carpeta.",
+        "en": "Create `app/blog/[slug]/page.tsx` — brackets in the folder name."
+      },
+      "successMessage": {
+        "es": "Ruta dinámica declarada.",
+        "en": "Dynamic route declared."
+      },
+      "points": 25
+    },
+    {
+      "id": "build-primero",
+      "kind": "cli-transcript",
+      "expectedCommands": [
+        "next build"
+      ],
+      "allowExtra": true,
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Ejecuta `next build` y mira con qué símbolo aparece la ruta nueva.",
+        "en": "Run `next build` and look at which symbol the new route gets."
+      },
+      "successMessage": {
+        "es": "Rutas listadas.",
+        "en": "Routes listed."
+      },
+      "points": 15
+    },
+    {
+      "id": "lee-el-parametro",
+      "kind": "regex-must",
+      "file": "app/blog/[slug]/page.tsx",
+      "pattern": "await\\s+params",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "`params` llega como promesa: hay que esperarla antes de sacar nada de dentro.",
+        "en": "`params` arrives as a promise: await it before pulling anything out."
+      },
+      "successMessage": {
+        "es": "Parámetro leído como toca.",
+        "en": "Parameter read the right way."
+      },
+      "points": 30
+    },
+    {
+      "id": "componente-asincrono",
+      "kind": "regex-must",
+      "file": "app/blog/[slug]/page.tsx",
+      "pattern": "export\\s+default\\s+async\\s+function",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Para poder usar `await` dentro, el componente tiene que ser `async`.",
+        "en": "To use `await` inside, the component must be `async`."
+      },
+      "successMessage": {
+        "es": "Un componente de servidor puede ser asíncrono.",
+        "en": "A Server Component is allowed to be async."
+      },
+      "points": 20
+    },
+    {
+      "id": "usa-el-slug",
+      "kind": "regex-must",
+      "file": "app/blog/[slug]/page.tsx",
+      "pattern": "slug",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "El nombre de la carpeta es el nombre del parámetro: `slug`.",
+        "en": "The folder's name is the parameter's name: `slug`."
+      },
+      "successMessage": {
+        "es": "El nombre coincide.",
+        "en": "The name matches."
+      },
+      "points": 15
+    },
+    {
+      "id": "prerenderiza",
+      "kind": "regex-must",
+      "file": "app/blog/[slug]/page.tsx",
+      "pattern": "generateStaticParams",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Exporta `generateStaticParams` devolviendo la lista de parámetros que existen.",
+        "en": "Export `generateStaticParams` returning the list of parameters that exist."
+      },
+      "successMessage": {
+        "es": "Next ya sabe qué páginas hay antes de que se las pidan.",
+        "en": "Next now knows which pages exist before anyone asks."
+      },
+      "points": 35
+    },
+    {
+      "id": "build-final",
+      "kind": "cli-transcript",
+      "expectedCommands": [
+        "next build"
+      ],
+      "allowExtra": true,
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Vuelve a ejecutar `next build`: el símbolo de la ruta tiene que haber cambiado.",
+        "en": "Run `next build` again: the route's symbol must have changed."
+      },
+      "successMessage": {
+        "es": "○ en vez de ƒ.",
+        "en": "○ instead of ƒ."
+      },
+      "points": 20
+    }
+  ],
+  "steps": [
+    {
+      "id": "step-1-corchetes",
+      "title": {
+        "es": "Rutas que no se pueden escribir a mano",
+        "en": "Routes you can't write by hand"
+      },
+      "body": {
+        "es": "Un blog con cuatrocientos artículos no tiene cuatrocientas carpetas. Tiene **una**, con el nombre entre corchetes:\n\n```\napp/blog/[slug]/page.tsx   →  /blog/lo-que-sea\n```\n\nLos corchetes le dicen a Next: «este segmento de la URL no lo sé de antemano; lo que venga ahí pásamelo como parámetro». Y el nombre que pongas dentro —`slug`— es literalmente **cómo se va a llamar la variable** cuando llegue. Si la carpeta fuera `[id]`, el parámetro sería `id`. No hay ningún sitio donde se declare esa correspondencia: es el nombre de la carpeta y ya.\n\nCrea `app/blog/[slug]/page.tsx` con un componente cualquiera y ejecuta `next build`. Fíjate bien en **el símbolo** con el que aparece la ruta nueva frente al de la portada: uno es un círculo y otro no, y esa diferencia es el resto de la lección.",
+        "en": "A blog with four hundred articles doesn't have four hundred folders. It has **one**, named in brackets:\n\n```\napp/blog/[slug]/page.tsx   →  /blog/whatever\n```\n\nThe brackets tell Next: \"I don't know this URL segment in advance; hand me whatever shows up there as a parameter\". And the name you put inside — `slug` — is literally **what the variable will be called** when it arrives. Were the folder `[id]`, the parameter would be `id`. There's nowhere that mapping gets declared: it's the folder's name, that's all.\n\nCreate `app/blog/[slug]/page.tsx` with any component and run `next build`. Look carefully at **the symbol** the new route gets versus the home page's: one is a circle and one isn't, and that difference is the rest of this lesson."
+      },
+      "task": {
+        "es": "Crea `app/blog/[slug]/page.tsx` con un componente que exporte por defecto, y ejecuta `next build`.",
+        "en": "Create `app/blog/[slug]/page.tsx` with a default-exported component, and run `next build`."
+      },
+      "focusFile": "app/blog/[slug]/page.tsx",
+      "ruleIds": [
+        "existe-ruta-dinamica",
+        "build-primero"
+      ],
+      "xp": 25,
+      "hints": [
+        {
+          "id": "h-crear",
+          "tier": 1,
+          "text": {
+            "es": "En la tarjeta de archivos hay un campo para crear uno nuevo: escribe la ruta entera, corchetes incluidos.",
+            "en": "The files card has a field to create one: type the whole path, brackets included."
+          },
+          "xpPenalty": 5,
+          "autoOfferAfterSeconds": 60
+        }
+      ],
+      "solution": [
+        {
+          "path": "app/blog/[slug]/page.tsx",
+          "content": "export default function Articulo() {\n  return <article>Un artículo</article>;\n}\n"
+        }
+      ]
+    },
+    {
+      "id": "step-2-params",
+      "title": {
+        "es": "El parámetro llega como promesa",
+        "en": "The parameter arrives as a promise"
+      },
+      "body": {
+        "es": "La página recibe una prop llamada `params` con los segmentos dinámicos dentro. Y aquí viene el cambio que rompe casi todo el código antiguo que encontrarás por internet: **`params` ya no es un objeto, es una promesa**. Hay que esperarla.\n\n```tsx\nexport default async function Ficha({ params }) {\n  const { id } = await params;\n  // ...\n}\n```\n\nDos cosas que chirrían la primera vez:\n\n- **El componente es `async`.** En React de toda la vida eso no se podía; en un componente de servidor sí, porque no se re-renderiza en el navegador: se ejecuta una vez, en el servidor, y lo que sale es HTML. Por eso mismo puedes hacer `await` de una consulta a la base de datos ahí mismo, sin `useEffect` ni estado de carga.\n- **Si te olvidas del `await`**, no explota: obtienes un objeto raro y una propiedad `undefined` que se pinta como texto vacío. Es un fallo silencioso, de los que se tarda en ver.\n\nHaz que la página lea `slug` y lo muestre.",
+        "en": "The page receives a prop called `params` holding the dynamic segments. And here comes the change that breaks most of the old code you'll find online: **`params` is no longer an object, it's a promise**. You have to await it.\n\n```tsx\nexport default async function Card({ params }) {\n  const { id } = await params;\n  // ...\n}\n```\n\nTwo things that feel wrong the first time:\n\n- **The component is `async`.** In plain React that wasn't allowed; in a Server Component it is, because it never re-renders in the browser: it runs once, on the server, and what comes out is HTML. Which is also why you can `await` a database query right there, with no `useEffect` and no loading state.\n- **If you forget the `await`**, nothing explodes: you get a strange object and an `undefined` property that renders as empty text. A silent failure, the slow kind to spot.\n\nMake the page read `slug` and display it."
+      },
+      "task": {
+        "es": "Convierte el componente en `async` y saca `slug` esperando a `params`.",
+        "en": "Make the component `async` and pull `slug` out by awaiting `params`."
+      },
+      "focusFile": "app/blog/[slug]/page.tsx",
+      "ruleIds": [
+        "lee-el-parametro",
+        "componente-asincrono",
+        "usa-el-slug"
+      ],
+      "xp": 35,
+      "hints": [
+        {
+          "id": "h-await",
+          "tier": 1,
+          "text": {
+            "es": "`export default async function ...({ params })` y dentro `const { slug } = await params;`",
+            "en": "`export default async function ...({ params })` and inside `const { slug } = await params;`"
+          },
+          "xpPenalty": 8,
+          "autoOfferAfterSeconds": 75
+        }
+      ],
+      "solution": [
+        {
+          "path": "app/blog/[slug]/page.tsx",
+          "content": "export default async function Articulo({ params }) {\n  const { slug } = await params;\n\n  return <article>Estás leyendo: {slug}</article>;\n}\n"
+        }
+      ]
+    },
+    {
+      "id": "step-3-generate-static-params",
+      "title": {
+        "es": "De ƒ a ○",
+        "en": "From ƒ to ○"
+      },
+      "body": {
+        "es": "El símbolo del build no era decorativo:\n\n- **ƒ (Dynamic)** — la página se renderiza **cada vez que alguien la pide**. Hay un servidor trabajando en cada visita.\n- **○ (Static)** — la página se generó **al construir** y se sirve como un archivo. Sin servidor, sin espera, y desde el CDN más cercano.\n\nUna ruta con corchetes empieza siendo ƒ por lo evidente: Next no puede adivinar qué artículos existen. Pero tú sí lo sabes, y hay una forma de decírselo:\n\n```tsx\nexport const generateStaticParams = async () => [{ id: '1' }, { id: '2' }];\n```\n\n(Vale igual como declaración de función de toda la vida; lo que importa es el nombre exacto y que se exporte.)\n\nDevuelve **una lista de objetos con la forma del parámetro**, uno por página que quieras prerenderizar. Con eso, en el build Next recorre la lista, renderiza cada página y las guarda. Es `async` porque lo normal es que esa lista salga de una consulta o de una API — se ejecuta en tu máquina al construir, no en la del usuario.\n\nAñádelo devolviendo dos artículos y vuelve a ejecutar `next build`: la ruta tiene que pasar de ƒ a ○.",
+        "en": "The build symbol wasn't decoration:\n\n- **ƒ (Dynamic)** — the page renders **every time somebody asks for it**. A server works on every visit.\n- **○ (Static)** — the page was generated **at build time** and is served as a file. No server, no wait, from the nearest CDN.\n\nA bracketed route starts out ƒ for the obvious reason: Next can't guess which articles exist. But you do know, and there's a way to tell it:\n\n```tsx\nexport const generateStaticParams = async () => [{ id: '1' }, { id: '2' }];\n```\n\n(A plain function declaration works just the same; what matters is the exact name and that it's exported.)\n\nIt returns **a list of objects shaped like the parameter**, one per page you want prerendered. With that, at build time Next walks the list, renders each page and stores it. It's `async` because that list usually comes from a query or an API — it runs on your machine at build time, not on the user's.\n\nAdd it returning two articles and run `next build` again: the route must go from ƒ to ○."
+      },
+      "task": {
+        "es": "Exporta `generateStaticParams` con dos artículos y ejecuta `next build` para ver el símbolo cambiar.",
+        "en": "Export `generateStaticParams` with two articles and run `next build` to watch the symbol change."
+      },
+      "focusFile": "app/blog/[slug]/page.tsx",
+      "ruleIds": [
+        "prerenderiza",
+        "build-final"
+      ],
+      "xp": 40,
+      "hints": [
+        {
+          "id": "h-lista",
+          "tier": 1,
+          "text": {
+            "es": "La clave de cada objeto se llama igual que la carpeta: `[{ slug: 'hola-mundo' }, ...]`.",
+            "en": "Each object's key is named after the folder: `[{ slug: 'hello-world' }, ...]`."
+          },
+          "xpPenalty": 10,
+          "autoOfferAfterSeconds": 90
+        }
+      ],
+      "solution": [
+        {
+          "path": "app/blog/[slug]/page.tsx",
+          "content": "export async function generateStaticParams() {\n  return [{ slug: 'hola-mundo' }, { slug: 'el-router' }];\n}\n\nexport default async function Articulo({ params }) {\n  const { slug } = await params;\n\n  return <article>Estás leyendo: {slug}</article>;\n}\n"
+        }
+      ],
+      "bestPractice": {
+        "es": "**Estándar de la industria:** lo que se pueda prerenderizar, se prerenderiza. Y cuando la lista es enorme, el punto medio habitual es publicar en `generateStaticParams` solo las que más se visitan: el resto se generan la primera vez que alguien entra y se quedan guardadas.",
+        "en": "**Industry standard:** whatever can be prerendered, gets prerendered. And when the list is huge, the usual middle ground is publishing only the most-visited ones in `generateStaticParams`: the rest are generated the first time somebody visits and then cached."
+      }
+    }
+  ],
+  "drills": [],
+  "reward": {
+    "baseXp": 150,
+    "flawlessBonus": 55,
+    "noHintBonus": 30,
+    "comboMultiplierCap": 3,
+    "achievements": []
+  },
+  "solution": {
+    "files": [
+      {
+        "path": "app/blog/[slug]/page.tsx",
+        "content": "export async function generateStaticParams() {\n  return [{ slug: 'hola-mundo' }, { slug: 'el-router' }];\n}\n\nexport default async function Articulo({ params }) {\n  const { slug } = await params;\n\n  return <article>Estás leyendo: {slug}</article>;\n}\n"
+      }
+    ],
+    "explanation": {
+      "es": "Una carpeta entre corchetes declara un segmento que no se conoce de antemano, y su nombre es el del parámetro. Ese parámetro llega como promesa, así que el componente se declara `async` y se espera — algo que un componente de servidor puede hacer porque se ejecuta una sola vez y fuera del navegador. Y una ruta dinámica deja de serlo en cuanto exportas `generateStaticParams`: con la lista de páginas por delante, Next las genera en el build y las sirve como archivos.",
+      "en": "A bracketed folder declares a segment unknown in advance, and its name is the parameter's name. That parameter arrives as a promise, so the component is declared `async` and awaits it — something a Server Component can do because it runs once and outside the browser. And a dynamic route stops being dynamic the moment you export `generateStaticParams`: given the list of pages up front, Next generates them at build time and serves them as files."
+    }
+  }
+}

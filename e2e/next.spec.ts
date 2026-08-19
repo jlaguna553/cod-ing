@@ -90,3 +90,90 @@ test('⭐ el módulo de Next aparece en la ruta de Frontend', async ({ page }) =
   await page.goto('/es/tracks/frontend');
   await expect(page.getByRole('heading', { name: 'nextjs' })).toBeVisible();
 });
+
+/* ── Servidor y cliente (next-02) ─────────────────────────────────── */
+
+const FRONTERA = '/es/play/frontend/next-02-servidor-y-cliente';
+
+test('⭐ un hook sin `use client` da el error que se lleva a todo el mundo', async ({ page }) => {
+  await page.goto(FRONTERA);
+  await esperarTerminal(page);
+
+  await ejecutar(page, 'next build');
+
+  // Palabra por palabra lo que imprime Next: es lo que el alumno va a buscar.
+  await expect(terminal(page)).toContainText('Client Component', { timeout: 20_000 });
+  await expect(terminal(page)).toContainText('use client');
+});
+
+test('⭐ con la directiva en la primera línea, el build pasa', async ({ page }) => {
+  await page.goto(FRONTERA);
+  await esperarTerminal(page);
+
+  await escribirEnEditor(
+    page,
+    "'use client';\n\nimport { useState } from 'react';\n\nexport default function Page() {\n  const [abierto, setAbierto] = useState(false);\n\n  return <button onClick={() => setAbierto(!abierto)}>Filtros</button>;\n}\n",
+  );
+
+  await ejecutar(page, 'next build');
+  await expect(terminal(page)).toContainText('Compiled successfully', { timeout: 20_000 });
+});
+
+/* ── Rutas dinámicas (next-03) ────────────────────────────────────── */
+
+const DINAMICAS = '/es/play/frontend/next-03-rutas-dinamicas';
+
+async function crearArchivo(page: Page, ruta: string, contenido: string) {
+  await page.getByRole('button', { name: /nuevo archivo/i }).click();
+  await page.getByLabel(/nuevo archivo/i).fill(ruta);
+  await page.getByRole('button', { name: /^crear$/i }).click();
+  await expect(page.getByRole('heading', { name: ruta })).toBeVisible();
+  await escribirEnEditor(page, contenido);
+}
+
+test('⭐ una carpeta entre corchetes es dinámica hasta que declara sus páginas', async ({
+  page,
+}) => {
+  await page.goto(DINAMICAS);
+  await esperarTerminal(page);
+
+  await crearArchivo(
+    page,
+    'app/blog/[slug]/page.tsx',
+    'export default async function Articulo({ params }) {\n  const { slug } = await params;\n\n  return <article>{slug}</article>;\n}\n',
+  );
+
+  await ejecutar(page, 'next build');
+
+  // ƒ: se renderiza por petición, porque Next no sabe qué artículos existen.
+  await expect(terminal(page)).toContainText('ƒ /blog/[slug]', { timeout: 20_000 });
+
+  await escribirEnEditor(
+    page,
+    "export async function generateStaticParams() {\n  return [{ slug: 'hola-mundo' }, { slug: 'el-router' }];\n}\n\nexport default async function Articulo({ params }) {\n  const { slug } = await params;\n\n  return <article>{slug}</article>;\n}\n",
+  );
+
+  await ejecutar(page, 'next build');
+
+  // ○: ya se sabe la lista, así que se prerenderizan en el build.
+  await expect(terminal(page)).toContainText('○ /blog/[slug]', { timeout: 20_000 });
+});
+
+test('⭐ el reto no deja avanzar hasta que se ejecuta el build', async ({ page }) => {
+  await page.goto(FRONTERA);
+  await esperarTerminal(page);
+
+  const evaluar = page.getByRole('button', { name: /^evaluar$/i });
+
+  // Sin haber ejecutado nada, evaluar el paso 1 no lo da por bueno.
+  await evaluar.click();
+  await expect(page.getByRole('button', { name: /^siguiente$/i })).toHaveCount(0);
+
+  await ejecutar(page, 'next build');
+  await expect(terminal(page)).toContainText('Client Component', { timeout: 20_000 });
+
+  await evaluar.click();
+  await expect(page.getByRole('button', { name: /^siguiente$/i })).toBeVisible({
+    timeout: 20_000,
+  });
+});

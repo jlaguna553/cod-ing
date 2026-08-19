@@ -1,0 +1,329 @@
+{
+  "$schema": "../../../schema/lesson.schema.json",
+  "schemaVersion": 1,
+  "id": "next-02-servidor-y-cliente",
+  "track": "frontend",
+  "module": "nextjs",
+  "order": 2,
+  "kind": "challenge",
+  "difficulty": "adept",
+  "estimatedMinutes": 24,
+  "title": {
+    "es": "Dónde corre cada componente",
+    "en": "Where each component runs"
+  },
+  "summary": {
+    "es": "El error que se encuentra todo el mundo el primer día —«This React hook only works in a Client Component»— y por qué la respuesta casi nunca es poner `'use client'` arriba del todo.",
+    "en": "The error everyone hits on day one — \"This React hook only works in a Client Component\" — and why the answer is almost never putting `'use client'` at the very top."
+  },
+  "concepts": [
+    "nextjs",
+    "server-components",
+    "use-client",
+    "rsc"
+  ],
+  "prerequisites": [
+    "next-01-app-router"
+  ],
+  "runtime": {
+    "kind": "cli-sim",
+    "dependencies": {},
+    "timeoutMs": 15000,
+    "terminal": {
+      "enabled": true,
+      "allowedCommands": [
+        "next",
+        "ls",
+        "cat",
+        "cd",
+        "pwd",
+        "echo",
+        "clear"
+      ],
+      "greeting": {
+        "es": "Ejecuta `next build` para ver qué opina el compilador de tus componentes.",
+        "en": "Run `next build` to see what the compiler thinks of your components."
+      }
+    }
+  },
+  "workspace": {
+    "entry": "app/page.tsx",
+    "allowCreate": true,
+    "allowDelete": false,
+    "files": [
+      {
+        "path": "app/page.tsx",
+        "active": true,
+        "content": "// Paso 1: ejecuta `next build` y lee el error.\n// Este componente usa un hook y no ha dicho que sea de cliente.\n\nimport { useState } from 'react';\n\nexport default function Page() {\n  const [abierto, setAbierto] = useState(false);\n\n  return (\n    <main>\n      <h1>Catálogo</h1>\n      <button onClick={() => setAbierto(!abierto)}>Filtros</button>\n    </main>\n  );\n}\n"
+      },
+      {
+        "path": "app/layout.tsx",
+        "content": "export default function RootLayout({ children }) {\n  return (\n    <html lang=\"es\">\n      <body>{children}</body>\n    </html>\n  );\n}\n"
+      },
+      {
+        "path": "package.json",
+        "readOnly": true,
+        "content": "{\n  \"name\": \"catalogo\",\n  \"scripts\": { \"build\": \"next build\" }\n}\n"
+      }
+    ]
+  },
+  "rules": [
+    {
+      "id": "build-ejecutado",
+      "kind": "cli-transcript",
+      "expectedCommands": [
+        "next build"
+      ],
+      "allowExtra": true,
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Ejecuta `next build` en la terminal: el error que da es la lección.",
+        "en": "Run `next build` in the terminal: the error it gives is the lesson."
+      },
+      "successMessage": {
+        "es": "El compilador ha hablado.",
+        "en": "The compiler has spoken."
+      },
+      "points": 20
+    },
+    {
+      "id": "marca-cliente",
+      "kind": "regex-must",
+      "file": "app/page.tsx",
+      "pattern": "^\\s*['\"]use client['\"]",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Marca el archivo con `'use client'` en la **primera línea**, antes de los imports.",
+        "en": "Mark the file with `'use client'` on the **first line**, before the imports."
+      },
+      "successMessage": {
+        "es": "Declarado como componente de cliente.",
+        "en": "Declared as a Client Component."
+      },
+      "points": 25
+    },
+    {
+      "id": "existe-filtros",
+      "kind": "file-exists",
+      "file": "app/filtros.tsx",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Crea `app/filtros.tsx` y llévate ahí lo interactivo. La página vuelve a ser de servidor.",
+        "en": "Create `app/filtros.tsx` and move the interactive part there. The page goes back to being a Server Component."
+      },
+      "successMessage": {
+        "es": "Lo interactivo, en su propia hoja del árbol.",
+        "en": "The interactive part, on its own leaf of the tree."
+      },
+      "points": 30
+    },
+    {
+      "id": "pagina-vuelve-a-servidor",
+      "kind": "regex-forbid",
+      "file": "app/page.tsx",
+      "pattern": "use client",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "La página ya no necesita ser de cliente: quítale el `'use client'` ahora que lo interactivo vive en otro archivo.",
+        "en": "The page no longer needs to be a Client Component: drop its `'use client'` now that the interactive part lives elsewhere."
+      },
+      "successMessage": {
+        "es": "La página vuelve al servidor, que es donde rinde.",
+        "en": "The page is back on the server, which is where it pays off."
+      },
+      "points": 25
+    },
+    {
+      "id": "filtros-es-cliente",
+      "kind": "regex-must",
+      "file": "app/filtros.tsx",
+      "pattern": "^\\s*['\"]use client['\"]",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "`app/filtros.tsx` es el que tiene el estado: ese sí lleva `'use client'`.",
+        "en": "`app/filtros.tsx` is the one holding state: that's the one that carries `'use client'`."
+      },
+      "successMessage": {
+        "es": "La frontera está donde tiene que estar.",
+        "en": "The boundary is where it belongs."
+      },
+      "points": 20
+    },
+    {
+      "id": "build-verde-final",
+      "kind": "cli-transcript",
+      "expectedCommands": [
+        "next build"
+      ],
+      "allowExtra": true,
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Vuelve a ejecutar `next build` para comprobar que ya no protesta.",
+        "en": "Run `next build` again to check it no longer complains."
+      },
+      "successMessage": {
+        "es": "Compila.",
+        "en": "It compiles."
+      },
+      "points": 20
+    }
+  ],
+  "steps": [
+    {
+      "id": "step-1-el-error",
+      "title": {
+        "es": "El error del primer día",
+        "en": "Day one's error"
+      },
+      "body": {
+        "es": "En el App Router, **todo es un componente de servidor por defecto**. Y eso no es un detalle de configuración: cambia dónde se ejecuta tu código.\n\nUn componente de servidor se renderiza en el servidor y al navegador le llega **el resultado**, no el componente. Por eso puede leer de la base de datos directamente, usar secretos sin exponerlos, y **no pesa nada** en el bundle que descarga el usuario.\n\nLo que no puede hacer es nada que necesite un navegador: no hay estado, ni efectos, ni `onClick`, porque en el servidor no hay nadie pulsando nada.\n\nEl archivo de la izquierda usa `useState` y un `onClick` sin haber dicho que es de cliente. **Ejecuta `next build` y lee el error entero**: dice qué hook, en qué archivo, y cuál es el arreglo. Es de los errores mejor escritos que da un framework, y merece la pena leerlo despacio antes de arreglarlo.",
+        "en": "In the App Router, **everything is a Server Component by default**. And that isn't a configuration detail: it changes where your code runs.\n\nA Server Component renders on the server and what reaches the browser is **the result**, not the component. That's why it can read from the database directly, use secrets without exposing them, and **weighs nothing** in the bundle the user downloads.\n\nWhat it can't do is anything needing a browser: no state, no effects, no `onClick`, because on the server nobody is clicking anything.\n\nThe file on the left uses `useState` and an `onClick` without having said it's a client one. **Run `next build` and read the whole error**: it says which hook, in which file, and what the fix is. It's one of the best-written errors a framework gives, and it's worth reading slowly before fixing it."
+      },
+      "task": {
+        "es": "Ejecuta `next build` en la terminal y lee el error que da sobre `useState`.",
+        "en": "Run `next build` in the terminal and read the error it gives about `useState`."
+      },
+      "focusFile": "app/page.tsx",
+      "ruleIds": [
+        "build-ejecutado"
+      ],
+      "xp": 20,
+      "hints": [
+        {
+          "id": "h-build",
+          "tier": 1,
+          "text": {
+            "es": "Pincha en la terminal y escribe `next build`.",
+            "en": "Click the terminal and type `next build`."
+          },
+          "xpPenalty": 4,
+          "autoOfferAfterSeconds": 50
+        }
+      ],
+      "solution": [
+        {
+          "path": "app/page.tsx",
+          "content": "import { useState } from 'react';\n\nexport default function Page() {\n  const [abierto, setAbierto] = useState(false);\n\n  return (\n    <main>\n      <h1>Catálogo</h1>\n      <button onClick={() => setAbierto(!abierto)}>Filtros</button>\n    </main>\n  );\n}\n"
+        }
+      ]
+    },
+    {
+      "id": "step-2-use-client",
+      "title": {
+        "es": "La directiva que cruza la frontera",
+        "en": "The directive that crosses the boundary"
+      },
+      "body": {
+        "es": "El arreglo inmediato es declarar el archivo como componente de cliente:\n\n```tsx\n'use client';\n```\n\nVa en la **primera línea**, antes de cualquier import — no es un comentario ni una convención de estilo: es una directiva que el compilador lee antes que nada.\n\nY lo que hace no es «activar hooks». Lo que hace es marcar **una frontera**: ese archivo y *todo lo que importe desde él* se empaquetan y se envían al navegador. De ahí la parte que casi nadie cuenta: poner `'use client'` en la página de arriba del todo arrastra al cliente el árbol entero, y con él se va la razón por la que existen los componentes de servidor.\n\nHazlo igualmente —hay que verlo funcionar— y comprueba que el build pasa. En el paso siguiente lo colocamos donde debe ir.",
+        "en": "The immediate fix is declaring the file a Client Component:\n\n```tsx\n'use client';\n```\n\nIt goes on the **first line**, before any import — it isn't a comment or a style convention: it's a directive the compiler reads before anything else.\n\nAnd what it does isn't \"enable hooks\". What it does is mark **a boundary**: that file and *everything it imports* get bundled and shipped to the browser. Hence the part almost nobody mentions: putting `'use client'` at the top of the page drags the whole tree to the client, and with it goes the reason Server Components exist.\n\nDo it anyway — you have to see it work — and check the build passes. Next step we put it where it belongs."
+      },
+      "task": {
+        "es": "Añade `'use client'` en la primera línea de `app/page.tsx` y vuelve a ejecutar `next build`.",
+        "en": "Add `'use client'` on the first line of `app/page.tsx` and run `next build` again."
+      },
+      "focusFile": "app/page.tsx",
+      "ruleIds": [
+        "marca-cliente",
+        "build-ejecutado"
+      ],
+      "xp": 25,
+      "hints": [
+        {
+          "id": "h-directiva",
+          "tier": 1,
+          "text": {
+            "es": "Primera línea del archivo, con comillas y punto y coma: `'use client';`",
+            "en": "First line of the file, quotes and semicolon: `'use client';`"
+          },
+          "xpPenalty": 5,
+          "autoOfferAfterSeconds": 60
+        }
+      ],
+      "solution": [
+        {
+          "path": "app/page.tsx",
+          "content": "'use client';\n\nimport { useState } from 'react';\n\nexport default function Page() {\n  const [abierto, setAbierto] = useState(false);\n\n  return (\n    <main>\n      <h1>Catálogo</h1>\n      <button onClick={() => setAbierto(!abierto)}>Filtros</button>\n    </main>\n  );\n}\n"
+        }
+      ]
+    },
+    {
+      "id": "step-3-frontera-abajo",
+      "title": {
+        "es": "La frontera, lo más abajo posible",
+        "en": "The boundary, as low as possible"
+      },
+      "body": {
+        "es": "Un catálogo entero no necesita ser interactivo: lo es **el botón de filtros**. Y sin embargo, con `'use client'` en la página, al navegador se le manda todo: el listado, el pie, y la biblioteca de formateo de fechas que importaba el encabezado.\n\nLa regla que se usa en cualquier equipo que haya sufrido esto: **baja la frontera todo lo que puedas**. Se saca lo interactivo a su propio archivo, ese lleva la directiva, y la página vuelve a ser de servidor.\n\n```\napp/page.tsx      → servidor: datos, listado, texto\napp/filtros.tsx   → 'use client': el estado y el botón\n```\n\nY aquí está la parte que sorprende: **un componente de servidor puede renderizar uno de cliente**. Lo importa y lo usa con normalidad. Lo que no puede es al revés — un componente de cliente no puede importar uno de servidor, porque en el navegador no hay servidor donde ejecutarlo.\n\nTampoco puede pasarle una función como prop: lo que cruza la frontera tiene que poder serializarse, así que un `onClick` que viva en el servidor no llega. Es la misma restricción que tiene cualquier cosa que viaje por la red.\n\n**Saca los filtros a `app/filtros.tsx`, quita el `'use client'` de la página y comprueba que sigue compilando.**",
+        "en": "A whole catalogue doesn't need to be interactive: **the filters button** does. And yet, with `'use client'` on the page, everything gets shipped to the browser: the listing, the footer, and the date-formatting library the header imported.\n\nThe rule used by any team that has suffered this: **push the boundary as low as you can**. You pull the interactive part into its own file, that one carries the directive, and the page goes back to being a Server Component.\n\n```\napp/page.tsx      → server: data, listing, text\napp/filtros.tsx   → 'use client': the state and the button\n```\n\nAnd here's the surprising part: **a Server Component can render a Client Component**. It imports it and uses it normally. What it can't do is the reverse — a Client Component can't import a Server one, because in the browser there's no server to run it on.\n\nIt also can't pass it a function as a prop: whatever crosses the boundary must be serialisable, so an `onClick` living on the server never arrives. Same restriction as anything travelling over a network.\n\n**Move the filters into `app/filtros.tsx`, drop the `'use client'` from the page, and check it still compiles.**"
+      },
+      "task": {
+        "es": "Crea `app/filtros.tsx` con `'use client'` y el estado, deja `app/page.tsx` sin la directiva, y ejecuta `next build`.",
+        "en": "Create `app/filtros.tsx` with `'use client'` and the state, leave `app/page.tsx` without the directive, and run `next build`."
+      },
+      "focusFile": "app/filtros.tsx",
+      "ruleIds": [
+        "existe-filtros",
+        "filtros-es-cliente",
+        "pagina-vuelve-a-servidor",
+        "build-verde-final"
+      ],
+      "xp": 40,
+      "hints": [
+        {
+          "id": "h-extraer",
+          "tier": 1,
+          "text": {
+            "es": "En `filtros.tsx`: `'use client';` + `import { useState } from 'react';` + el componente con el botón. En `page.tsx`: importa `Filtros` y úsalo, sin directiva.",
+            "en": "In `filtros.tsx`: `'use client';` + `import { useState } from 'react';` + the component with the button. In `page.tsx`: import `Filtros` and use it, no directive."
+          },
+          "xpPenalty": 10,
+          "autoOfferAfterSeconds": 90
+        }
+      ],
+      "solution": [
+        {
+          "path": "app/filtros.tsx",
+          "content": "'use client';\n\nimport { useState } from 'react';\n\nexport function Filtros() {\n  const [abierto, setAbierto] = useState(false);\n\n  return <button onClick={() => setAbierto(!abierto)}>Filtros</button>;\n}\n"
+        },
+        {
+          "path": "app/page.tsx",
+          "content": "import { Filtros } from './filtros';\n\nexport default function Page() {\n  return (\n    <main>\n      <h1>Catálogo</h1>\n      <Filtros />\n    </main>\n  );\n}\n"
+        }
+      ],
+      "bestPractice": {
+        "es": "**Estándar de la industria:** `'use client'` en las hojas del árbol, nunca en la raíz. Cuando aparece en un layout, lo normal es que nadie lo haya decidido: se puso para arreglar un error y se llevó por delante todo lo que colgaba de él.",
+        "en": "**Industry standard:** `'use client'` on the leaves, never at the root. When it shows up in a layout, usually nobody decided that: it was added to fix an error and took everything below it along."
+      }
+    }
+  ],
+  "drills": [],
+  "reward": {
+    "baseXp": 130,
+    "flawlessBonus": 50,
+    "noHintBonus": 25,
+    "comboMultiplierCap": 3,
+    "achievements": []
+  },
+  "solution": {
+    "files": [
+      {
+        "path": "app/filtros.tsx",
+        "content": "'use client';\n\nimport { useState } from 'react';\n\nexport function Filtros() {\n  const [abierto, setAbierto] = useState(false);\n\n  return <button onClick={() => setAbierto(!abierto)}>Filtros</button>;\n}\n"
+      },
+      {
+        "path": "app/page.tsx",
+        "content": "import { Filtros } from './filtros';\n\nexport default function Page() {\n  return (\n    <main>\n      <h1>Catálogo</h1>\n      <Filtros />\n    </main>\n  );\n}\n"
+      }
+    ],
+    "explanation": {
+      "es": "En el App Router todo es de servidor salvo que se diga lo contrario, y `'use client'` no «activa hooks»: marca una frontera que arrastra al navegador ese archivo y todo lo que importe. De ahí que la respuesta correcta casi nunca sea ponerlo arriba del todo, sino sacar lo interactivo a su propia hoja y dejar que la página siga siendo de servidor.",
+      "en": "In the App Router everything is server-side unless stated otherwise, and `'use client'` doesn't \"enable hooks\": it marks a boundary that drags that file and everything it imports to the browser. Which is why the right answer is almost never putting it at the very top, but pulling the interactive part onto its own leaf and letting the page stay on the server."
+    }
+  }
+}
