@@ -2,6 +2,7 @@ import { detectTarget, extractMethod, formatTestOutput, runTests } from './cshar
 import { dockerBuild } from './docker-build';
 import { isTemplate, scaffoldVite, VITE_TEMPLATES } from './npm-scenario';
 import { VirtualFs } from './vfs';
+import { nextBuild } from './next-build';
 
 export interface ShellResult {
   stdout: string;
@@ -90,6 +91,8 @@ export class Shell {
         return ok(args.join(' ').replace(/^["']|["']$/g, ''));
       case 'clear':
         return ok('\x1b[2J\x1b[H');
+      case 'next':
+        return this.next(args);
       case 'node':
         return ok(`v20.19.0`);
       default:
@@ -98,6 +101,28 @@ export class Shell {
   }
 
   /* ── npm ─────────────────────────────────────────────────────── */
+
+  /**
+   * `next build` y `next dev` sobre el árbol de archivos (ADR-27).
+   *
+   * No compila nada: lee las convenciones del App Router y reproduce los
+   * errores que Next da cuando no se cumplen. Un verde aquí significa «las
+   * convenciones están bien», no «esto funciona».
+   */
+  private next(args: string[]): ShellResult {
+    const subcomando = args.find((arg) => !arg.startsWith('-')) ?? 'build';
+
+    if (subcomando !== 'build' && subcomando !== 'dev') {
+      return fail(`Unknown command "${subcomando}". Prueba con: next build, next dev`);
+    }
+
+    const resultado = nextBuild(this.fs, subcomando);
+    const texto = resultado.salida.join('\n');
+
+    return resultado.ok
+      ? { stdout: texto, stderr: '', exitCode: 0, touched: [] }
+      : { stdout: '', stderr: texto, exitCode: 1, touched: [] };
+  }
 
   private npm(args: string[], binary: string): ShellResult {
     const [subcommand, ...rest] = args;

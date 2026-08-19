@@ -1255,6 +1255,47 @@ las tres lecciones paso a paso con sus soluciones y comprueba, además, que el e
 explica qué hay y que un servidor contesta lo que su código dice —un 418 que no aparece en
 ningún enunciado— y no lo que la plataforma quisiera oír.
 
+### ADR-27 · Next.js: el árbol de archivos es lo que se enseña
+
+**Contexto.** Next necesita Node, y WebContainers —la única forma de tenerlo en el
+navegador— sigue bloqueado por licencia (ADR-07). Pero antes de dar el módulo por
+imposible conviene mirar **qué se enseña realmente** del App Router: qué rutas existen,
+cuál es estática y cuál se renderiza por petición, qué componente corre en el servidor y
+por qué ese `useState` no compila. Todo eso está en los nombres de las carpetas y en las
+primeras líneas de cada archivo.
+
+**Decisión.** Un `next build` y un `next dev` **simulados** sobre el sistema de archivos
+virtual del ADR-03. Leen el árbol, descubren las rutas —incluidos los grupos entre
+paréntesis, que agrupan sin aparecer en la URL— y las listan con los mismos símbolos que
+imprime Next (`○` prerenderizada, `ƒ` por petición).
+
+**Los errores son el contenido.** Se reproducen los tres que se llevan por delante a todo
+el que empieza, **con su texto**: un hook en un componente de servidor («This React hook
+only works in a Client Component»), un `export const metadata` en un archivo con `'use
+client'`, y un `app/` sin layout raíz. Ese texto es lo que uno acaba pegando en un
+buscador a las once de la noche, y reescribirlo con palabras propias le quitaría a la
+lección justo lo que la hace útil.
+
+**Lo que no hace, dicho en la lección.** No compila, no ejecuta React, no resuelve imports
+y no sabe si tu JSX es válido. Un verde aquí significa «las convenciones están bien», no
+«esto funciona». Está escrito en el propio enunciado, no solo aquí.
+
+**Y una herramienta que faltaba: crear archivos.** `allowCreate` estaba en el schema desde
+la primera fase y **no lo implementaba ninguna pantalla**, así que un enunciado del tipo
+«crea `app/layout.tsx`» era literalmente imposible de cumplir. En el App Router crear
+archivos *es* el ejercicio, así que ahora la tarjeta de archivos tiene su formulario: pide
+la ruta entera —carpetas incluidas, porque la ruta es la respuesta—, rechaza `..` y lo que
+ya existe, y abre el archivo nuevo. El árbol pasa a enseñar los declarados por la lección
+**más** los creados por el usuario; leerlos solo de la lección los dejaba invisibles.
+
+**Guardia.** `tests/next-sim.test.ts` prueba el descubrimiento de rutas y los tres errores
+con su texto; `tests/lesson-store.test.ts` cubre la creación de archivos —permiso, rutas
+que se salen del workspace, duplicados—; y `e2e/next.spec.ts` hace el recorrido entero en
+la pantalla: build en rojo, crear el layout desde la interfaz, build en verde, y un grupo
+entre paréntesis que no aparece en la URL. Ese E2E destapó de paso un bucle de renders:
+el selector de archivos fabricaba objetos nuevos en cada llamada y `useShallow` los veía
+siempre distintos — «Maximum update depth exceeded» en cuanto se creaba un archivo.
+
 ---
 
 ## 5. Modelo de datos de progreso (servidor)

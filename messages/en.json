@@ -126,7 +126,15 @@
   "files": {
     "modified": "Modified",
     "single": "Single file",
-    "count": "{count} files"
+    "count": "{count} files",
+    "newFile": "New file",
+    "create": "Create",
+    "errors": {
+      "empty": "Type a path.",
+      "invalid": "That path won't do: no `..` and no odd characters.",
+      "exists": "A file with that path already exists.",
+      "not-allowed": "This lesson does not allow creating files."
+    }
   },
   "runner": {
     "booting": "Starting environment…",

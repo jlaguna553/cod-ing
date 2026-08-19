@@ -28,6 +28,8 @@ interface LessonState {
   syncLesson: (lesson: LocalizedLesson) => void;
   setActiveFile: (path: string) => void;
   updateFile: (path: string, content: string) => void;
+  /** Crea un archivo nuevo y lo abre. Devuelve el motivo si no se pudo. */
+  createFile: (path: string) => string | null;
   goToStep: (index: number) => void;
   nextStep: () => void;
   previousStep: () => void;
@@ -95,6 +97,38 @@ export const useLessonStore = create<LessonState>()((set, get) => ({
   },
 
   setActiveFile: (path) => set({ activeFile: path }),
+
+  /**
+   * Crea un archivo en el workspace.
+   *
+   * El schema anunciaba `allowCreate` desde la primera fase y no había forma
+   * de crear nada: una lección cuyo ejercicio fuera «crea `app/layout.tsx`»
+   * era literalmente imposible de completar. En el App Router de Next eso no
+   * es un caso raro — **crear archivos es el ejercicio**.
+   *
+   * Devuelve el motivo del rechazo, no lanza: quien llama es un formulario, y
+   * lo que necesita es un mensaje que enseñar debajo del campo.
+   */
+  createFile: (path) => {
+    const limpio = path.trim().replace(/^\.?\//, '');
+    const state = get();
+
+    if (limpio === '') return 'empty';
+    // Rutas relativas hacia arriba, absolutas o con caracteres raros: fuera.
+    if (limpio.includes('..') || /[^\w./()[\]@-]/.test(limpio)) return 'invalid';
+    if (state.files[limpio] !== undefined) return 'exists';
+    if (state.lesson?.workspace.allowCreate !== true) return 'not-allowed';
+
+    set({
+      files: { ...state.files, [limpio]: '' },
+      // Nace modificado: no existe en el contenido de la lección, así que
+      // todo lo que tenga dentro lo ha escrito el usuario.
+      dirtyFiles: [...new Set([...state.dirtyFiles, limpio])],
+      activeFile: limpio,
+    });
+
+    return null;
+  },
 
   updateFile: (path, content) =>
     set((state) => {
@@ -170,8 +204,47 @@ export const useCurrentStep = () =>
  * update depth exceeded». Es exactamente lo que tumbó la página entera hasta
  * que un E2E la abrió en un navegador de verdad.
  */
+/**
+ * Los archivos que se enseñan en el árbol.
+ *
+ * Son los declarados por la lección **más los que haya creado el usuario**.
+ * Leerlos solo de la lección dejaba invisible todo lo que uno creara: el
+ * archivo existía, el runner lo veía, y en la pantalla no había forma de
+ * abrirlo. Los `hidden` (tests, andamiaje) siguen sin aparecer.
+ */
+/*
+ * Los descriptores de los archivos creados se cachean por ruta.
+ *
+ * `useShallow` compara los elementos por identidad, así que fabricar un objeto
+ * nuevo en cada llamada hacía que la lista **siempre** pareciera distinta:
+ * React se quedaba en un bucle de renders y moría con «Maximum update depth
+ * exceeded». Reutilizando el mismo objeto por ruta, la comparación vuelve a
+ * significar lo que dice.
+ */
+const descriptores = new Map<string, { path: string; content: string; readOnly: boolean; hidden: boolean; active: boolean }>();
+
+function descriptorDe(path: string) {
+  let descriptor = descriptores.get(path);
+  if (!descriptor) {
+    descriptor = { path, content: '', readOnly: false, hidden: false, active: false };
+    descriptores.set(path, descriptor);
+  }
+  return descriptor;
+}
+
 export const useVisibleFiles = () =>
-  useLessonStore(useShallow((s) => s.lesson?.workspace.files.filter((f) => !f.hidden) ?? []));
+  useLessonStore(
+    useShallow((s) => {
+      const declarados = s.lesson?.workspace.files.filter((f) => !f.hidden) ?? [];
+      const conocidos = new Set(s.lesson?.workspace.files.map((f) => f.path) ?? []);
+      const creados = Object.keys(s.files)
+        .filter((path) => !conocidos.has(path))
+        .sort()
+        .map(descriptorDe);
+
+      return [...declarados, ...creados];
+    }),
+  );
 
 export const useActiveFileContent = () =>
   useLessonStore((s) => (s.activeFile ? s.files[s.activeFile] ?? '' : ''));

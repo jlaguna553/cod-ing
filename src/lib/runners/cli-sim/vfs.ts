@@ -65,6 +65,13 @@ export class VirtualFs {
     return [...entries].sort();
   }
 
+  /**
+   * Todas las rutas del sistema, en orden.
+   *
+   * `list()` da solo las entradas directas de un directorio, que es lo que
+   * necesita un `ls`. Para recorrer un árbol entero —el router de Next lo
+   * es— hace falta verlo completo.
+   */
   paths(): string[] {
     return [...this.files.keys()].sort();
   }

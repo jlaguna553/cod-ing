@@ -170,3 +170,54 @@ test('resetWorkspace devuelve los archivos a su estado inicial', () => {
   assert.ok(store.getState().files['index.js'].includes('const prices'));
   assert.deepEqual(store.getState().dirtyFiles, []);
 });
+
+/* ── Crear archivos ──────────────────────────────────────────────── */
+
+/** La lección de siempre, con el permiso de crear archivos a voluntad. */
+function leccionDePrueba({ allowCreate }: { allowCreate: boolean }): LocalizedLesson {
+  return {
+    ...inSpanish,
+    workspace: { ...inSpanish.workspace, allowCreate },
+  } as LocalizedLesson;
+}
+
+test('⭐ crear un archivo lo abre y lo marca como escrito por el usuario', () => {
+  const lesson = leccionDePrueba({ allowCreate: true });
+  useLessonStore.getState().syncLesson(lesson);
+
+  assert.equal(useLessonStore.getState().createFile('app/layout.tsx'), null);
+
+  const estado = useLessonStore.getState();
+  assert.equal(estado.files['app/layout.tsx'], '');
+  // Se abre solo: crear un archivo y tener que buscarlo sería absurdo.
+  assert.equal(estado.activeFile, 'app/layout.tsx');
+  // Y nace modificado: todo lo que tenga dentro lo habrá escrito el usuario.
+  assert.ok(estado.dirtyFiles.includes('app/layout.tsx'));
+});
+
+test('⭐ una lección que no lo permite no crea nada', () => {
+  const lesson = leccionDePrueba({ allowCreate: false });
+  useLessonStore.getState().syncLesson(lesson);
+
+  assert.equal(useLessonStore.getState().createFile('otro.js'), 'not-allowed');
+  assert.equal(useLessonStore.getState().files['otro.js'], undefined);
+});
+
+test('⭐ no se sale del workspace ni pisa lo que ya existe', () => {
+  const lesson = leccionDePrueba({ allowCreate: true });
+  useLessonStore.getState().syncLesson(lesson);
+
+  // `..` es la vía clásica para escribir donde no toca.
+  assert.equal(useLessonStore.getState().createFile('../fuera.js'), 'invalid');
+  assert.equal(useLessonStore.getState().createFile('  '), 'empty');
+  const yaExiste = Object.keys(useLessonStore.getState().files)[0];
+  assert.equal(useLessonStore.getState().createFile(yaExiste), 'exists');
+});
+
+test('la ruta se normaliza: `./app/x.tsx` y `app/x.tsx` son la misma', () => {
+  const lesson = leccionDePrueba({ allowCreate: true });
+  useLessonStore.getState().syncLesson(lesson);
+
+  assert.equal(useLessonStore.getState().createFile('./app/x.tsx'), null);
+  assert.equal(useLessonStore.getState().createFile('app/x.tsx'), 'exists');
+});

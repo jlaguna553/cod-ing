@@ -126,7 +126,15 @@
   "files": {
     "modified": "Modificado",
     "single": "Un solo archivo",
-    "count": "{count} archivos"
+    "count": "{count} archivos",
+    "newFile": "Nuevo archivo",
+    "create": "Crear",
+    "errors": {
+      "empty": "Escribe una ruta.",
+      "invalid": "Esa ruta no vale: sin `..` y sin caracteres raros.",
+      "exists": "Ya existe un archivo con esa ruta.",
+      "not-allowed": "Esta lección no permite crear archivos."
+    }
   },
   "runner": {
     "booting": "Arrancando entorno…",

@@ -1,0 +1,304 @@
+{
+  "$schema": "../../../schema/lesson.schema.json",
+  "schemaVersion": 1,
+  "id": "next-01-app-router",
+  "track": "frontend",
+  "module": "nextjs",
+  "order": 1,
+  "kind": "concept",
+  "difficulty": "apprentice",
+  "estimatedMinutes": 22,
+  "title": {
+    "es": "El árbol de carpetas ES el router",
+    "en": "The folder tree IS the router"
+  },
+  "summary": {
+    "es": "En el App Router no se declara ninguna ruta: se crean archivos. Qué significa cada nombre, por qué el layout raíz no es opcional, y qué son esas carpetas entre paréntesis que no salen en la URL.",
+    "en": "In the App Router you declare no routes: you create files. What each name means, why the root layout isn't optional, and what those parenthesised folders that never show up in the URL are."
+  },
+  "concepts": [
+    "nextjs",
+    "app-router",
+    "rutas",
+    "layouts"
+  ],
+  "prerequisites": [
+    "react-01-components"
+  ],
+  "runtime": {
+    "kind": "cli-sim",
+    "dependencies": {},
+    "timeoutMs": 15000,
+    "terminal": {
+      "enabled": true,
+      "allowedCommands": [
+        "next",
+        "ls",
+        "cat",
+        "cd",
+        "pwd",
+        "echo",
+        "clear"
+      ],
+      "greeting": {
+        "es": "Terminal del proyecto. Prueba `next build` para ver qué rutas encuentra.",
+        "en": "Project terminal. Try `next build` to see which routes it finds."
+      }
+    }
+  },
+  "workspace": {
+    "entry": "app/page.tsx",
+    "allowCreate": true,
+    "allowDelete": false,
+    "files": [
+      {
+        "path": "app/page.tsx",
+        "active": true,
+        "content": "// Esta es la página de `/`. Falta el layout raíz para que Next arranque.\n\nexport default function Page() {\n  return <h1>Portada</h1>;\n}\n"
+      },
+      {
+        "path": "package.json",
+        "readOnly": true,
+        "content": "{\n  \"name\": \"tienda\",\n  \"scripts\": {\n    \"dev\": \"next dev\",\n    \"build\": \"next build\"\n  }\n}\n"
+      }
+    ]
+  },
+  "rules": [
+    {
+      "id": "existe-layout-raiz",
+      "kind": "file-exists",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Falta `app/layout.tsx`. Es el único que declara `<html>` y `<body>`: sin él no hay documento donde meter la página.",
+        "en": "`app/layout.tsx` is missing. It's the only one declaring `<html>` and `<body>`: without it there's no document to put the page in."
+      },
+      "successMessage": {
+        "es": "Layout raíz en su sitio.",
+        "en": "Root layout in place."
+      },
+      "points": 25,
+      "file": "app/layout.tsx"
+    },
+    {
+      "id": "layout-con-children",
+      "kind": "regex-must",
+      "file": "app/layout.tsx",
+      "pattern": "children",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "El layout recibe `children` y lo pinta dentro: es el hueco donde entra cada página.",
+        "en": "The layout receives `children` and renders it inside: it's the hole each page goes into."
+      },
+      "successMessage": {
+        "es": "El hueco está: por ahí entra cada página.",
+        "en": "The hole is there: that's where each page goes."
+      },
+      "points": 15
+    },
+    {
+      "id": "build-verde",
+      "kind": "cli-transcript",
+      "expectedCommands": [
+        "next build"
+      ],
+      "allowExtra": true,
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Ejecuta `next build` en la terminal: es quien te dice qué rutas ha encontrado y qué le falta.",
+        "en": "Run `next build` in the terminal: it's what tells you which routes it found and what's missing."
+      },
+      "successMessage": {
+        "es": "El build ha hablado.",
+        "en": "The build has spoken."
+      },
+      "points": 20
+    },
+    {
+      "id": "existe-blog",
+      "kind": "file-exists",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Crea `app/blog/page.tsx`. La carpeta es el segmento de la URL y el archivo `page` es lo que la hace navegable.",
+        "en": "Create `app/blog/page.tsx`. The folder is the URL segment and the `page` file is what makes it navigable."
+      },
+      "successMessage": {
+        "es": "`/blog` existe porque existe su carpeta.",
+        "en": "`/blog` exists because its folder does."
+      },
+      "points": 25,
+      "file": "app/blog/page.tsx"
+    },
+    {
+      "id": "existe-grupo",
+      "kind": "file-exists",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Crea `app/(marketing)/precios/page.tsx`. Los paréntesis agrupan sin aparecer en la URL.",
+        "en": "Create `app/(marketing)/precios/page.tsx`. Parentheses group without showing up in the URL."
+      },
+      "successMessage": {
+        "es": "Agrupado y, en la URL, invisible.",
+        "en": "Grouped and, in the URL, invisible."
+      },
+      "points": 30,
+      "file": "app/(marketing)/precios/page.tsx"
+    }
+  ],
+  "steps": [
+    {
+      "id": "step-1-layout",
+      "title": {
+        "es": "Sin layout raíz no hay aplicación",
+        "en": "No root layout, no application"
+      },
+      "body": {
+        "es": "Next no tiene archivo de rutas. **Las rutas son las carpetas** dentro de `app/`, y cada una se vuelve navegable cuando contiene un archivo `page`:\n\n```\napp/page.tsx          →  /\napp/blog/page.tsx     →  /blog\napp/blog/nuevo/page.tsx →  /blog/nuevo\n```\n\nAsí que no hay nada que registrar, y tampoco hay forma de que una ruta y su declaración se desincronicen: son la misma cosa.\n\nLo primero que hace falta es el **layout raíz**. Es obligatorio y es el único sitio donde se escriben `<html>` y `<body>` — Next no los pone por ti. Recibe `children`, que es la página que toque en cada momento:\n\n```tsx\nexport default function RootLayout({ children }) {\n  return (\n    <html lang=\"es\">\n      <body>{children}</body>\n    </html>\n  );\n}\n```\n\nY conviene saber desde el principio lo que lo hace especial: **un layout no se vuelve a montar al navegar**. Al pasar de `/` a `/blog`, la página cambia y el layout se queda — con su estado, su scroll y sus componentes vivos. Es la razón de que la barra de navegación no parpadee.\n\n> La terminal de esta lección tiene un `next build` **simulado**: lee tus archivos y aplica las reglas del App Router, pero no compila ni ejecuta React. Un verde aquí significa «las convenciones están bien», no «esto funciona».\n\n**Crea `app/layout.tsx` y ejecuta `next build`.**",
+        "en": "Next has no routes file. **The routes are the folders** inside `app/`, and each becomes navigable when it contains a `page` file:\n\n```\napp/page.tsx          →  /\napp/blog/page.tsx     →  /blog\napp/blog/nuevo/page.tsx →  /blog/nuevo\n```\n\nSo there's nothing to register, and no way for a route and its declaration to drift apart: they're the same thing.\n\nThe first thing you need is the **root layout**. It's mandatory and it's the only place where `<html>` and `<body>` get written — Next doesn't add them for you. It receives `children`, which is whichever page is current:\n\n```tsx\nexport default function RootLayout({ children }) {\n  return (\n    <html lang=\"es\">\n      <body>{children}</body>\n    </html>\n  );\n}\n```\n\nAnd it's worth knowing from the start what makes it special: **a layout doesn't remount on navigation**. Going from `/` to `/blog`, the page changes and the layout stays — with its state, its scroll and its components alive. That's why the nav bar doesn't flicker.\n\n> This lesson's terminal has a **simulated** `next build`: it reads your files and applies the App Router's rules, but it doesn't compile or run React. Green here means \"the conventions are right\", not \"this works\".\n\n**Create `app/layout.tsx` and run `next build`.**"
+      },
+      "task": {
+        "es": "Crea `app/layout.tsx` con `<html>`, `<body>` y `children`, y ejecuta `next build` en la terminal.",
+        "en": "Create `app/layout.tsx` with `<html>`, `<body>` and `children`, then run `next build` in the terminal."
+      },
+      "focusFile": "app/layout.tsx",
+      "ruleIds": [
+        "existe-layout-raiz",
+        "layout-con-children",
+        "build-verde"
+      ],
+      "xp": 30,
+      "hints": [
+        {
+          "id": "h-layout",
+          "tier": 1,
+          "text": {
+            "es": "Crea el archivo con el botón de nuevo archivo, ruta `app/layout.tsx`, y exporta por defecto un componente que devuelva `<html><body>{children}</body></html>`.",
+            "en": "Create the file with the new-file button, path `app/layout.tsx`, and default-export a component returning `<html><body>{children}</body></html>`."
+          },
+          "xpPenalty": 6,
+          "autoOfferAfterSeconds": 70
+        }
+      ],
+      "solution": [
+        {
+          "path": "app/layout.tsx",
+          "content": "export default function RootLayout({ children }) {\n  return (\n    <html lang=\"es\">\n      <body>{children}</body>\n    </html>\n  );\n}\n"
+        }
+      ]
+    },
+    {
+      "id": "step-2-rutas",
+      "title": {
+        "es": "Una carpeta, una ruta",
+        "en": "One folder, one route"
+      },
+      "body": {
+        "es": "Con el layout puesto, añadir una ruta es crear una carpeta con su `page`. Nada más: ni registro, ni configuración, ni un archivo central que haya que recordar actualizar.\n\nLo que hay dentro de `app/` que **no** es una ruta también sigue una convención, y merece la pena reconocerla desde el principio:\n\n| Archivo | Para qué |\n|---|---|\n| `page` | La ruta. Sin él, la carpeta no es navegable |\n| `layout` | Envuelve la página y **sobrevive** a la navegación |\n| `loading` | Lo que se enseña mientras la página carga |\n| `error` | Lo que se enseña si revienta |\n| `not-found` | El 404 de ese tramo |\n\nY una cosa que confunde a todo el mundo: **un archivo suelto dentro de `app/` no crea ninguna ruta**. Puedes poner `app/blog/tarjeta.tsx` y no existe `/blog/tarjeta`; solo `page` (y `route`, para las APIs) hacen navegable una carpeta. Eso permite tener los componentes junto a la página que los usa en vez de en una carpeta lejana.\n\n**Crea `/blog` y comprueba con `next build` que aparecen las dos rutas.**",
+        "en": "With the layout in place, adding a route means creating a folder with its `page`. That's it: no registry, no configuration, no central file you must remember to update.\n\nWhat lives inside `app/` that is **not** a route also follows a convention, and it's worth recognising early:\n\n| File | What for |\n|---|---|\n| `page` | The route. Without it, the folder isn't navigable |\n| `layout` | Wraps the page and **survives** navigation |\n| `loading` | What's shown while the page loads |\n| `error` | What's shown if it blows up |\n| `not-found` | That segment's 404 |\n\nAnd something that confuses everyone: **a loose file inside `app/` creates no route**. You can put `app/blog/tarjeta.tsx` and `/blog/tarjeta` doesn't exist; only `page` (and `route`, for APIs) make a folder navigable. That's what lets you keep components next to the page using them instead of in some faraway folder.\n\n**Create `/blog` and check with `next build` that both routes show up.**"
+      },
+      "task": {
+        "es": "Crea `app/blog/page.tsx` con un componente exportado por defecto y comprueba con `next build` que salen `/` y `/blog`.",
+        "en": "Create `app/blog/page.tsx` with a default-exported component and check with `next build` that `/` and `/blog` appear."
+      },
+      "focusFile": "app/blog/page.tsx",
+      "ruleIds": [
+        "existe-blog",
+        "build-verde"
+      ],
+      "xp": 30,
+      "hints": [
+        {
+          "id": "h-blog",
+          "tier": 1,
+          "text": {
+            "es": "Archivo nuevo en `app/blog/page.tsx`: `export default function Page() { return <h1>Blog</h1>; }`",
+            "en": "New file at `app/blog/page.tsx`: `export default function Page() { return <h1>Blog</h1>; }`"
+          },
+          "xpPenalty": 6,
+          "autoOfferAfterSeconds": 70
+        }
+      ],
+      "solution": [
+        {
+          "path": "app/blog/page.tsx",
+          "content": "export default function Page() {\n  return <h1>Blog</h1>;\n}\n"
+        }
+      ]
+    },
+    {
+      "id": "step-3-grupos",
+      "title": {
+        "es": "Carpetas que organizan sin salir en la URL",
+        "en": "Folders that organise without showing in the URL"
+      },
+      "body": {
+        "es": "Si el árbol de carpetas es la URL, ¿cómo se agrupan páginas que no comparten prefijo? Con los **grupos de rutas**: una carpeta entre paréntesis que Next no cuenta como segmento.\n\n```\napp/(marketing)/precios/page.tsx  →  /precios\napp/(marketing)/layout.tsx        →  layout SOLO de ese grupo\napp/(app)/panel/page.tsx          →  /panel\n```\n\nEso resuelve un problema muy concreto: la página pública y el panel privado necesitan **layouts distintos** —una con la barra de marketing, otra con la del producto— pero las dos cuelgan de la raíz. Sin grupos habría que meterlas bajo `/marketing/…` y ensuciar la URL para arreglar un problema de organización.\n\nEs además una de esas cosas que solo se entienden viéndolas: la carpeta existe, el layout existe, y en la URL no hay ni rastro del paréntesis.\n\n**Crea `app/(marketing)/precios/page.tsx` y confirma con `next build` que la ruta es `/precios`, no `/(marketing)/precios`.**",
+        "en": "If the folder tree is the URL, how do you group pages that share no prefix? With **route groups**: a parenthesised folder Next doesn't count as a segment.\n\n```\napp/(marketing)/precios/page.tsx  →  /precios\napp/(marketing)/layout.tsx        →  layout for that group ONLY\napp/(app)/panel/page.tsx          →  /panel\n```\n\nThat solves a very concrete problem: the public site and the private dashboard need **different layouts** — one with the marketing bar, the other with the product's — yet both hang off the root. Without groups you'd have to push them under `/marketing/…` and dirty the URL to fix an organisation problem.\n\nIt's also one of those things you only get by seeing it: the folder exists, the layout exists, and there isn't a trace of the parenthesis in the URL.\n\n**Create `app/(marketing)/precios/page.tsx` and confirm with `next build` that the route is `/precios`, not `/(marketing)/precios`.**"
+      },
+      "task": {
+        "es": "Crea `app/(marketing)/precios/page.tsx` y comprueba con `next build` que la ruta listada es `/precios`.",
+        "en": "Create `app/(marketing)/precios/page.tsx` and check with `next build` that the listed route is `/precios`."
+      },
+      "focusFile": "app/(marketing)/precios/page.tsx",
+      "ruleIds": [
+        "existe-grupo",
+        "build-verde"
+      ],
+      "xp": 35,
+      "hints": [
+        {
+          "id": "h-grupo",
+          "tier": 1,
+          "text": {
+            "es": "La ruta del archivo lleva los paréntesis literales: `app/(marketing)/precios/page.tsx`.",
+            "en": "The file path includes the literal parentheses: `app/(marketing)/precios/page.tsx`."
+          },
+          "xpPenalty": 8,
+          "autoOfferAfterSeconds": 80
+        }
+      ],
+      "solution": [
+        {
+          "path": "app/(marketing)/precios/page.tsx",
+          "content": "export default function Page() {\n  return <h1>Precios</h1>;\n}\n"
+        }
+      ],
+      "bestPractice": {
+        "es": "**Estándar de la industria:** los grupos son para separar layouts o para ordenar un `app/` que ya cuesta leer — no para replicar la estructura de carpetas de tu cabeza. Un `app/` con cinco grupos y ocho rutas es más difícil de recorrer que uno plano.",
+        "en": "**Industry standard:** groups are for separating layouts or tidying an `app/` that's already hard to read — not for mirroring the folder structure in your head. An `app/` with five groups and eight routes is harder to walk than a flat one."
+      }
+    }
+  ],
+  "drills": [],
+  "reward": {
+    "baseXp": 120,
+    "flawlessBonus": 45,
+    "noHintBonus": 25,
+    "comboMultiplierCap": 3,
+    "achievements": []
+  },
+  "solution": {
+    "files": [
+      {
+        "path": "app/layout.tsx",
+        "content": "export default function RootLayout({ children }) {\n  return (\n    <html lang=\"es\">\n      <body>{children}</body>\n    </html>\n  );\n}\n"
+      },
+      {
+        "path": "app/blog/page.tsx",
+        "content": "export default function Page() {\n  return <h1>Blog</h1>;\n}\n"
+      },
+      {
+        "path": "app/(marketing)/precios/page.tsx",
+        "content": "export default function Page() {\n  return <h1>Precios</h1>;\n}\n"
+      }
+    ],
+    "explanation": {
+      "es": "En el App Router no se registra ninguna ruta: la carpeta es el segmento y el archivo `page` la hace navegable. El layout raíz es obligatorio porque es el único que escribe `<html>` y `<body>`, y sobrevive a la navegación — de ahí que la barra no parpadee. Los grupos entre paréntesis organizan y comparten layout sin aparecer en la URL.",
+      "en": "In the App Router you register no routes: the folder is the segment and the `page` file makes it navigable. The root layout is mandatory because it's the only one writing `<html>` and `<body>`, and it survives navigation — which is why the nav bar doesn't flicker. Parenthesised groups organise and share a layout without showing up in the URL."
+    }
+  }
+}
