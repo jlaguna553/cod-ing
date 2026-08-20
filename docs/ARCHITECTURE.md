@@ -1296,6 +1296,56 @@ entre paréntesis que no aparece en la URL. Ese E2E destapó de paso un bucle de
 el selector de archivos fabricaba objetos nuevos en cada llamada y `useShallow` los veía
 siempre distintos — «Maximum update depth exceeded» en cuanto se creaba un archivo.
 
+### ADR-28 · NestJS: el contrato, no el servidor
+
+**Contexto.** Nest es TypeScript con decoradores repartido en varios archivos, y en el
+navegador no hay Node (ADR-07) ni npm del que sacar `@nestjs/common`. Pero conviene
+mirar **qué es Nest** antes de darlo por imposible: un puñado de decoradores que apuntan
+metadatos, un contenedor que resuelve dependencias por el tipo del constructor, y un
+despachador de rutas. Nada de eso necesita un puerto abierto. Lo único que sí lo
+necesitaría —escuchar— es exactamente lo que ya se sustituye en el ADR-26 por las
+peticiones que declara la lección.
+
+**Decisión.** Un `@nestjs/common` y un `@nestjs/core` **de mentira pero honestos**,
+escritos en `nest-prelude.ts` y registrados en la tabla de módulos del núcleo del prelude
+de Node: así el `import { Controller } from '@nestjs/common'` se resuelve por el mismo
+`require`, con la misma caché, en vez de duplicar el cargador de módulos. El TypeScript de
+la lección se compila **entero** —no solo la entrada— con el compilador que ya está
+cargado (ADR-25), a CommonJS y con `experimentalDecorators` y `emitDecoratorMetadata`.
+
+**La pieza que lo sostiene: `Reflect.metadata`.** Con `emitDecoratorMetadata`, TypeScript
+emite `Reflect.metadata('design:paramtypes', [UsuariosService])` por cada clase decorada
+— ahí es donde queda escrito qué pide el constructor, y es lo único que el contenedor sabe
+leer. El navegador trae `Reflect`, pero no esa parte (vive en el paquete
+`reflect-metadata`), y el ayudante que emite TypeScript comprueba si existe y, **si no,
+no hace nada**: el resultado sería un contenedor convencido de que ninguna clase depende
+de nada. Se implementa lo justo, con un `WeakMap`.
+
+**Los errores son el contenido, otra vez.** Se reproduce palabra por palabra el que más se
+repite —`Nest can't resolve dependencies of the UsuariosController (?). Please make sure
+that the argument UsuariosService at index [0] is available in the AppModule context.`—
+con su interrogación marcando cuál falta y su índice. Y las líneas de arranque
+(`RoutesResolver`, `Mapped {/usuarios, GET} route`), que son las que se miran cuando algo
+«no responde». Un fallo al montar la aplicación se **imprime** como lo imprime Nest en vez
+de propagarse: aquí no hay proceso que matar, y un rechazo sin capturar se llevaría por
+delante el mensaje, que es la lección entera.
+
+**Lo que no es, dicho en la lección.** No hay pipes de validación, ni guards, ni
+interceptores, ni ámbitos de petición: todos los proveedores son singletons de la
+aplicación — que es además lo que enseña la lección 2, con un contador que llega a dos.
+`@Body()` no valida nada, y eso se dice explícitamente donde toca decirlo.
+
+**Guardia.** `tests/nest-runtime.test.ts` compila con **el mismo TypeScript que usa el
+navegador** —el que Monaco lleva dentro, 5.9— y ejecuta el prelude en Node: inyección por
+tipo, orden de rutas, 201 en el POST, el cuerpo exacto de una excepción, `imports` que solo
+comparten lo que exportan. `tests/nest-lecciones.test.ts` resuelve cada paso de cada
+lección y pasa sus reglas por el motor de evaluación de verdad. Y `e2e/nest.spec.ts`
+comprueba lo único que no se puede comprobar fuera del navegador: que el worker de Monaco
+acepta los decoradores, emite sus metadatos, y que un error de tipos detiene la ejecución
+antes de que Nest arranque.
+
+---
+
 ---
 
 ## 5. Modelo de datos de progreso (servidor)

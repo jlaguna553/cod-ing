@@ -1,0 +1,362 @@
+{
+  "$schema": "../../../schema/lesson.schema.json",
+  "schemaVersion": 1,
+  "id": "nest-01-controlador-y-modulo",
+  "track": "backend",
+  "module": "nest",
+  "order": 1,
+  "kind": "concept",
+  "difficulty": "adept",
+  "estimatedMinutes": 26,
+  "title": {
+    "es": "Decorar no basta: hay que registrarlo",
+    "en": "Decorating isn't enough: it has to be registered"
+  },
+  "summary": {
+    "es": "Un controlador de Nest es una clase con etiquetas, y las etiquetas solas no hacen nada: si el módulo no lo declara, la ruta no existe. El 404 que sale de ahí es el primero que se lleva todo el mundo.",
+    "en": "A Nest controller is a class with labels, and labels alone do nothing: if the module doesn't declare it, the route doesn't exist. The 404 that comes out of that is everyone's first one."
+  },
+  "concepts": [
+    "nestjs",
+    "decoradores",
+    "controladores",
+    "modulos"
+  ],
+  "prerequisites": [
+    "ts-01-tipos-que-fallan-antes",
+    "node-03-servidor-http"
+  ],
+  "runtime": {
+    "kind": "nest",
+    "dependencies": {},
+    "timeoutMs": 15000,
+    "requests": [
+      {
+        "method": "GET",
+        "url": "/usuarios"
+      },
+      {
+        "method": "GET",
+        "url": "/usuarios/activos"
+      },
+      {
+        "method": "GET",
+        "url": "/pedidos"
+      }
+    ]
+  },
+  "workspace": {
+    "entry": "main.ts",
+    "allowCreate": false,
+    "allowDelete": false,
+    "files": [
+      {
+        "path": "usuarios.controller.ts",
+        "active": true,
+        "content": "// Paso 1: esto todavia no es un controlador. Es una clase normal.\n\nexport class UsuariosController {\n  todos() {\n    return [{ id: 1, nombre: 'Ana' }];\n  }\n}\n"
+      },
+      {
+        "path": "app.module.ts",
+        "content": "import { Module } from '@nestjs/common';\n\n@Module({\n  controllers: [],\n  providers: [],\n})\nexport class AppModule {}\n"
+      },
+      {
+        "path": "main.ts",
+        "readOnly": true,
+        "content": "// El arranque. En un proyecto de Nest esto no se toca casi nunca.\n\nimport { NestFactory } from '@nestjs/core';\nimport { AppModule } from './app.module';\n\nasync function bootstrap() {\n  const app = await NestFactory.create(AppModule);\n  await app.listen(3000);\n}\n\nbootstrap();\n"
+      }
+    ]
+  },
+  "rules": [
+    {
+      "id": "hay-controlador",
+      "kind": "regex-must",
+      "file": "usuarios.controller.ts",
+      "pattern": "@Controller\\(\\s*['\"]usuarios['\"]\\s*\\)",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Marca la clase con `@Controller('usuarios')`: ese texto es el prefijo de todas sus rutas.",
+        "en": "Mark the class with `@Controller('usuarios')`: that string is the prefix for all its routes."
+      },
+      "successMessage": {
+        "es": "Ya es un controlador.",
+        "en": "It's a controller now."
+      },
+      "points": 20
+    },
+    {
+      "id": "hay-get",
+      "kind": "regex-must",
+      "file": "usuarios.controller.ts",
+      "pattern": "@Get\\(",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "El método que responde necesita `@Get()` encima.",
+        "en": "The method that answers needs `@Get()` above it."
+      },
+      "successMessage": {
+        "es": "Con su verbo.",
+        "en": "With its verb."
+      },
+      "points": 15
+    },
+    {
+      "id": "todavia-404",
+      "kind": "stdout-match",
+      "matches": "Cannot GET /usuarios",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Ejecuta y mira la salida: la ruta sigue sin existir. Eso es lo que hay que ver en este paso.",
+        "en": "Run it and look at the output: the route still doesn't exist. That's what this step is for."
+      },
+      "successMessage": {
+        "es": "Decorada y aun asi invisible.",
+        "en": "Decorated and still invisible."
+      },
+      "points": 20
+    },
+    {
+      "id": "registrado",
+      "kind": "regex-must",
+      "file": "app.module.ts",
+      "pattern": "controllers:\\s*\\[\\s*UsuariosController",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Declara el controlador en `controllers` del `@Module`, e impórtalo arriba.",
+        "en": "Declare the controller in the `@Module`'s `controllers`, and import it at the top."
+      },
+      "successMessage": {
+        "es": "El modulo ya sabe que existe.",
+        "en": "The module knows it exists now."
+      },
+      "points": 30
+    },
+    {
+      "id": "ruta-mapeada",
+      "kind": "stdout-match",
+      "matches": "Mapped \\{/usuarios, GET\\} route",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Nest anuncia cada ruta que mapea. Si esa linea no sale, la ruta no existe.",
+        "en": "Nest announces every route it maps. If that line isn't there, the route doesn't exist."
+      },
+      "successMessage": {
+        "es": "Mapeada.",
+        "en": "Mapped."
+      },
+      "points": 20
+    },
+    {
+      "id": "responde",
+      "kind": "stdout-match",
+      "matches": "GET /usuarios -> 200 \\[\\{\"id\":1,\"nombre\":\"Ana\"\\}\\]",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "La peticion a `/usuarios` tiene que contestar 200 con la lista. Devuelve el array tal cual: Nest lo serializa.",
+        "en": "The request to `/usuarios` must answer 200 with the list. Return the array as is: Nest serialises it."
+      },
+      "successMessage": {
+        "es": "Contesta.",
+        "en": "It answers."
+      },
+      "points": 25
+    },
+    {
+      "id": "segunda-ruta",
+      "kind": "stdout-match",
+      "matches": "Mapped \\{/usuarios/activos, GET\\} route",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Anade un segundo metodo con `@Get('activos')`: la URL sale de juntar el prefijo con la ruta.",
+        "en": "Add a second method with `@Get('activos')`: the URL comes from joining the prefix with the route."
+      },
+      "successMessage": {
+        "es": "Dos rutas, un controlador.",
+        "en": "Two routes, one controller."
+      },
+      "points": 25
+    },
+    {
+      "id": "segunda-responde",
+      "kind": "stdout-match",
+      "matches": "GET /usuarios/activos -> 200",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "La segunda ruta tiene que contestar 200.",
+        "en": "The second route must answer 200."
+      },
+      "successMessage": {
+        "es": "Las dos contestan.",
+        "en": "Both answer."
+      },
+      "points": 15
+    }
+  ],
+  "steps": [
+    {
+      "id": "step-1-decorar",
+      "title": {
+        "es": "Una clase con etiquetas",
+        "en": "A class with labels"
+      },
+      "body": {
+        "es": "Nest no es un framework de rutas: es un framework de **clases anotadas**. No hay ningún sitio donde se escriba «cuando llegue GET /usuarios, llama a esta función». Lo que hay son etiquetas pegadas a una clase, y Nest las lee al arrancar.\n\nDos de ellas:\n\n- **`@Controller('facturas')`** convierte la clase en un controlador y fija el **prefijo** de todas sus rutas: ahí dentro va el nombre del recurso.\n- **`@Get()`** encima de un método dice que ese método responde a las peticiones GET de ese prefijo.\n\nUn decorador no es magia: es **una función que recibe la clase** y apunta algo sobre ella en una tabla aparte. Cuando Nest arranca, recorre esa tabla y construye el enrutador. De ahí que todo lo que viene después —la inyección, los guards, la validación— sea siempre lo mismo: apuntar metadatos y leerlos al arrancar.\n\nDecora la clase y **ejecuta**. La respuesta va a ser un 404 y no está mal: es el paso siguiente.",
+        "en": "Nest isn't a routing framework: it's an **annotated-class** framework. There's nowhere you write \"when GET /usuarios arrives, call this function\". What there is are labels stuck on a class, which Nest reads at startup.\n\nTwo of them:\n\n- **`@Controller('facturas')`** turns the class into a controller and fixes the **prefix** for all its routes: the resource's name goes in there.\n- **`@Get()`** above a method says that method answers GET requests on that prefix.\n\nA decorator isn't magic: it's **a function that receives the class** and notes something about it in a separate table. When Nest starts, it walks that table and builds the router. Which is why everything that comes later — injection, guards, validation — is always the same thing: note metadata, read it at startup.\n\nDecorate the class and **run it**. The answer will be a 404, and that's fine: that's the next step."
+      },
+      "task": {
+        "es": "Marca la clase como controlador del recurso `usuarios` y el método con `@Get()`, y ejecuta.",
+        "en": "Mark the class as the controller for the `usuarios` resource and the method with `@Get()`, then run."
+      },
+      "focusFile": "usuarios.controller.ts",
+      "ruleIds": [
+        "hay-controlador",
+        "hay-get",
+        "todavia-404"
+      ],
+      "xp": 30,
+      "hints": [
+        {
+          "id": "h-import",
+          "tier": 1,
+          "text": {
+            "es": "Los decoradores se importan: `import { Controller, Get } from '@nestjs/common';`",
+            "en": "The decorators are imported: `import { Controller, Get } from '@nestjs/common';`"
+          },
+          "xpPenalty": 6,
+          "autoOfferAfterSeconds": 60
+        }
+      ],
+      "solution": [
+        {
+          "path": "usuarios.controller.ts",
+          "content": "import { Controller, Get } from '@nestjs/common';\n\n@Controller('usuarios')\nexport class UsuariosController {\n  @Get()\n  todos() {\n    return [{ id: 1, nombre: 'Ana' }];\n  }\n}\n"
+        }
+      ]
+    },
+    {
+      "id": "step-2-registrar",
+      "title": {
+        "es": "El módulo es la lista de invitados",
+        "en": "The module is the guest list"
+      },
+      "body": {
+        "es": "El controlador está decorado y aun así `/usuarios` no existe. Lee la salida del paso anterior: Nest arrancó, no mapeó ninguna ruta, y la petición se fue con un `Cannot GET /usuarios`.\n\nY es que Nest **no busca clases**. No recorre carpetas ni adivina: monta exactamente lo que su módulo raíz declara. Un `@Module` es una lista de invitados con tres apartados:\n\n```ts\n@Module({\n  imports: [],      // otros modulos de los que se usa algo\n  controllers: [],  // quien atiende peticiones\n  providers: [],    // quien se puede inyectar\n})\n```\n\nQue el archivo exista, que la clase esté decorada y que compile no le importa a nadie si su nombre no está en esa lista. Es deliberado: en un proyecto de cincuenta módulos, saber qué monta cada uno se responde leyendo diez líneas en vez de rastreando el árbol entero.\n\n**Importa el controlador en `app.module.ts` y ponlo en `controllers`.** Fíjate al ejecutar en las líneas que aparecen: `RoutesResolver` dice qué controlador se montó y `Mapped` dice ruta por ruta lo que quedó registrado. Son las dos líneas que se miran cuando algo «no responde».",
+        "en": "The controller is decorated and `/usuarios` still doesn't exist. Read the previous step's output: Nest started, mapped no routes, and the request left with a `Cannot GET /usuarios`.\n\nBecause Nest **doesn't look for classes**. It doesn't walk folders or guess: it mounts exactly what its root module declares. A `@Module` is a guest list with three sections:\n\n```ts\n@Module({\n  imports: [],      // other modules you use something from\n  controllers: [],  // who serves requests\n  providers: [],    // who can be injected\n})\n```\n\nThat the file exists, that the class is decorated and that it compiles matters to nobody if its name isn't on that list. It's deliberate: in a fifty-module project, knowing what each one mounts is answered by reading ten lines instead of crawling the whole tree.\n\n**Import the controller in `app.module.ts` and put it in `controllers`.** When you run, watch the lines that appear: `RoutesResolver` says which controller was mounted and `Mapped` says route by route what got registered. Those are the two lines you look at when something \"doesn't respond\"."
+      },
+      "task": {
+        "es": "Declara `UsuariosController` en `controllers` del módulo y comprueba que `/usuarios` contesta 200.",
+        "en": "Declare `UsuariosController` in the module's `controllers` and check that `/usuarios` answers 200."
+      },
+      "focusFile": "app.module.ts",
+      "ruleIds": [
+        "registrado",
+        "ruta-mapeada",
+        "responde",
+        "hay-controlador"
+      ],
+      "xp": 35,
+      "hints": [
+        {
+          "id": "h-registrar",
+          "tier": 1,
+          "text": {
+            "es": "Arriba: `import { UsuariosController } from './usuarios.controller';`. Y dentro: `controllers: [UsuariosController]`.",
+            "en": "At the top: `import { UsuariosController } from './usuarios.controller';`. And inside: `controllers: [UsuariosController]`."
+          },
+          "xpPenalty": 7,
+          "autoOfferAfterSeconds": 70
+        }
+      ],
+      "solution": [
+        {
+          "path": "usuarios.controller.ts",
+          "content": "import { Controller, Get } from '@nestjs/common';\n\n@Controller('usuarios')\nexport class UsuariosController {\n  @Get()\n  todos() {\n    return [{ id: 1, nombre: 'Ana' }];\n  }\n}\n"
+        },
+        {
+          "path": "app.module.ts",
+          "content": "import { Module } from '@nestjs/common';\nimport { UsuariosController } from './usuarios.controller';\n\n@Module({\n  controllers: [UsuariosController],\n  providers: [],\n})\nexport class AppModule {}\n"
+        }
+      ]
+    },
+    {
+      "id": "step-3-mas-rutas",
+      "title": {
+        "es": "El prefijo y la ruta se suman",
+        "en": "Prefix and route add up"
+      },
+      "body": {
+        "es": "Una ruta en Nest se lee en dos trozos: el del `@Controller` y el del verbo.\n\n```\n@Controller('facturas')  +  @Get('pendientes')   →  /facturas/pendientes\n@Controller('facturas')  +  @Get()               →  /facturas\n```\n\nEso hace que un controlador sea la unidad natural de un recurso: todo lo que cuelga de `/usuarios` vive en el mismo archivo y el prefijo se escribe una sola vez. Cambiar la URL del recurso entero es cambiar una cadena.\n\nY conviene mirar la tercera petición de la lección: `/pedidos` sigue devolviendo 404, porque no hay ningún controlador que lo reclame. Nest no inventa rutas — **lo que no está mapeado, no existe**, y la lista de `Mapped` al arrancar es la verdad completa sobre lo que tu aplicación atiende.\n\n**Añade un segundo método que responda en `/usuarios/activos`.**",
+        "en": "A route in Nest reads in two pieces: the `@Controller` one and the verb one.\n\n```\n@Controller('facturas')  +  @Get('pendientes')   →  /facturas/pendientes\n@Controller('facturas')  +  @Get()               →  /facturas\n```\n\nThat makes a controller the natural unit for a resource: everything hanging off `/usuarios` lives in one file and the prefix is written once. Changing the whole resource's URL is changing one string.\n\nAnd it's worth looking at the lesson's third request: `/pedidos` still returns 404, because no controller claims it. Nest invents no routes — **what isn't mapped doesn't exist**, and the `Mapped` list at startup is the complete truth about what your application serves.\n\n**Add a second method answering at `/usuarios/activos`.**"
+      },
+      "task": {
+        "es": "Añade un método con `@Get('activos')` que devuelva la lista de usuarios activos.",
+        "en": "Add a method with `@Get('activos')` returning the list of active users."
+      },
+      "focusFile": "usuarios.controller.ts",
+      "ruleIds": [
+        "segunda-ruta",
+        "segunda-responde",
+        "responde",
+        "registrado"
+      ],
+      "xp": 35,
+      "hints": [
+        {
+          "id": "h-segunda",
+          "tier": 1,
+          "text": {
+            "es": "Otro método en la misma clase, con `@Get('activos')` encima. Devuelve lo que quieras: un array vale.",
+            "en": "Another method in the same class, with `@Get('activos')` above it. Return whatever you like: an array is fine."
+          },
+          "xpPenalty": 7,
+          "autoOfferAfterSeconds": 70
+        }
+      ],
+      "solution": [
+        {
+          "path": "usuarios.controller.ts",
+          "content": "import { Controller, Get } from '@nestjs/common';\n\n@Controller('usuarios')\nexport class UsuariosController {\n  @Get()\n  todos() {\n    return [{ id: 1, nombre: 'Ana' }];\n  }\n\n  @Get('activos')\n  activos() {\n    return [{ id: 1, nombre: 'Ana', activo: true }];\n  }\n}\n"
+        },
+        {
+          "path": "app.module.ts",
+          "content": "import { Module } from '@nestjs/common';\nimport { UsuariosController } from './usuarios.controller';\n\n@Module({\n  controllers: [UsuariosController],\n  providers: [],\n})\nexport class AppModule {}\n"
+        }
+      ],
+      "bestPractice": {
+        "es": "**Estándar de la industria:** un controlador por recurso, con el prefijo en el `@Controller` y nunca repetido en cada método. Y el controlador se queda fino: recibe, delega y devuelve. La lógica vive en un servicio — que es la lección siguiente.",
+        "en": "**Industry standard:** one controller per resource, with the prefix on the `@Controller` and never repeated in each method. And the controller stays thin: it receives, delegates and returns. The logic lives in a service — which is the next lesson."
+      }
+    }
+  ],
+  "drills": [],
+  "reward": {
+    "baseXp": 150,
+    "flawlessBonus": 55,
+    "noHintBonus": 30,
+    "comboMultiplierCap": 3,
+    "achievements": []
+  },
+  "solution": {
+    "files": [
+      {
+        "path": "usuarios.controller.ts",
+        "content": "import { Controller, Get } from '@nestjs/common';\n\n@Controller('usuarios')\nexport class UsuariosController {\n  @Get()\n  todos() {\n    return [{ id: 1, nombre: 'Ana' }];\n  }\n\n  @Get('activos')\n  activos() {\n    return [{ id: 1, nombre: 'Ana', activo: true }];\n  }\n}\n"
+      },
+      {
+        "path": "app.module.ts",
+        "content": "import { Module } from '@nestjs/common';\nimport { UsuariosController } from './usuarios.controller';\n\n@Module({\n  controllers: [UsuariosController],\n  providers: [],\n})\nexport class AppModule {}\n"
+      }
+    ],
+    "explanation": {
+      "es": "En Nest las rutas no se declaran: se anotan. `@Controller` fija el prefijo, `@Get` marca qué método atiende, y los dos trozos se suman para formar la URL. Pero decorar solo apunta metadatos — quien decide qué se monta es el `@Module`, que declara sus controladores uno a uno. Por eso una clase perfectamente decorada y ausente de esa lista produce un 404 que desconcierta: la ruta nunca llegó a existir, y la lista de `Mapped` del arranque lo dice sin ambigüedad.",
+      "en": "In Nest routes aren't declared: they're annotated. `@Controller` fixes the prefix, `@Get` marks which method serves, and the two pieces add up into the URL. But decorating only notes metadata — what gets mounted is decided by the `@Module`, which declares its controllers one by one. Which is why a perfectly decorated class missing from that list produces a baffling 404: the route never came to exist, and the startup `Mapped` list says so unambiguously."
+    }
+  }
+}

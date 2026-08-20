@@ -63,6 +63,7 @@ export const RuntimeKindSchema = z.enum([
   'php',          // PHP interpretado en JavaScript, autoalojado (ADR-20)
   'ts',           // TypeScript: tipos con el compilador del editor (ADR-25)
   'node',         // Node simulado: módulos, fs, http deterministas (ADR-26)
+  'nest',         // NestJS reducido a su contrato, sobre el de Node (ADR-28)
 ]);
 
 /**
@@ -108,6 +109,8 @@ export const RuntimeSpecSchema = z.object({
       z.object({
         method: z.string().default('GET'),
         url: z.string(),
+        /** Cuerpo JSON de la petición, para lo que llega por `@Body()`. */
+        body: z.string().optional(),
       }),
     )
     .default([]),

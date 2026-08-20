@@ -1,0 +1,425 @@
+{
+  "$schema": "../../../schema/lesson.schema.json",
+  "schemaVersion": 1,
+  "id": "nest-03-parametros-y-errores",
+  "track": "backend",
+  "module": "nest",
+  "order": 3,
+  "kind": "challenge",
+  "difficulty": "adept",
+  "estimatedMinutes": 28,
+  "title": {
+    "es": "Lo que entra y lo que sale mal",
+    "en": "What comes in and what goes wrong"
+  },
+  "summary": {
+    "es": "Parámetros de ruta y cuerpo de la petición, y el detalle que separa una API decente de una que miente: devolver 404 cuando algo no existe, en vez de un 200 vacío.",
+    "en": "Route parameters and request body, plus the detail separating a decent API from a lying one: returning 404 when something doesn't exist, instead of an empty 200."
+  },
+  "concepts": [
+    "nestjs",
+    "parametros",
+    "dto",
+    "excepciones",
+    "codigos-http"
+  ],
+  "prerequisites": [
+    "nest-02-inyeccion-de-dependencias"
+  ],
+  "runtime": {
+    "kind": "nest",
+    "dependencies": {},
+    "timeoutMs": 15000,
+    "requests": [
+      {
+        "method": "GET",
+        "url": "/usuarios/2"
+      },
+      {
+        "method": "GET",
+        "url": "/usuarios/99"
+      },
+      {
+        "method": "POST",
+        "url": "/usuarios",
+        "body": "{\"nombre\":\"Marta\"}"
+      },
+      {
+        "method": "GET",
+        "url": "/usuarios"
+      }
+    ]
+  },
+  "workspace": {
+    "entry": "main.ts",
+    "allowCreate": false,
+    "allowDelete": false,
+    "files": [
+      {
+        "path": "usuarios.controller.ts",
+        "active": true,
+        "content": "// Paso 1: falta la ruta que devuelve UN usuario.\n\nimport { Controller, Get } from '@nestjs/common';\nimport { UsuariosService } from './usuarios.service';\n\n@Controller('usuarios')\nexport class UsuariosController {\n  constructor(private readonly usuarios: UsuariosService) {}\n\n  @Get()\n  todos() {\n    return this.usuarios.todos();\n  }\n}\n"
+      },
+      {
+        "path": "usuarios.service.ts",
+        "content": "import { Injectable } from '@nestjs/common';\n\n@Injectable()\nexport class UsuariosService {\n  private usuarios = [\n    { id: 1, nombre: 'Ana' },\n    { id: 2, nombre: 'Luis' },\n  ];\n\n  todos() {\n    return this.usuarios;\n  }\n\n  // Devuelve undefined si no lo encuentra. Eso, por HTTP, es un 200 vacio.\n  uno(id: number) {\n    return this.usuarios.find((usuario) => usuario.id === id);\n  }\n}\n"
+      },
+      {
+        "path": "app.module.ts",
+        "readOnly": true,
+        "content": "import { Module } from '@nestjs/common';\nimport { UsuariosController } from './usuarios.controller';\nimport { UsuariosService } from './usuarios.service';\n\n@Module({\n  controllers: [UsuariosController],\n  providers: [UsuariosService],\n})\nexport class AppModule {}\n"
+      },
+      {
+        "path": "main.ts",
+        "readOnly": true,
+        "content": "import { NestFactory } from '@nestjs/core';\nimport { AppModule } from './app.module';\n\nasync function bootstrap() {\n  const app = await NestFactory.create(AppModule);\n  await app.listen(3000);\n}\n\nbootstrap();\n"
+      }
+    ]
+  },
+  "rules": [
+    {
+      "id": "ruta-con-parametro",
+      "kind": "regex-must",
+      "file": "usuarios.controller.ts",
+      "pattern": "@Get\\(\\s*['\"]:id['\"]\\s*\\)",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Declara la ruta del recurso concreto con los dos puntos delante del nombre del parámetro.",
+        "en": "Declare the single-resource route with a colon before the parameter's name."
+      },
+      "successMessage": {
+        "es": "Ruta con hueco.",
+        "en": "A route with a slot."
+      },
+      "points": 20
+    },
+    {
+      "id": "usa-param",
+      "kind": "regex-must",
+      "file": "usuarios.controller.ts",
+      "pattern": "@Param\\(",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "El valor llega por `@Param('id')` en el argumento del método.",
+        "en": "The value arrives through `@Param('id')` in the method's argument."
+      },
+      "successMessage": {
+        "es": "Recibido.",
+        "en": "Received."
+      },
+      "points": 20
+    },
+    {
+      "id": "convierte-a-numero",
+      "kind": "regex-must",
+      "file": "usuarios.controller.ts",
+      "pattern": "Number\\(",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Un parámetro de ruta siempre llega como texto: conviértelo antes de comparar con un número.",
+        "en": "A route parameter always arrives as text: convert it before comparing with a number."
+      },
+      "successMessage": {
+        "es": "Convertido.",
+        "en": "Converted."
+      },
+      "points": 20
+    },
+    {
+      "id": "uno-responde",
+      "kind": "stdout-match",
+      "matches": "GET /usuarios/2 -> 200 \\{\"id\":2,\"nombre\":\"Luis\"\\}",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "`/usuarios/2` tiene que devolver a Luis.",
+        "en": "`/usuarios/2` must return Luis."
+      },
+      "successMessage": {
+        "es": "El parámetro llega y se usa.",
+        "en": "The parameter arrives and gets used."
+      },
+      "points": 25
+    },
+    {
+      "id": "el-200-mentiroso",
+      "kind": "stdout-match",
+      "matches": "GET /usuarios/99 -> 200",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Ejecuta y mira qué contesta `/usuarios/99`: un 200 con el cuerpo vacío. Todavía no lo arregles.",
+        "en": "Run it and look at what `/usuarios/99` answers: a 200 with an empty body. Don't fix it yet."
+      },
+      "successMessage": {
+        "es": "Un «todo bien» que no es verdad.",
+        "en": "An \"all good\" that isn't true."
+      },
+      "points": 20
+    },
+    {
+      "id": "lanza-not-found",
+      "kind": "regex-must",
+      "file": "usuarios.service.ts",
+      "pattern": "NotFoundException",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Lanza `NotFoundException` cuando no aparezca el usuario.",
+        "en": "Throw `NotFoundException` when the user isn't there."
+      },
+      "successMessage": {
+        "es": "Falla como debe.",
+        "en": "It fails properly."
+      },
+      "points": 30
+    },
+    {
+      "id": "cuarto-cero-cuatro",
+      "kind": "stdout-match",
+      "matches": "GET /usuarios/99 -> 404 \\{\"message\":\"No existe el usuario 99\",\"error\":\"Not Found\",\"statusCode\":404\\}",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "`/usuarios/99` tiene que contestar 404 con el mensaje dentro. El texto: «No existe el usuario 99».",
+        "en": "`/usuarios/99` must answer 404 with the message inside. The text: \"No existe el usuario 99\"."
+      },
+      "successMessage": {
+        "es": "El estado dice la verdad.",
+        "en": "The status tells the truth."
+      },
+      "points": 30
+    },
+    {
+      "id": "hay-post",
+      "kind": "regex-must",
+      "file": "usuarios.controller.ts",
+      "pattern": "@Post\\(",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Falta el método que crea: lleva `@Post()` encima.",
+        "en": "The creating method is missing: it takes `@Post()` above it."
+      },
+      "successMessage": {
+        "es": "Con su verbo.",
+        "en": "With its verb."
+      },
+      "points": 20
+    },
+    {
+      "id": "usa-body",
+      "kind": "regex-must",
+      "file": "usuarios.controller.ts",
+      "pattern": "@Body\\(",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "El cuerpo de la petición llega por `@Body()`.",
+        "en": "The request body arrives through `@Body()`."
+      },
+      "successMessage": {
+        "es": "El cuerpo, dentro.",
+        "en": "The body, in."
+      },
+      "points": 20
+    },
+    {
+      "id": "crea-y-devuelve-201",
+      "kind": "stdout-match",
+      "matches": "POST /usuarios -> 201 \\{\"id\":3,\"nombre\":\"Marta\"\\}",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "El POST tiene que crear el usuario y contestar 201 con el creado dentro.",
+        "en": "The POST must create the user and answer 201 with the created one inside."
+      },
+      "successMessage": {
+        "es": "201, sin que nadie lo pida.",
+        "en": "201, without anyone asking."
+      },
+      "points": 30
+    },
+    {
+      "id": "la-lista-crece",
+      "kind": "stdout-match",
+      "matches": "GET /usuarios -> 200 \\[\\{\"id\":1,\"nombre\":\"Ana\"\\},\\{\"id\":2,\"nombre\":\"Luis\"\\},\\{\"id\":3,\"nombre\":\"Marta\"\\}\\]",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "La última petición debe ver a los tres: el POST tiene que haber guardado de verdad.",
+        "en": "The last request must see all three: the POST has to have actually stored it."
+      },
+      "successMessage": {
+        "es": "Guardado y visible.",
+        "en": "Stored and visible."
+      },
+      "points": 20
+    }
+  ],
+  "steps": [
+    {
+      "id": "step-1-parametros",
+      "title": {
+        "es": "Un hueco en la ruta",
+        "en": "A slot in the route"
+      },
+      "body": {
+        "es": "Falta la ruta más común de todas: la del recurso concreto. Se declara con **dos puntos** delante del nombre, y el valor se recoge con un decorador de parámetro:\n\n```ts\n@Get(':codigo')\nuna(@Param('codigo') codigo: string) { ... }\n```\n\nEl nombre del hueco y el que se le pide a `@Param` tienen que **coincidir**; no hay nada que los ate salvo esa cadena, así que un error de dedo ahí se convierte en un `undefined` silencioso.\n\nY el detalle que muerde a todo el mundo una vez: **un parámetro de ruta siempre llega como texto**. La URL no tiene tipos. Si tus datos usan números, `'2' === 2` es `false` y la búsqueda no encuentra nada, sin ningún error de por medio — hay que convertirlo a mano.\n\nHay dos decoradores hermanos que se usan igual: `@Query('pagina')` para lo que va detrás del interrogante, y `@Body()` para el cuerpo, que es el paso 3.\n\n**Añade la ruta que devuelve un usuario por su identificador y ejecuta.** Fíjate en lo que contesta `/usuarios/99`: eso es el paso siguiente.",
+        "en": "The commonest route of all is missing: the one for a specific resource. It's declared with a **colon** before the name, and the value is picked up with a parameter decorator:\n\n```ts\n@Get(':codigo')\nuna(@Param('codigo') codigo: string) { ... }\n```\n\nThe slot's name and the one you ask `@Param` for must **match**; nothing ties them together but that string, so a typo there turns into a silent `undefined`.\n\nAnd the detail that bites everyone once: **a route parameter always arrives as text**. URLs have no types. If your data uses numbers, `'2' === 2` is `false` and the lookup finds nothing, with no error anywhere — you have to convert it yourself.\n\nThere are two sibling decorators used the same way: `@Query('pagina')` for what comes after the question mark, and `@Body()` for the body, which is step 3.\n\n**Add the route returning one user by its identifier and run.** Watch what `/usuarios/99` answers: that's the next step."
+      },
+      "task": {
+        "es": "Añade la ruta del usuario concreto, recoge el parámetro y conviértelo a número antes de buscar.",
+        "en": "Add the single-user route, pick up the parameter and convert it to a number before looking up."
+      },
+      "focusFile": "usuarios.controller.ts",
+      "ruleIds": [
+        "ruta-con-parametro",
+        "usa-param",
+        "convierte-a-numero",
+        "uno-responde",
+        "el-200-mentiroso"
+      ],
+      "xp": 35,
+      "hints": [
+        {
+          "id": "h-param",
+          "tier": 1,
+          "text": {
+            "es": "`@Get(':id')` encima del método, y en el argumento `@Param('id') id: string`. Luego `Number(id)`.",
+            "en": "`@Get(':id')` above the method, and in the argument `@Param('id') id: string`. Then `Number(id)`."
+          },
+          "xpPenalty": 8,
+          "autoOfferAfterSeconds": 75
+        }
+      ],
+      "solution": [
+        {
+          "path": "usuarios.controller.ts",
+          "content": "import { Controller, Get, Param } from '@nestjs/common';\nimport { UsuariosService } from './usuarios.service';\n\n@Controller('usuarios')\nexport class UsuariosController {\n  constructor(private readonly usuarios: UsuariosService) {}\n\n  @Get()\n  todos() {\n    return this.usuarios.todos();\n  }\n\n  @Get(':id')\n  uno(@Param('id') id: string) {\n    return this.usuarios.uno(Number(id));\n  }\n}\n"
+        }
+      ]
+    },
+    {
+      "id": "step-2-excepciones",
+      "title": {
+        "es": "Un 200 que miente",
+        "en": "A 200 that lies"
+      },
+      "body": {
+        "es": "`/usuarios/99` contesta **200 con el cuerpo vacío**. Es lo que pasa cuando un `find` no encuentra nada y ese `undefined` sube tal cual hasta la respuesta.\n\nY es un fallo de verdad, aunque no parezca: 200 significa «tu petición se atendió y aquí está lo que pediste». Quien lo recibe hace lo que hay que hacer con un 200 — guardarlo en caché, pintar la pantalla — y se encuentra con la nada. Un cliente honesto no puede distinguir «no existe» de «existe y está vacío».\n\nEn Nest eso se arregla **lanzando**:\n\n```ts\nthrow new NotFoundException('No hay factura ' + numero);\n```\n\nNo hay que capturarla en ningún sitio. Nest tiene un filtro de excepciones que las recoge y las convierte en respuesta:\n\n```json\n{ \"message\": \"...\", \"error\": \"Not Found\", \"statusCode\": 404 }\n```\n\nY viene toda la familia: `BadRequestException` (400), `UnauthorizedException` (401), `ForbiddenException` (403), `ConflictException` (409). Cualquier otro error que se escape —uno de programación— se convierte en un 500 genérico **sin filtrar el mensaje**, que es justo lo que se quiere: el detalle va al log, no al cliente.\n\nDónde lanzarla: en el **servicio**, no en el controlador. Quien sabe que algo no existe es quien lo buscó, y así la regla vale igual si mañana ese servicio se llama desde una cola o desde una tarea programada.\n\n**Haz que el servicio lance `NotFoundException` con el texto «No existe el usuario 99» para el que falta.**",
+        "en": "`/usuarios/99` answers **200 with an empty body**. That's what happens when a `find` finds nothing and that `undefined` travels straight up into the response.\n\nAnd it's a real bug, however harmless it looks: 200 means \"your request was served and here's what you asked for\". Whoever receives it does what you do with a 200 — cache it, render the screen — and finds nothing there. An honest client can't tell \"doesn't exist\" from \"exists and is empty\".\n\nIn Nest you fix that by **throwing**:\n\n```ts\nthrow new NotFoundException('No hay factura ' + numero);\n```\n\nYou don't catch it anywhere. Nest has an exception filter that picks these up and turns them into a response:\n\n```json\n{ \"message\": \"...\", \"error\": \"Not Found\", \"statusCode\": 404 }\n```\n\nAnd the whole family comes along: `BadRequestException` (400), `UnauthorizedException` (401), `ForbiddenException` (403), `ConflictException` (409). Any other error that escapes — a programming one — becomes a generic 500 **without leaking the message**, which is exactly what you want: the detail goes to the log, not to the client.\n\nWhere to throw it: in the **service**, not the controller. Whoever knows something doesn't exist is whoever looked for it, and that way the rule holds if tomorrow that service is called from a queue or a scheduled job.\n\n**Make the service throw `NotFoundException` with the text \"No existe el usuario 99\" for the missing one.**"
+      },
+      "task": {
+        "es": "En el servicio, lanza `NotFoundException` si no aparece el usuario, con el mensaje que pide la prueba.",
+        "en": "In the service, throw `NotFoundException` if the user isn't found, with the message the test asks for."
+      },
+      "focusFile": "usuarios.service.ts",
+      "ruleIds": [
+        "lanza-not-found",
+        "cuarto-cero-cuatro",
+        "uno-responde"
+      ],
+      "xp": 40,
+      "hints": [
+        {
+          "id": "h-throw",
+          "tier": 1,
+          "text": {
+            "es": "Guarda el resultado de `find` en una constante, y si no hay nada: `throw new NotFoundException('No existe el usuario ' + id);`.",
+            "en": "Store the `find` result in a constant, and if there's nothing: `throw new NotFoundException('No existe el usuario ' + id);`."
+          },
+          "xpPenalty": 9,
+          "autoOfferAfterSeconds": 80
+        }
+      ],
+      "solution": [
+        {
+          "path": "usuarios.service.ts",
+          "content": "import { Injectable, NotFoundException } from '@nestjs/common';\n\n@Injectable()\nexport class UsuariosService {\n  private usuarios = [\n    { id: 1, nombre: 'Ana' },\n    { id: 2, nombre: 'Luis' },\n  ];\n\n  todos() {\n    return this.usuarios;\n  }\n\n  uno(id: number) {\n    const usuario = this.usuarios.find((u) => u.id === id);\n    if (!usuario) {\n      throw new NotFoundException('No existe el usuario ' + id);\n    }\n    return usuario;\n  }\n}\n"
+        },
+        {
+          "path": "usuarios.controller.ts",
+          "content": "import { Controller, Get, Param } from '@nestjs/common';\nimport { UsuariosService } from './usuarios.service';\n\n@Controller('usuarios')\nexport class UsuariosController {\n  constructor(private readonly usuarios: UsuariosService) {}\n\n  @Get()\n  todos() {\n    return this.usuarios.todos();\n  }\n\n  @Get(':id')\n  uno(@Param('id') id: string) {\n    return this.usuarios.uno(Number(id));\n  }\n}\n"
+        }
+      ]
+    },
+    {
+      "id": "step-3-post",
+      "title": {
+        "es": "Lo que llega en el cuerpo",
+        "en": "What arrives in the body"
+      },
+      "body": {
+        "es": "Falta crear. Un `@Post()` en el mismo controlador, y el cuerpo de la petición entra por `@Body()` ya convertido a objeto — de deserializar el JSON no se encarga nadie a mano.\n\nDos cosas que se ven en la salida y conviene no dar por sentadas:\n\n**El 201.** Nest responde `201 Created` a un POST sin que nadie se lo pida, y 200 a todo lo demás. Es el código correcto para «he creado algo», y por eso está puesto por defecto. Se puede cambiar con `@HttpCode(...)`, pero antes de cambiarlo conviene saber por qué está.\n\n**Lo que devuelve.** Un POST que crea suele devolver el recurso creado, con el identificador que le ha tocado. Quien llama lo necesita: sin eso, para saber qué acaba de crear tiene que pedir la lista entera y adivinar.\n\nY una advertencia con la que conviene salir de aquí: **`@Body()` no valida nada**. Lo que llega es lo que el cliente haya mandado, tipado en TypeScript como una promesa que nadie comprueba en tiempo de ejecución — el tipo desaparece al compilar. Un cuerpo sin `nombre` entra igual y rompe más adelante. En un proyecto de verdad eso se cierra con un DTO y `ValidationPipe`, que convierte lo que no encaje en un 400 antes de que llegue a tu método.\n\n**Añade la creación: cuerpo, guardado y respuesta.**",
+        "en": "Creating is missing. A `@Post()` in the same controller, and the request body comes in through `@Body()` already turned into an object — nobody deserialises the JSON by hand.\n\nTwo things visible in the output that are worth not taking for granted:\n\n**The 201.** Nest answers `201 Created` to a POST without being asked, and 200 to everything else. It's the right code for \"I created something\", which is why it's the default. You can change it with `@HttpCode(...)`, but it's worth knowing why it's there before changing it.\n\n**What it returns.** A POST that creates usually returns the created resource, with whatever identifier it got. The caller needs it: without that, to know what it just created it has to fetch the whole list and guess.\n\nAnd a warning to leave here with: **`@Body()` validates nothing**. What arrives is whatever the client sent, typed in TypeScript as a promise nobody checks at runtime — the type vanishes at compile time. A body with no `nombre` gets in just the same and breaks later. In a real project you close that with a DTO and `ValidationPipe`, which turns anything that doesn't fit into a 400 before it reaches your method.\n\n**Add creation: body, storing and response.**"
+      },
+      "task": {
+        "es": "Añade el método de creación con `@Post()` y `@Body()`, y guárdalo en el servicio.",
+        "en": "Add the creation method with `@Post()` and `@Body()`, and store it in the service."
+      },
+      "focusFile": "usuarios.controller.ts",
+      "ruleIds": [
+        "hay-post",
+        "usa-body",
+        "crea-y-devuelve-201",
+        "la-lista-crece",
+        "cuarto-cero-cuatro"
+      ],
+      "xp": 45,
+      "hints": [
+        {
+          "id": "h-post",
+          "tier": 1,
+          "text": {
+            "es": "En el servicio, un método que empuje al array y devuelva el objeto nuevo. En el controlador, `@Post()` y `@Body() cuerpo: { nombre: string }`.",
+            "en": "In the service, a method pushing into the array and returning the new object. In the controller, `@Post()` and `@Body() cuerpo: { nombre: string }`."
+          },
+          "xpPenalty": 10,
+          "autoOfferAfterSeconds": 90
+        }
+      ],
+      "solution": [
+        {
+          "path": "usuarios.service.ts",
+          "content": "import { Injectable, NotFoundException } from '@nestjs/common';\n\n@Injectable()\nexport class UsuariosService {\n  private usuarios = [\n    { id: 1, nombre: 'Ana' },\n    { id: 2, nombre: 'Luis' },\n  ];\n\n  todos() {\n    return this.usuarios;\n  }\n\n  uno(id: number) {\n    const usuario = this.usuarios.find((u) => u.id === id);\n    if (!usuario) {\n      throw new NotFoundException('No existe el usuario ' + id);\n    }\n    return usuario;\n  }\n\n  crear(nombre: string) {\n    const usuario = { id: this.usuarios.length + 1, nombre: nombre };\n    this.usuarios.push(usuario);\n    return usuario;\n  }\n}\n"
+        },
+        {
+          "path": "usuarios.controller.ts",
+          "content": "import { Body, Controller, Get, Param, Post } from '@nestjs/common';\nimport { UsuariosService } from './usuarios.service';\n\n@Controller('usuarios')\nexport class UsuariosController {\n  constructor(private readonly usuarios: UsuariosService) {}\n\n  @Get()\n  todos() {\n    return this.usuarios.todos();\n  }\n\n  @Get(':id')\n  uno(@Param('id') id: string) {\n    return this.usuarios.uno(Number(id));\n  }\n\n  @Post()\n  crear(@Body() cuerpo: { nombre: string }) {\n    return this.usuarios.crear(cuerpo.nombre);\n  }\n}\n"
+        }
+      ],
+      "bestPractice": {
+        "es": "**Estándar de la industria:** un DTO por entrada, validado con `ValidationPipe` y `class-validator`, y `whitelist: true` para que lo que no esté declarado no llegue siquiera al método. El código de estado se elige a conciencia: 201 al crear, 204 al borrar sin cuerpo, 409 cuando choca con algo que ya existe.",
+        "en": "**Industry standard:** one DTO per input, validated with `ValidationPipe` and `class-validator`, plus `whitelist: true` so anything undeclared never reaches the method. Status codes are chosen deliberately: 201 on create, 204 on delete with no body, 409 when it clashes with something that already exists."
+      }
+    }
+  ],
+  "drills": [],
+  "reward": {
+    "baseXp": 170,
+    "flawlessBonus": 60,
+    "noHintBonus": 30,
+    "comboMultiplierCap": 3,
+    "achievements": []
+  },
+  "solution": {
+    "files": [
+      {
+        "path": "usuarios.service.ts",
+        "content": "import { Injectable, NotFoundException } from '@nestjs/common';\n\n@Injectable()\nexport class UsuariosService {\n  private usuarios = [\n    { id: 1, nombre: 'Ana' },\n    { id: 2, nombre: 'Luis' },\n  ];\n\n  todos() {\n    return this.usuarios;\n  }\n\n  uno(id: number) {\n    const usuario = this.usuarios.find((u) => u.id === id);\n    if (!usuario) {\n      throw new NotFoundException('No existe el usuario ' + id);\n    }\n    return usuario;\n  }\n\n  crear(nombre: string) {\n    const usuario = { id: this.usuarios.length + 1, nombre: nombre };\n    this.usuarios.push(usuario);\n    return usuario;\n  }\n}\n"
+      },
+      {
+        "path": "usuarios.controller.ts",
+        "content": "import { Body, Controller, Get, Param, Post } from '@nestjs/common';\nimport { UsuariosService } from './usuarios.service';\n\n@Controller('usuarios')\nexport class UsuariosController {\n  constructor(private readonly usuarios: UsuariosService) {}\n\n  @Get()\n  todos() {\n    return this.usuarios.todos();\n  }\n\n  @Get(':id')\n  uno(@Param('id') id: string) {\n    return this.usuarios.uno(Number(id));\n  }\n\n  @Post()\n  crear(@Body() cuerpo: { nombre: string }) {\n    return this.usuarios.crear(cuerpo.nombre);\n  }\n}\n"
+      }
+    ],
+    "explanation": {
+      "es": "Lo que entra por la URL o por el cuerpo llega a través de decoradores de parámetro —`@Param`, `@Query`, `@Body`—, y lo de la ruta siempre llega como texto, así que compararlo con un número exige convertirlo. Lo que sale mal se cuenta con el estado: devolver 200 con el cuerpo vacío cuando algo no existe es mentirle al cliente, y se arregla lanzando una excepción de Nest desde el servicio —quien buscó es quien sabe que no está—. El filtro de excepciones la convierte en una respuesta con su código y su mensaje, y el POST responde 201 devolviendo el recurso creado.",
+      "en": "What comes in from the URL or the body arrives through parameter decorators — `@Param`, `@Query`, `@Body` — and the route ones always arrive as text, so comparing them with a number requires converting. What goes wrong is told through the status: returning 200 with an empty body when something doesn't exist is lying to the client, and it's fixed by throwing a Nest exception from the service — whoever looked is who knows it isn't there. The exception filter turns it into a response with its code and message, and the POST answers 201 returning the created resource."
+    }
+  }
+}

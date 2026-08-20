@@ -116,7 +116,12 @@
             "pyodide",
             "remote",
             "cli-sim",
-            "sql"
+            "sql",
+            "vue",
+            "php",
+            "ts",
+            "node",
+            "nest"
           ]
         },
         "command": {
@@ -176,6 +181,28 @@
         },
         "cliScenario": {
           "type": "string"
+        },
+        "requests": {
+          "default": [],
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "method": {
+                "default": "GET",
+                "type": "string"
+              },
+              "url": {
+                "type": "string"
+              },
+              "body": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "url"
+            ]
+          }
         },
         "timeoutMs": {
           "default": 10000,
@@ -737,6 +764,98 @@
                 "type": "integer",
                 "minimum": -9007199254740991,
                 "maximum": 9007199254740991
+              }
+            },
+            "required": [
+              "id",
+              "message",
+              "kind"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "phase": {
+                "default": "submit",
+                "type": "string",
+                "enum": [
+                  "type",
+                  "run",
+                  "submit"
+                ]
+              },
+              "severity": {
+                "default": "error",
+                "type": "string",
+                "enum": [
+                  "damage",
+                  "error",
+                  "warn"
+                ]
+              },
+              "message": {
+                "type": "object",
+                "properties": {
+                  "es": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "en": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "es",
+                  "en"
+                ]
+              },
+              "successMessage": {
+                "type": "object",
+                "properties": {
+                  "es": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "en": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "es",
+                  "en"
+                ]
+              },
+              "points": {
+                "default": 10,
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "hidden": {
+                "default": false,
+                "type": "boolean"
+              },
+              "kind": {
+                "type": "string",
+                "const": "type-error"
+              },
+              "expectCode": {
+                "type": "integer",
+                "exclusiveMinimum": 0,
+                "maximum": 9007199254740991
+              },
+              "messageContains": {
+                "type": "string"
+              },
+              "expectNone": {
+                "default": false,
+                "type": "boolean"
               }
             },
             "required": [
@@ -2239,6 +2358,98 @@
                       "type": "integer",
                       "minimum": -9007199254740991,
                       "maximum": 9007199254740991
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "message",
+                    "kind"
+                  ]
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "phase": {
+                      "default": "submit",
+                      "type": "string",
+                      "enum": [
+                        "type",
+                        "run",
+                        "submit"
+                      ]
+                    },
+                    "severity": {
+                      "default": "error",
+                      "type": "string",
+                      "enum": [
+                        "damage",
+                        "error",
+                        "warn"
+                      ]
+                    },
+                    "message": {
+                      "type": "object",
+                      "properties": {
+                        "es": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "en": {
+                          "type": "string",
+                          "minLength": 1
+                        }
+                      },
+                      "required": [
+                        "es",
+                        "en"
+                      ]
+                    },
+                    "successMessage": {
+                      "type": "object",
+                      "properties": {
+                        "es": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "en": {
+                          "type": "string",
+                          "minLength": 1
+                        }
+                      },
+                      "required": [
+                        "es",
+                        "en"
+                      ]
+                    },
+                    "points": {
+                      "default": 10,
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    "hidden": {
+                      "default": false,
+                      "type": "boolean"
+                    },
+                    "kind": {
+                      "type": "string",
+                      "const": "type-error"
+                    },
+                    "expectCode": {
+                      "type": "integer",
+                      "exclusiveMinimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    "messageContains": {
+                      "type": "string"
+                    },
+                    "expectNone": {
+                      "default": false,
+                      "type": "boolean"
                     }
                   },
                   "required": [

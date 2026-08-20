@@ -1,0 +1,402 @@
+{
+  "$schema": "../../../schema/lesson.schema.json",
+  "schemaVersion": 1,
+  "id": "nest-02-inyeccion-de-dependencias",
+  "track": "backend",
+  "module": "nest",
+  "order": 2,
+  "kind": "challenge",
+  "difficulty": "adept",
+  "estimatedMinutes": 28,
+  "title": {
+    "es": "Pedir por el constructor",
+    "en": "Asking through the constructor"
+  },
+  "summary": {
+    "es": "El error más repetido de Nest —«Nest can't resolve dependencies»— provocado a propósito, entendido y arreglado. Y por qué al contenedor le basta con el tipo del parámetro.",
+    "en": "Nest's most repeated error — \"Nest can't resolve dependencies\" — triggered on purpose, understood and fixed. And why the parameter's type is all the container needs."
+  },
+  "concepts": [
+    "nestjs",
+    "inyeccion-de-dependencias",
+    "providers",
+    "singleton"
+  ],
+  "prerequisites": [
+    "nest-01-controlador-y-modulo"
+  ],
+  "runtime": {
+    "kind": "nest",
+    "dependencies": {},
+    "timeoutMs": 15000,
+    "requests": [
+      {
+        "method": "GET",
+        "url": "/usuarios"
+      },
+      {
+        "method": "GET",
+        "url": "/usuarios"
+      }
+    ]
+  },
+  "workspace": {
+    "entry": "main.ts",
+    "allowCreate": false,
+    "allowDelete": false,
+    "files": [
+      {
+        "path": "usuarios.controller.ts",
+        "active": true,
+        "content": "// Un controlador que hace de todo: atiende la peticion Y guarda los datos.\n// Paso 1: sacale los datos a un servicio y pideselo por el constructor.\n\nimport { Controller, Get } from '@nestjs/common';\n\n@Controller('usuarios')\nexport class UsuariosController {\n  private usuarios = [\n    { id: 1, nombre: 'Ana' },\n    { id: 2, nombre: 'Luis' },\n  ];\n\n  @Get()\n  todos() {\n    return this.usuarios;\n  }\n}\n"
+      },
+      {
+        "path": "usuarios.service.ts",
+        "content": "// Paso 1: aqui van los datos y la logica. Ahora mismo esta vacio.\n//\n// Un servicio es una clase normal con @Injectable() encima. Ese decorador\n// no la hace especial: hace que TypeScript apunte que necesita su\n// constructor, que es lo unico que el contenedor sabe leer.\n"
+      },
+      {
+        "path": "auditoria.service.ts",
+        "readOnly": true,
+        "content": "// Un servicio que no depende de nadie y del que dependen otros.\n// Lleva la cuenta de lo que se le pide: por eso se nota si el contenedor\n// crea una instancia o veinte.\n\nimport { Injectable } from '@nestjs/common';\n\n@Injectable()\nexport class AuditoriaService {\n  private consultas = 0;\n\n  registrar(evento: string) {\n    this.consultas = this.consultas + 1;\n    console.log(JSON.stringify({ event: evento, consultas: this.consultas }));\n  }\n}\n"
+      },
+      {
+        "path": "app.module.ts",
+        "content": "import { Module } from '@nestjs/common';\nimport { UsuariosController } from './usuarios.controller';\n\n@Module({\n  controllers: [UsuariosController],\n  providers: [],\n})\nexport class AppModule {}\n"
+      },
+      {
+        "path": "main.ts",
+        "readOnly": true,
+        "content": "import { NestFactory } from '@nestjs/core';\nimport { AppModule } from './app.module';\n\nasync function bootstrap() {\n  const app = await NestFactory.create(AppModule);\n  await app.listen(3000);\n}\n\nbootstrap();\n"
+      }
+    ]
+  },
+  "rules": [
+    {
+      "id": "servicio-inyectable",
+      "kind": "regex-must",
+      "file": "usuarios.service.ts",
+      "pattern": "@Injectable\\(\\)",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "El servicio necesita `@Injectable()`. Sin decorador no se emiten los metadatos de su constructor.",
+        "en": "The service needs `@Injectable()`. With no decorator, its constructor's metadata isn't emitted."
+      },
+      "successMessage": {
+        "es": "Inyectable.",
+        "en": "Injectable."
+      },
+      "points": 20
+    },
+    {
+      "id": "controlador-pide",
+      "kind": "regex-must",
+      "file": "usuarios.controller.ts",
+      "pattern": "constructor\\s*\\([^)]*UsuariosService",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "El controlador pide el servicio por el constructor: `constructor(private readonly usuarios: UsuariosService) {}`.",
+        "en": "The controller asks for the service through the constructor: `constructor(private readonly usuarios: UsuariosService) {}`."
+      },
+      "successMessage": {
+        "es": "Lo pide, no lo construye.",
+        "en": "It asks for it, doesn't build it."
+      },
+      "points": 25
+    },
+    {
+      "id": "sin-new",
+      "kind": "regex-forbid",
+      "file": "usuarios.controller.ts",
+      "pattern": "new\\s+UsuariosService",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "No lo construyas tú: la gracia es que lo construya el contenedor.",
+        "en": "Don't build it yourself: the whole point is the container building it."
+      },
+      "successMessage": {
+        "es": "Sin `new` a la vista.",
+        "en": "No `new` in sight."
+      },
+      "points": 15
+    },
+    {
+      "id": "error-de-dependencias",
+      "kind": "stdout-match",
+      "matches": "Nest can't resolve dependencies of the UsuariosController",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Ejecuta y lee el error: es el que verás mil veces. Todavía no lo arregles.",
+        "en": "Run it and read the error: it's the one you'll see a thousand times. Don't fix it yet."
+      },
+      "successMessage": {
+        "es": "Ahí está, con su texto.",
+        "en": "There it is, with its exact wording."
+      },
+      "points": 25
+    },
+    {
+      "id": "en-providers",
+      "kind": "regex-must",
+      "file": "app.module.ts",
+      "pattern": "providers:\\s*\\[\\s*UsuariosService",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Declara `UsuariosService` en `providers` del módulo.",
+        "en": "Declare `UsuariosService` in the module's `providers`."
+      },
+      "successMessage": {
+        "es": "El contenedor ya sabe fabricarlo.",
+        "en": "The container knows how to build it now."
+      },
+      "points": 30
+    },
+    {
+      "id": "responde-con-servicio",
+      "kind": "stdout-match",
+      "matches": "GET /usuarios -> 200 \\[\\{\"id\":1,\"nombre\":\"Ana\"\\}",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Con el proveedor declarado, `/usuarios` tiene que volver a contestar 200 con la lista.",
+        "en": "With the provider declared, `/usuarios` must answer 200 with the list again."
+      },
+      "successMessage": {
+        "es": "Inyectado y funcionando.",
+        "en": "Injected and working."
+      },
+      "points": 25
+    },
+    {
+      "id": "auditoria-declarada",
+      "kind": "regex-must",
+      "file": "app.module.ts",
+      "pattern": "AuditoriaService",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "`AuditoriaService` también es un proveedor: si no está en la lista, no se puede inyectar en ningún sitio.",
+        "en": "`AuditoriaService` is a provider too: if it isn't on the list, it can't be injected anywhere."
+      },
+      "successMessage": {
+        "es": "Los dos, declarados.",
+        "en": "Both declared."
+      },
+      "points": 20
+    },
+    {
+      "id": "servicio-usa-auditoria",
+      "kind": "regex-must",
+      "file": "usuarios.service.ts",
+      "pattern": "constructor\\s*\\([^)]*AuditoriaService",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "El servicio pide la auditoría igual que el controlador pidió el servicio: por el constructor.",
+        "en": "The service asks for the audit the same way the controller asked for the service: through the constructor."
+      },
+      "successMessage": {
+        "es": "Un proveedor que inyecta a otro.",
+        "en": "A provider injecting another."
+      },
+      "points": 25
+    },
+    {
+      "id": "misma-instancia",
+      "kind": "stdout-match",
+      "matches": "\"event\":\"consulta_usuarios\",\"consultas\":2",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Las dos peticiones tienen que compartir la misma instancia: la segunda debe registrar `consultas: 2`.",
+        "en": "Both requests must share the same instance: the second one has to log `consultas: 2`."
+      },
+      "successMessage": {
+        "es": "Una sola instancia para toda la aplicación.",
+        "en": "One single instance for the whole application."
+      },
+      "points": 30
+    }
+  ],
+  "steps": [
+    {
+      "id": "step-1-provocar-el-error",
+      "title": {
+        "es": "El error que verás mil veces",
+        "en": "The error you'll see a thousand times"
+      },
+      "body": {
+        "es": "Este controlador guarda los datos dentro. Funciona, y es exactamente lo que no se hace: el controlador es la capa de entrada —recibe, delega, devuelve— y todo lo demás vive en un **servicio**.\n\nUn servicio es una clase normal con `@Injectable()` encima. Y el controlador no lo construye: **lo pide**.\n\n```ts\nconstructor(private readonly facturas: FacturasService) {}\n```\n\nEsa línea hace dos cosas a la vez. `private readonly` es TypeScript: declara la propiedad y la asigna sin escribir `this.facturas = facturas`. Y el **tipo** del parámetro es lo que lee Nest: al compilar con decoradores, TypeScript deja apuntado en una tabla qué tipos pide cada constructor, y el contenedor construye por ahí. No hay cadenas mágicas ni configuración: el tipo *es* la referencia.\n\nMueve los datos y el método al servicio, decóralo, y pídelo desde el controlador. **Ejecuta sin tocar el módulo**: va a fallar, y el mensaje es de los que conviene reconocer de un vistazo. Léelo entero antes de seguir.",
+        "en": "This controller keeps the data inside it. It works, and it's exactly what you don't do: the controller is the entry layer — receive, delegate, return — and everything else lives in a **service**.\n\nA service is an ordinary class with `@Injectable()` on top. And the controller doesn't build it: **it asks for it**.\n\n```ts\nconstructor(private readonly facturas: FacturasService) {}\n```\n\nThat line does two things at once. `private readonly` is TypeScript: it declares the property and assigns it without writing `this.facturas = facturas`. And the parameter's **type** is what Nest reads: compiling with decorators, TypeScript notes in a table which types each constructor asks for, and the container builds from that. No magic strings, no configuration: the type *is* the reference.\n\nMove the data and the method into the service, decorate it, and ask for it from the controller. **Run it without touching the module**: it will fail, and the message is one worth recognising at a glance. Read it all before moving on."
+      },
+      "task": {
+        "es": "Pasa los datos al servicio con `@Injectable()`, pídelo en el constructor del controlador y ejecuta.",
+        "en": "Move the data into the service with `@Injectable()`, ask for it in the controller's constructor and run."
+      },
+      "focusFile": "usuarios.service.ts",
+      "ruleIds": [
+        "servicio-inyectable",
+        "controlador-pide",
+        "sin-new",
+        "error-de-dependencias"
+      ],
+      "xp": 35,
+      "hints": [
+        {
+          "id": "h-mover",
+          "tier": 1,
+          "text": {
+            "es": "En el servicio: `@Injectable()` + la clase con el array y el método `todos()`. En el controlador: importarlo, pedirlo por el constructor y llamar a `this.usuarios.todos()`.",
+            "en": "In the service: `@Injectable()` + the class with the array and the `todos()` method. In the controller: import it, ask for it in the constructor and call `this.usuarios.todos()`."
+          },
+          "xpPenalty": 8,
+          "autoOfferAfterSeconds": 80
+        }
+      ],
+      "solution": [
+        {
+          "path": "usuarios.service.ts",
+          "content": "import { Injectable } from '@nestjs/common';\n\n@Injectable()\nexport class UsuariosService {\n  private usuarios = [\n    { id: 1, nombre: 'Ana' },\n    { id: 2, nombre: 'Luis' },\n  ];\n\n  todos() {\n    return this.usuarios;\n  }\n}\n"
+        },
+        {
+          "path": "usuarios.controller.ts",
+          "content": "import { Controller, Get } from '@nestjs/common';\nimport { UsuariosService } from './usuarios.service';\n\n@Controller('usuarios')\nexport class UsuariosController {\n  constructor(private readonly usuarios: UsuariosService) {}\n\n  @Get()\n  todos() {\n    return this.usuarios.todos();\n  }\n}\n"
+        }
+      ]
+    },
+    {
+      "id": "step-2-declarar-el-proveedor",
+      "title": {
+        "es": "Leer el error de arriba abajo",
+        "en": "Reading the error top to bottom"
+      },
+      "body": {
+        "es": "Merece la pena desmontar el mensaje, porque lo dice todo:\n\n```\nNest can't resolve dependencies of the UsuariosController (?).\nPlease make sure that the argument UsuariosService at index [0]\nis available in the AppModule context.\n```\n\n- **`of the UsuariosController`** — quién no se pudo construir.\n- **`(?)`** — sus dependencias en orden; la interrogación marca **cuál** falta. Con varias, se ve enseguida si el problema es la primera o la tercera.\n- **`at index [0]`** — la posición en el constructor.\n- **`in the AppModule context`** — y aquí está la solución: el contenedor solo fabrica lo que su módulo declara en **`providers`**.\n\nPorque eso es un provider: una entrada en la lista de cosas que el contenedor sabe construir. Sin ella, la clase existe, compila y se importa perfectamente... y el contenedor no la conoce.\n\nUn matiz que ahorra sorpresas: **`imports` y `providers` no son lo mismo**. `imports` son otros módulos; `providers`, clases inyectables de este. Meter un servicio en `imports` es el segundo error más repetido, y el mensaje es igual de claro cuando se sabe leer.\n\n**Declara el servicio en `providers` y vuelve a ejecutar.**",
+        "en": "It's worth taking the message apart, because it says everything:\n\n```\nNest can't resolve dependencies of the UsuariosController (?).\nPlease make sure that the argument UsuariosService at index [0]\nis available in the AppModule context.\n```\n\n- **`of the UsuariosController`** — who couldn't be built.\n- **`(?)`** — its dependencies in order; the question mark marks **which** one is missing. With several, you see immediately whether the problem is the first or the third.\n- **`at index [0]`** — the position in the constructor.\n- **`in the AppModule context`** — and here's the fix: the container only builds what its module declares in **`providers`**.\n\nBecause that's what a provider is: an entry in the list of things the container knows how to build. Without it, the class exists, compiles and imports perfectly... and the container doesn't know it.\n\nOne nuance that saves surprises: **`imports` and `providers` are not the same**. `imports` are other modules; `providers` are injectable classes of this one. Putting a service in `imports` is the second most repeated mistake, and the message is just as clear once you can read it.\n\n**Declare the service in `providers` and run again.**"
+      },
+      "task": {
+        "es": "Añade el servicio a `providers` en `app.module.ts` y comprueba que vuelve a contestar 200.",
+        "en": "Add the service to `providers` in `app.module.ts` and check it answers 200 again."
+      },
+      "focusFile": "app.module.ts",
+      "ruleIds": [
+        "en-providers",
+        "responde-con-servicio",
+        "controlador-pide"
+      ],
+      "xp": 35,
+      "hints": [
+        {
+          "id": "h-providers",
+          "tier": 1,
+          "text": {
+            "es": "Impórtalo arriba y mételo entre los corchetes de `providers`.",
+            "en": "Import it at the top and put it inside the `providers` brackets."
+          },
+          "xpPenalty": 7,
+          "autoOfferAfterSeconds": 60
+        }
+      ],
+      "solution": [
+        {
+          "path": "usuarios.service.ts",
+          "content": "import { Injectable } from '@nestjs/common';\n\n@Injectable()\nexport class UsuariosService {\n  private usuarios = [\n    { id: 1, nombre: 'Ana' },\n    { id: 2, nombre: 'Luis' },\n  ];\n\n  todos() {\n    return this.usuarios;\n  }\n}\n"
+        },
+        {
+          "path": "usuarios.controller.ts",
+          "content": "import { Controller, Get } from '@nestjs/common';\nimport { UsuariosService } from './usuarios.service';\n\n@Controller('usuarios')\nexport class UsuariosController {\n  constructor(private readonly usuarios: UsuariosService) {}\n\n  @Get()\n  todos() {\n    return this.usuarios.todos();\n  }\n}\n"
+        },
+        {
+          "path": "app.module.ts",
+          "content": "import { Module } from '@nestjs/common';\nimport { UsuariosController } from './usuarios.controller';\nimport { UsuariosService } from './usuarios.service';\n\n@Module({\n  controllers: [UsuariosController],\n  providers: [UsuariosService],\n})\nexport class AppModule {}\n"
+        }
+      ]
+    },
+    {
+      "id": "step-3-grafo-y-singleton",
+      "title": {
+        "es": "Uno para toda la aplicación",
+        "en": "One for the whole application"
+      },
+      "body": {
+        "es": "Los proveedores también se inyectan entre ellos, y ahí es donde el contenedor deja de ser un lujo: tú declaras qué necesita cada clase, y él resuelve el grafo entero en orden.\n\n`auditoria.service.ts` ya está escrito y lleva la cuenta de lo que se le pide. Haz que `UsuariosService` lo use —mismo mecanismo: constructor y tipo— y declara los dos en `providers`.\n\nY ahora la parte que hay que mirar con atención. La lección lanza **dos peticiones**, y la salida dirá:\n\n```\n{\"event\":\"...\",\"consultas\":1}\n{\"event\":\"...\",\"consultas\":2}\n```\n\nEl contador no se reinicia porque **el contenedor crea una sola instancia de cada proveedor para toda la aplicación**. No es una optimización: es el ámbito por defecto de Nest, y tiene consecuencias que conviene tener claras desde el primer día.\n\n- Un servicio es **compartido**: guardar en él algo de una petición concreta —el usuario que la hizo, su idioma— es una fuga de datos entre peticiones esperando a pasar.\n- Una conexión a base de datos o una caché en un servicio se abre **una vez**, no una por petición. Eso es precisamente lo que se quiere.\n\nHay ámbitos por petición para cuando de verdad hacen falta, pero son la excepción, y cuestan: el contenedor tiene que reconstruir el árbol en cada llamada.",
+        "en": "Providers get injected into each other too, and that's where the container stops being a luxury: you declare what each class needs, and it resolves the whole graph in order.\n\n`auditoria.service.ts` is already written and keeps count of what it's asked. Make `UsuariosService` use it — same mechanism: constructor and type — and declare both in `providers`.\n\nAnd now the part to watch closely. The lesson fires **two requests**, and the output will say:\n\n```\n{\"event\":\"...\",\"consultas\":1}\n{\"event\":\"...\",\"consultas\":2}\n```\n\nThe counter doesn't reset because **the container creates a single instance of each provider for the whole application**. It isn't an optimisation: it's Nest's default scope, and it has consequences worth being clear about from day one.\n\n- A service is **shared**: storing something belonging to one request in it — who made it, their language — is a cross-request data leak waiting to happen.\n- A database connection or a cache inside a service is opened **once**, not once per request. Which is exactly what you want.\n\nThere are request-scoped providers for when you truly need them, but they're the exception, and they cost: the container has to rebuild the tree on every call."
+      },
+      "task": {
+        "es": "Inyecta `AuditoriaService` en `UsuariosService`, declara los dos proveedores y comprueba que el contador llega a 2.",
+        "en": "Inject `AuditoriaService` into `UsuariosService`, declare both providers and check the counter reaches 2."
+      },
+      "focusFile": "usuarios.service.ts",
+      "ruleIds": [
+        "servicio-usa-auditoria",
+        "auditoria-declarada",
+        "en-providers",
+        "misma-instancia",
+        "responde-con-servicio"
+      ],
+      "xp": 45,
+      "hints": [
+        {
+          "id": "h-cadena",
+          "tier": 1,
+          "text": {
+            "es": "En el servicio: `constructor(private readonly auditoria: AuditoriaService) {}` y una llamada a `this.auditoria.registrar('consulta_usuarios')` dentro de `todos()`.",
+            "en": "In the service: `constructor(private readonly auditoria: AuditoriaService) {}` and a call to `this.auditoria.registrar('consulta_usuarios')` inside `todos()`."
+          },
+          "xpPenalty": 10,
+          "autoOfferAfterSeconds": 90
+        }
+      ],
+      "solution": [
+        {
+          "path": "usuarios.service.ts",
+          "content": "import { Injectable } from '@nestjs/common';\nimport { AuditoriaService } from './auditoria.service';\n\n@Injectable()\nexport class UsuariosService {\n  constructor(private readonly auditoria: AuditoriaService) {}\n\n  private usuarios = [\n    { id: 1, nombre: 'Ana' },\n    { id: 2, nombre: 'Luis' },\n  ];\n\n  todos() {\n    this.auditoria.registrar('consulta_usuarios');\n    return this.usuarios;\n  }\n}\n"
+        },
+        {
+          "path": "usuarios.controller.ts",
+          "content": "import { Controller, Get } from '@nestjs/common';\nimport { UsuariosService } from './usuarios.service';\n\n@Controller('usuarios')\nexport class UsuariosController {\n  constructor(private readonly usuarios: UsuariosService) {}\n\n  @Get()\n  todos() {\n    return this.usuarios.todos();\n  }\n}\n"
+        },
+        {
+          "path": "app.module.ts",
+          "content": "import { Module } from '@nestjs/common';\nimport { AuditoriaService } from './auditoria.service';\nimport { UsuariosController } from './usuarios.controller';\nimport { UsuariosService } from './usuarios.service';\n\n@Module({\n  controllers: [UsuariosController],\n  providers: [UsuariosService, AuditoriaService],\n})\nexport class AppModule {}\n"
+        }
+      ],
+      "bestPractice": {
+        "es": "**Estándar de la industria:** el controlador no sabe de dónde salen los datos y el servicio no sabe que existe HTTP. Esa frontera es lo que hace que el servicio se pueda probar sin levantar nada y reutilizar desde una tarea programada o una cola.",
+        "en": "**Industry standard:** the controller doesn't know where the data comes from and the service doesn't know HTTP exists. That boundary is what makes the service testable without starting anything and reusable from a scheduled job or a queue."
+      }
+    }
+  ],
+  "drills": [],
+  "reward": {
+    "baseXp": 165,
+    "flawlessBonus": 60,
+    "noHintBonus": 30,
+    "comboMultiplierCap": 3,
+    "achievements": []
+  },
+  "solution": {
+    "files": [
+      {
+        "path": "usuarios.service.ts",
+        "content": "import { Injectable } from '@nestjs/common';\nimport { AuditoriaService } from './auditoria.service';\n\n@Injectable()\nexport class UsuariosService {\n  constructor(private readonly auditoria: AuditoriaService) {}\n\n  private usuarios = [\n    { id: 1, nombre: 'Ana' },\n    { id: 2, nombre: 'Luis' },\n  ];\n\n  todos() {\n    this.auditoria.registrar('consulta_usuarios');\n    return this.usuarios;\n  }\n}\n"
+      },
+      {
+        "path": "usuarios.controller.ts",
+        "content": "import { Controller, Get } from '@nestjs/common';\nimport { UsuariosService } from './usuarios.service';\n\n@Controller('usuarios')\nexport class UsuariosController {\n  constructor(private readonly usuarios: UsuariosService) {}\n\n  @Get()\n  todos() {\n    return this.usuarios.todos();\n  }\n}\n"
+      },
+      {
+        "path": "app.module.ts",
+        "content": "import { Module } from '@nestjs/common';\nimport { AuditoriaService } from './auditoria.service';\nimport { UsuariosController } from './usuarios.controller';\nimport { UsuariosService } from './usuarios.service';\n\n@Module({\n  controllers: [UsuariosController],\n  providers: [UsuariosService, AuditoriaService],\n})\nexport class AppModule {}\n"
+      }
+    ],
+    "explanation": {
+      "es": "En Nest una clase no construye sus dependencias: las pide por el constructor y el contenedor las provee, usando el **tipo** del parámetro como referencia — que es lo que TypeScript deja apuntado al compilar con decoradores. Para que el contenedor pueda fabricar algo, ese algo tiene que estar declarado en `providers` del módulo; si no, sale «Nest can't resolve dependencies», con la interrogación marcando cuál falta y el índice diciendo su posición. Y lo que fabrica es **una instancia por aplicación**: un servicio es estado compartido entre todas las peticiones.",
+      "en": "In Nest a class doesn't build its dependencies: it asks for them through the constructor and the container provides them, using the parameter's **type** as the reference — which is what TypeScript notes down when compiling with decorators. For the container to build something, that something must be declared in the module's `providers`; otherwise you get \"Nest can't resolve dependencies\", with the question mark marking which one is missing and the index giving its position. And what it builds is **one instance per application**: a service is state shared across every request."
+    }
+  }
+}

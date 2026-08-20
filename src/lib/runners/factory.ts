@@ -20,6 +20,7 @@ import { RunnerBootError } from './types';
  * | `php`          | 3         | ✅ implementado — intérprete en JS (ADR-20)|
  * | `ts`           | 3         | ✅ implementado — compilador del editor (ADR-25)|
  * | `node`         | 3         | ✅ simulado — módulos, fs y http (ADR-26)  |
+ * | `nest`         | 3         | ✅ simulado — contenedor y rutas (ADR-28)  |
  * | `webcontainer` | 1         | ⏸️ bloqueado por la licencia (ADR-07)      |
  * | `pyodide`      | 0         | ⏸️ sin contenido que lo use                |
  * | `remote`       | 0         | ⏸️ sin contenido que lo use                |
@@ -67,6 +68,11 @@ export async function createRunner(kind: RuntimeKind, mount: HTMLElement): Promi
     case 'node': {
       const { NodeRunner } = await import('./node');
       return new NodeRunner(mount);
+    }
+
+    case 'nest': {
+      const { NestRunner } = await import('./nest');
+      return new NestRunner(mount);
     }
 
     case 'webcontainer':

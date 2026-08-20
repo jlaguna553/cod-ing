@@ -51,8 +51,11 @@ export function surfacesFor(lesson: ClientLesson): Surfaces {
   if (kind === 'php') return { preview: false, console: true, terminal: false };
 
   // Node tampoco dibuja: su superficie es la consola, como en una terminal
-  // real cuando ejecutas `node main.js`.
-  if (kind === 'node') return { preview: false, console: true, terminal: false };
+  // real cuando ejecutas `node main.js`. Nest es Node con más ceremonia: lo
+  // que sale son los logs de arranque y la respuesta de cada petición.
+  if (kind === 'node' || kind === 'nest') {
+    return { preview: false, console: true, terminal: false };
+  }
 
   /*
    * En `cli-sim` la terminal ES la salida: no hay proceso aparte que imprima

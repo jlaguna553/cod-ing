@@ -383,6 +383,14 @@ export const NODE_PRELUDE = String.raw`
   global.__filename = 'main.js';
   global.__dirname = '/app';
   global.__NODE_FS__ = FICHEROS;
+
+  /*
+   * Los módulos del núcleo quedan a la vista para que otro prelude añada los
+   * suyos. Es lo que hace el de Nest (ADR-28): registra '@nestjs/common' aquí
+   * y así un 'import { Controller } from ...' se resuelve por el mismo
+   * require, con la misma caché, en vez de duplicar el cargador de módulos.
+   */
+  global.__NUCLEO__ = NUCLEO;
   global.__drenarTicks__ = drenarTicks;
 })(typeof window !== 'undefined' ? window : globalThis);
 `;

@@ -1,6 +1,7 @@
 import type { FileMap, LocalizedRuntimeSpec, RunResult, Runner } from './types';
 import { OutputEmitter, RunnerBootError } from './types';
-import { getMonaco } from './monaco-bridge';
+import { comoTsc, compilarTypeScript, configurarTypeScript } from './ts-compile';
+import type { TsDiagnostic } from './ts-compile';
 import { DomRunner } from './dom';
 
 /**
@@ -28,54 +29,7 @@ import { DomRunner } from './dom';
  * del DOM. No se reimplementa nada de eso: se delega.
  */
 
-/** Diagnóstico de TypeScript, en lo que necesita la lección. */
-export interface TsDiagnostic {
-  code: number;
-  message: string;
-  line: number;
-  file: string;
-}
-
-/** Forma mínima del worker de TypeScript de Monaco. */
-interface TsWorker {
-  getSyntacticDiagnostics(fileName: string): Promise<RawDiagnostic[]>;
-  getSemanticDiagnostics(fileName: string): Promise<RawDiagnostic[]>;
-  getEmitOutput(fileName: string): Promise<{ outputFiles: Array<{ name: string; text: string }> }>;
-}
-
-interface RawDiagnostic {
-  code: number;
-  start?: number;
-  messageText: string | { messageText: string };
-}
-
-/**
- * Pone el compilador en modo estricto.
- *
- * Monaco arranca su TypeScript **sin `strict`**, y eso no es un matiz: sin
- * `strictNullChecks` el estrechamiento sobre un campo booleano literal deja de
- * funcionar, y `if (!resultado.ok) resultado.error` —el patrón `Resultado<T>`
- * de manual— falla con «Property 'error' does not exist». Se descubrió con la
- * solución de una lección en la mano: la respuesta correcta no compilaba.
- *
- * Y es además lo que hay que enseñar: `strict: true` es el modo por defecto de
- * cualquier proyecto creado hoy, y la mitad de lo que hace útil al lenguaje
- * vive dentro de esa bandera.
- */
-function configurar(monaco: Awaited<ReturnType<typeof getMonaco>>) {
-  const ts = monaco.languages.typescript;
-
-  ts.typescriptDefaults.setCompilerOptions({
-    ...ts.typescriptDefaults.getCompilerOptions(),
-    strict: true,
-    target: ts.ScriptTarget.ES2020,
-    // Sin módulos: el JavaScript emitido se ejecuta en un `<script>` normal,
-    // y un `import` ahí sería un error en tiempo de ejecución.
-    module: ts.ModuleKind.None,
-    lib: ['es2020', 'dom'],
-    noEmitOnError: false,
-  });
-}
+export type { TsDiagnostic } from './ts-compile';
 
 export class TsRunner implements Runner {
   readonly kind = 'ts' as const;
@@ -99,8 +53,7 @@ export class TsRunner implements Runner {
     this.emitter.emit('system', 'Preparando TypeScript…\n');
 
     try {
-      const monaco = await getMonaco();
-      configurar(monaco);
+      await configurarTypeScript();
     } catch (cause) {
       throw new RunnerBootError('No se pudo preparar el compilador de TypeScript.', cause);
     }
@@ -135,9 +88,7 @@ export class TsRunner implements Runner {
        * `TS2322` no es ruido: es lo que se pega en un buscador cuando el
        * mensaje no basta, y aprender a leerlo forma parte de usar el lenguaje.
        */
-      const texto = diagnostics
-        .map((d) => `${d.file}(${d.line}): error TS${d.code}: ${d.message}`)
-        .join('\n');
+      const texto = comoTsc(diagnostics);
 
       this.emitter.emit('stderr', `${texto}\n`);
       this.emitter.emit(
@@ -181,69 +132,10 @@ export class TsRunner implements Runner {
     return this.dom.getDocument();
   }
 
-  /**
-   * Pide al servicio de lenguaje que revise y emita.
-   *
-   * Los modelos se **reutilizan** por su URI, que es la misma que usa el
-   * editor (`path={activeFile}`). Crear uno propio dejaba dos copias del
-   * mismo archivo en el ámbito global de TypeScript: cada función declarada
-   * dos veces, y el compilador contestando «No overload matches this call» a
-   * una función sin sobrecargas.
-   *
-   * Los archivos que el editor no tiene abiertos sí se crean aquí: si no, una
-   * lección de dos archivos se comprobaría a medias y el tipo importado del
-   * otro sería `any`.
-   */
+  /** Comprueba los tipos y emite el JavaScript de la entrada. */
   private async compilar(entrada: string) {
-    const monaco = await getMonaco();
-
-    for (const [ruta, contenido] of Object.entries(this.files)) {
-      if (!ruta.endsWith('.ts')) continue;
-
-      const uri = monaco.Uri.parse(ruta);
-      const modelo = monaco.editor.getModel(uri);
-      if (modelo) modelo.setValue(contenido);
-      else monaco.editor.createModel(contenido, 'typescript', uri);
-    }
-
-    const uriEntrada = monaco.Uri.parse(entrada);
-    const obtener = await monaco.languages.typescript.getTypeScriptWorker();
-
-    /*
-     * Se le pasan TODAS las URIs, no solo la de entrada.
-     *
-     * Esa llamada es la que sincroniza los modelos con el worker: pedir solo
-     * la entrada dejaría el resto con el contenido de la ejecución anterior,
-     * y los errores saldrían con números de línea de un archivo que ya no
-     * existe. Se vio en el primer intento: `main.ts(5)` en un archivo de
-     * cuatro líneas.
-     */
-    const uris = Object.keys(this.files)
-      .filter((ruta) => ruta.endsWith('.ts'))
-      .map((ruta) => monaco.Uri.parse(ruta));
-
-    const worker = (await obtener(...uris, uriEntrada)) as unknown as TsWorker;
-
-    const ruta = uriEntrada.toString();
-    const crudos = [
-      ...(await worker.getSyntacticDiagnostics(ruta)),
-      ...(await worker.getSemanticDiagnostics(ruta)),
-    ];
-
-    const modelo = monaco.editor.getModel(uriEntrada);
-    const diagnostics: TsDiagnostic[] = crudos.map((d) => ({
-      code: d.code,
-      message: typeof d.messageText === 'string' ? d.messageText : d.messageText.messageText,
-      line: modelo && d.start !== undefined ? modelo.getPositionAt(d.start).lineNumber : 0,
-      file: entrada,
-    }));
-
-    if (diagnostics.length > 0) return { diagnostics, javascript: '' };
-
-    const salida = await worker.getEmitOutput(ruta);
-    const javascript = salida.outputFiles.find((f) => f.name.endsWith('.js'))?.text ?? '';
-
-    return { diagnostics, javascript };
+    const { diagnostics, javascript } = await compilarTypeScript(this.files, [entrada]);
+    return { diagnostics, javascript: javascript[entrada] ?? '' };
   }
 
   private fallo(mensaje: string, startedAt: number): RunResult {

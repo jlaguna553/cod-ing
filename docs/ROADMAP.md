@@ -757,8 +757,26 @@ Los **ciclos sí son error**: un track sin punto de entrada no se puede empezar.
 
 Hoy no queda ninguna referencia rota: **toda lección citada como prerequisito existe**.
 
-**Sin empezar:** Next.js y NestJS. En Backend, Python sigue sin motor: ningún runner actual los ejecuta, y esa decisión sigue abierta —
-runtime remoto con base efímera por petición, o Pyodide para el caso de Python.
+**Sin empezar: solo Python.** Ningún runner actual lo ejecuta, y esa decisión sigue
+abierta — runtime remoto con base efímera por petición, o Pyodide.
+
+**Next.js ya tiene módulo y motor** (ADR-27): tres lecciones —el árbol de archivos como
+router, dónde corre cada componente y qué arrastra `'use client'`, y una carpeta entre
+corchetes que pasa de ƒ a ○— sobre un `next build` simulado que reproduce con su texto los
+errores que se lleva todo el que empieza. Trajo además una herramienta que faltaba desde la
+Fase 1: crear archivos desde la interfaz, sin la cual `allowCreate` no significaba nada.
+
+**NestJS ya tiene módulo y motor** (ADR-28): tres lecciones —decorar no basta si el módulo
+no lo declara, el error de dependencias provocado a propósito, y parámetros, cuerpo y
+excepciones— sobre un `@nestjs/common` de mentira montado encima del Node simulado. El
+compilador es el del editor, con decoradores y metadatos, así que la inyección por tipo es
+la de verdad: el contenedor lee lo que TypeScript emite.
+
+**Observabilidad ya es un capítulo, no solo instrumentación** (ADR-22 para lo nuestro):
+tres lecciones en DevOps —de la prosa al evento estructurado, el identificador que une las
+líneas de una misma petición, y por qué la media miente frente a los percentiles—.
+Corrigen por salida, y `tests/observabilidad-lecciones.test.ts` ejecuta cada solución
+publicada para que las cifras del enunciado sean las que salen de verdad.
 
 **Node ya tiene módulo y motor** (ADR-26): tres lecciones —módulos y caché, el orden del
 bucle de eventos, y un servidor HTTP sin framework— sobre un subconjunto simulado que se
@@ -775,9 +793,10 @@ PHP 5.x y una biblioteca estándar que se completa con un prelude escrito en PHP
 tres primeras lecciones se escriben dentro de él. El límite no es una promesa: cada
 solución se ejecuta con ese mismo motor en `tests/php-lessons.test.ts`.
 
-**Módulos cerrados: 6 de 8** (JavaScript, React, Vue, HTML, CSS y Docker). Todos con
+**Módulos cerrados: 6 de 11** (JavaScript, React, Vue, HTML, CSS y Docker). Todos con
 cadena completa desde su primera lección; React y Docker además con boss de entrevista.
-SQL queda abierto a propósito: tiene cadena completa y tema por delante.
+SQL, TypeScript, Node, PHP, Next, Nest y observabilidad quedan abiertos a propósito: tienen
+cadena completa y tema por delante.
 
 ---
 
