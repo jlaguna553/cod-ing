@@ -128,7 +128,22 @@ export async function escribirEnEditor(page: Page, text: string) {
  * equivocado y el paso no se superaba nunca.
  */
 export async function abrirArchivo(page: Page, path: string) {
-  const boton = page.getByRole('button', { name: path, exact: true });
+  /*
+   * El botón NO se busca por nombre exacto.
+   *
+   * En cuanto un archivo se toca, el árbol le añade la insignia «Modificado» y
+   * su nombre accesible pasa a ser «main.js Modificado». Con `exact: true` eso
+   * dejaba de encontrarse, y como esta función calla cuando no hay botón —las
+   * lecciones de un solo archivo no tienen árbol—, el cambio de archivo se
+   * saltaba **en silencio**: la solución del paso 3 se pegaba encima del
+   * archivo que estuviera abierto, y el fallo aparecía luego como «el paso no
+   * pasa con su propia solución».
+   *
+   * Se ancla al principio para no confundir `page.tsx` con `app/page.tsx`.
+   */
+  const boton = page.getByRole('button', {
+    name: new RegExp(`^${path.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\\s|$)`),
+  });
   if ((await boton.count()) === 0) return;
 
   await boton.first().click();

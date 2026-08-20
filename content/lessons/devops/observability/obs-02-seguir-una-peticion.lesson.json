@@ -1,0 +1,367 @@
+{
+  "$schema": "../../../schema/lesson.schema.json",
+  "schemaVersion": 1,
+  "id": "obs-02-seguir-una-peticion",
+  "track": "devops",
+  "module": "observability",
+  "order": 2,
+  "kind": "challenge",
+  "difficulty": "adept",
+  "estimatedMinutes": 26,
+  "title": {
+    "es": "Seguir una petición entera",
+    "en": "Following one whole request"
+  },
+  "summary": {
+    "es": "Diez líneas de log de cuatro peticiones distintas, mezcladas. El identificador que las vuelve a juntar, cómo se propaga hacia abajo y por qué al final conviene una línea ancha por petición.",
+    "en": "Ten log lines from four different requests, all mixed. The identifier that puts them back together, how it propagates downwards, and why one wide line per request wins in the end."
+  },
+  "concepts": [
+    "observabilidad",
+    "correlacion",
+    "request-id",
+    "trazas",
+    "http"
+  ],
+  "prerequisites": [
+    "obs-01-logs-estructurados",
+    "node-03-servidor-http"
+  ],
+  "runtime": {
+    "kind": "node",
+    "dependencies": {},
+    "timeoutMs": 10000,
+    "requests": [
+      {
+        "method": "GET",
+        "url": "/"
+      },
+      {
+        "method": "GET",
+        "url": "/api/pedidos"
+      },
+      {
+        "method": "GET",
+        "url": "/no-existe"
+      },
+      {
+        "method": "POST",
+        "url": "/api/pedidos"
+      }
+    ]
+  },
+  "workspace": {
+    "entry": "main.js",
+    "allowCreate": false,
+    "allowDelete": false,
+    "files": [
+      {
+        "path": "main.js",
+        "active": true,
+        "content": "// Un servidor que atiende cuatro peticiones y no cuenta ninguna.\n// Paso 1: una línea de log por petición, con lo que respondió.\n\nconst http = require('http');\nconst { buscarPedidos } = require('./pedidos');\nconst { log } = require('./log');\n\nfunction atender(peticion, respuesta) {\n  if (peticion.url === '/api/pedidos') {\n    const pedidos = buscarPedidos();\n    respuesta.end(JSON.stringify(pedidos));\n    return;\n  }\n\n  if (peticion.url === '/') {\n    respuesta.end('Hola');\n    return;\n  }\n\n  respuesta.statusCode = 404;\n  respuesta.end('No encontrado');\n}\n\nconst servidor = http.createServer(function (peticion, respuesta) {\n  atender(peticion, respuesta);\n});\n\nservidor.listen(3000);\n"
+      },
+      {
+        "path": "pedidos.js",
+        "content": "// La capa de datos. Deja su línea de log, pero no sabe nada de la\n// petición que la llamó: cuando hay tráfico, esa línea no se puede\n// atribuir a nadie.\n\nconst { log } = require('./log');\n\nfunction buscarPedidos() {\n  const pedidos = [{ id: 'A-1042' }, { id: 'A-1043' }];\n\n  log('info', 'consulta_pedidos', { encontrados: pedidos.length });\n\n  return pedidos;\n}\n\nmodule.exports = { buscarPedidos };\n"
+      },
+      {
+        "path": "log.js",
+        "readOnly": true,
+        "content": "// El logger de la lección anterior, tal cual. Aquí ya no se toca.\n\nfunction log(level, event, datos) {\n  console.log(\n    JSON.stringify({\n      ts: new Date().toISOString(),\n      service: 'pedidos-api',\n      level: level,\n      event: event,\n      ...datos,\n    }),\n  );\n}\n\nmodule.exports = { log };\n"
+      }
+    ]
+  },
+  "rules": [
+    {
+      "id": "evento-http",
+      "kind": "stdout-match",
+      "matches": "\"event\":\"http_request\"",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Cada petición atendida tiene que dejar un evento `http_request`.",
+        "en": "Every served request must leave an `http_request` event."
+      },
+      "successMessage": {
+        "es": "El servidor cuenta lo que hace.",
+        "en": "The server accounts for what it does."
+      },
+      "points": 20
+    },
+    {
+      "id": "registra-la-url",
+      "kind": "stdout-match",
+      "matches": "\"url\":\"/no-existe\"",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "En el evento tiene que ir la URL: sin ella no se sabe qué se pidió.",
+        "en": "The URL must be in the event: without it you don't know what was asked for."
+      },
+      "successMessage": {
+        "es": "Con la URL dentro.",
+        "en": "URL included."
+      },
+      "points": 15
+    },
+    {
+      "id": "registra-el-estado",
+      "kind": "stdout-match",
+      "matches": "\"status\":404",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Falta el código de respuesta. El 404 de `/no-existe` tiene que verse.",
+        "en": "The response code is missing. The 404 for `/no-existe` has to show up."
+      },
+      "successMessage": {
+        "es": "Se ve lo que se respondió.",
+        "en": "What was answered is visible."
+      },
+      "points": 25
+    },
+    {
+      "id": "id-en-la-peticion",
+      "kind": "stdout-match",
+      "matches": "\"requestId\":\"req-2\"",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Genera un identificador por petición —`req-1`, `req-2`…— y ponlo en el evento.",
+        "en": "Generate one identifier per request — `req-1`, `req-2`… — and put it in the event."
+      },
+      "successMessage": {
+        "es": "Cada petición tiene nombre.",
+        "en": "Each request has a name."
+      },
+      "points": 25
+    },
+    {
+      "id": "id-en-la-capa-de-datos",
+      "kind": "regex-must",
+      "file": "pedidos.js",
+      "pattern": "requestId",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "La capa de datos tiene que recibir el identificador y registrarlo: es lo que une sus líneas con las del servidor.",
+        "en": "The data layer must receive the identifier and log it: that's what ties its lines to the server's."
+      },
+      "successMessage": {
+        "es": "El identificador baja con la llamada.",
+        "en": "The identifier travels down with the call."
+      },
+      "points": 30
+    },
+    {
+      "id": "consulta-correlacionada",
+      "kind": "stdout-match",
+      "matches": "\"event\":\"consulta_pedidos\"[\\s\\S]*?\"requestId\":\"req-2\"|\"requestId\":\"req-2\"[\\s\\S]*?\"encontrados\":2",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "La línea de `consulta_pedidos` tiene que llevar el mismo identificador que la petición que la provocó.",
+        "en": "The `consulta_pedidos` line must carry the same identifier as the request that caused it."
+      },
+      "successMessage": {
+        "es": "Dos capas, una misma petición.",
+        "en": "Two layers, one same request."
+      },
+      "points": 25
+    },
+    {
+      "id": "mide-el-tiempo",
+      "kind": "regex-must",
+      "file": "main.js",
+      "pattern": "Date\\.now",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Mide cuánto tardó la petición con `Date.now()` antes y después de atenderla.",
+        "en": "Measure how long the request took with `Date.now()` before and after serving it."
+      },
+      "successMessage": {
+        "es": "Con reloj.",
+        "en": "With a clock."
+      },
+      "points": 20
+    },
+    {
+      "id": "duracion-registrada",
+      "kind": "stdout-match",
+      "matches": "\"ms\":\\d+",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "La duración va en el mismo evento, en milisegundos: `ms`.",
+        "en": "The duration goes in the same event, in milliseconds: `ms`."
+      },
+      "successMessage": {
+        "es": "Una línea que ya vale para medir.",
+        "en": "A line you can now measure with."
+      },
+      "points": 25
+    }
+  ],
+  "steps": [
+    {
+      "id": "step-1-una-linea-por-peticion",
+      "title": {
+        "es": "Lo que el servidor no cuenta",
+        "en": "What the server never says"
+      },
+      "body": {
+        "es": "Este servidor atiende cuatro peticiones y de tres de ellas no queda constancia ninguna. La única línea que se emite viene de la capa de datos, y dice `consulta_pedidos` sin decir de quién.\n\nLa primera regla de un servicio HTTP observable: **una petición atendida, un evento**. Y ese evento lleva siempre lo mismo, porque son las tres preguntas que se hacen siempre:\n\n- **qué se pidió** — método y URL,\n- **qué se respondió** — el código de estado,\n- y en breve, **cuánto costó**.\n\nHay un sitio natural para emitirlo: **fuera del enrutado**, envolviéndolo. Si cada rama de `atender` tuviera que acordarse de loggear, la rama que se añada mañana no lo hará. Aquí eso es literal: el manejador llama a `atender` y, cuando vuelve, la respuesta ya sabe con qué estado terminó.\n\n**Emite un evento `http_request` por petición, con método, URL y estado.**",
+        "en": "This server serves four requests and three of them leave no record at all. The only line emitted comes from the data layer, and it says `consulta_pedidos` without saying whose.\n\nFirst rule of an observable HTTP service: **one served request, one event**. And that event always carries the same things, because they're the three questions always asked:\n\n- **what was requested** — method and URL,\n- **what was answered** — the status code,\n- and shortly, **what it cost**.\n\nThere's a natural place to emit it: **outside the routing**, wrapping it. If every branch of `atender` had to remember to log, the branch added tomorrow won't. Here that's literal: the handler calls `atender` and, when it returns, the response already knows which status it ended with.\n\n**Emit one `http_request` event per request, with method, URL and status.**"
+      },
+      "task": {
+        "es": "En el manejador, tras llamar a `atender`, registra `http_request` con `method`, `url` y `status`.",
+        "en": "In the handler, after calling `atender`, log `http_request` with `method`, `url` and `status`."
+      },
+      "focusFile": "main.js",
+      "ruleIds": [
+        "evento-http",
+        "registra-la-url",
+        "registra-el-estado"
+      ],
+      "xp": 30,
+      "hints": [
+        {
+          "id": "h-envoltura",
+          "tier": 1,
+          "text": {
+            "es": "El estado está en `respuesta.statusCode` cuando `atender` ha vuelto: `log('info', 'http_request', { method: peticion.method, url: peticion.url, status: respuesta.statusCode })`.",
+            "en": "The status is in `respuesta.statusCode` once `atender` returns: `log('info', 'http_request', { method: peticion.method, url: peticion.url, status: respuesta.statusCode })`."
+          },
+          "xpPenalty": 6,
+          "autoOfferAfterSeconds": 70
+        }
+      ],
+      "solution": [
+        {
+          "path": "main.js",
+          "content": "const http = require('http');\nconst { buscarPedidos } = require('./pedidos');\nconst { log } = require('./log');\n\nfunction atender(peticion, respuesta) {\n  if (peticion.url === '/api/pedidos') {\n    const pedidos = buscarPedidos();\n    respuesta.end(JSON.stringify(pedidos));\n    return;\n  }\n\n  if (peticion.url === '/') {\n    respuesta.end('Hola');\n    return;\n  }\n\n  respuesta.statusCode = 404;\n  respuesta.end('No encontrado');\n}\n\nconst servidor = http.createServer(function (peticion, respuesta) {\n  atender(peticion, respuesta);\n\n  log('info', 'http_request', {\n    method: peticion.method,\n    url: peticion.url,\n    status: respuesta.statusCode,\n  });\n});\n\nservidor.listen(3000);\n"
+        }
+      ]
+    },
+    {
+      "id": "step-2-request-id",
+      "title": {
+        "es": "El hilo que las une",
+        "en": "The thread that ties them"
+      },
+      "body": {
+        "es": "Mira la salida ahora. Hay líneas de dos capas mezcladas y **nada dice cuál va con cuál**. Con cuatro peticiones se adivina por el orden; con cuarenta por segundo, no. Y es exactamente el momento en que se necesita: alguien dice «me ha dado un error a las 10:32» y hay que reconstruir qué pasó *en esa* petición, no en las mil de al lado.\n\nLa solución es un **identificador de correlación**: se genera al entrar la petición, se mete en todas las líneas que produzca, y baja con cada llamada a las capas de abajo.\n\n```js\natendidas += 1;\nconst id = 'peticion-' + atendidas;\n```\n\nEn producción se coge de una cabecera si viene —así el identificador cruza servicios y no solo capas— y se genera si no. Y suele salir también en la respuesta, para que quien reporta el fallo pueda pegarlo tal cual.\n\nLo que **no** funciona es una variable global «la petición actual»: con concurrencia, dos peticiones se pisan y las líneas acaban atribuidas a la equivocada. El identificador se pasa como argumento, y punto. (Node tiene `AsyncLocalStorage` justo para no tener que ir pasándolo a mano; el modelo mental es el mismo, y conviene entenderlo así primero.)\n\n**Genera `req-1`, `req-2`… por petición, ponlo en el evento HTTP y pásaselo a `buscarPedidos` para que su línea lo lleve también.**",
+        "en": "Look at the output now. There are lines from two layers mixed together and **nothing says which goes with which**. With four requests you can guess from the order; at forty a second, you can't. And that's exactly when you need it: somebody says \"I got an error at 10:32\" and you have to reconstruct what happened in *that* request, not the thousand next to it.\n\nThe answer is a **correlation identifier**: generated as the request comes in, put into every line it produces, and passed down with every call into the layers below.\n\n```js\natendidas += 1;\nconst id = 'peticion-' + atendidas;\n```\n\nIn production you take it from a header if one arrives — so the identifier crosses services and not just layers — and generate it otherwise. It usually goes out in the response too, so whoever reports the failure can paste it straight in.\n\nWhat **doesn't** work is a global \"current request\" variable: under concurrency two requests trample each other and lines end up attributed to the wrong one. The identifier is passed as an argument, full stop. (Node has `AsyncLocalStorage` precisely so you don't have to thread it by hand; the mental model is the same, and it's worth understanding this way first.)\n\n**Generate `req-1`, `req-2`… per request, put it in the HTTP event and pass it to `buscarPedidos` so its line carries it too.**"
+      },
+      "task": {
+        "es": "Añade `requestId` al evento HTTP y propágalo a `buscarPedidos`, que debe registrarlo en su línea.",
+        "en": "Add `requestId` to the HTTP event and propagate it to `buscarPedidos`, which must log it in its line."
+      },
+      "focusFile": "main.js",
+      "ruleIds": [
+        "id-en-la-peticion",
+        "id-en-la-capa-de-datos",
+        "consulta-correlacionada",
+        "evento-http"
+      ],
+      "xp": 40,
+      "hints": [
+        {
+          "id": "h-propagar",
+          "tier": 1,
+          "text": {
+            "es": "Un contador fuera del manejador, `'req-' + contador` dentro, y `atender(peticion, respuesta, requestId)` → `buscarPedidos(requestId)`.",
+            "en": "A counter outside the handler, `'req-' + counter` inside, and `atender(peticion, respuesta, requestId)` → `buscarPedidos(requestId)`."
+          },
+          "xpPenalty": 9,
+          "autoOfferAfterSeconds": 85
+        }
+      ],
+      "solution": [
+        {
+          "path": "main.js",
+          "content": "const http = require('http');\nconst { buscarPedidos } = require('./pedidos');\nconst { log } = require('./log');\n\nlet atendidas = 0;\n\nfunction atender(peticion, respuesta, requestId) {\n  if (peticion.url === '/api/pedidos') {\n    const pedidos = buscarPedidos(requestId);\n    respuesta.end(JSON.stringify(pedidos));\n    return;\n  }\n\n  if (peticion.url === '/') {\n    respuesta.end('Hola');\n    return;\n  }\n\n  respuesta.statusCode = 404;\n  respuesta.end('No encontrado');\n}\n\nconst servidor = http.createServer(function (peticion, respuesta) {\n  atendidas += 1;\n  const requestId = 'req-' + atendidas;\n\n  atender(peticion, respuesta, requestId);\n\n  log('info', 'http_request', {\n    requestId: requestId,\n    method: peticion.method,\n    url: peticion.url,\n    status: respuesta.statusCode,\n  });\n});\n\nservidor.listen(3000);\n"
+        },
+        {
+          "path": "pedidos.js",
+          "content": "const { log } = require('./log');\n\nfunction buscarPedidos(requestId) {\n  const pedidos = [{ id: 'A-1042' }, { id: 'A-1043' }];\n\n  log('info', 'consulta_pedidos', {\n    requestId: requestId,\n    encontrados: pedidos.length,\n  });\n\n  return pedidos;\n}\n\nmodule.exports = { buscarPedidos };\n"
+        }
+      ]
+    },
+    {
+      "id": "step-3-linea-ancha",
+      "title": {
+        "es": "Una línea ancha, no diez estrechas",
+        "en": "One wide line, not ten narrow ones"
+      },
+      "body": {
+        "es": "Falta la pregunta que más se hace de un servicio: **¿cuánto tardó?** Se mide donde se atiende, no dentro de cada rama:\n\n```js\nconst arranque = Date.now();\n// ...atender...\nlog('info', 'peticion', { duracion: Date.now() - arranque });\n```\n\n(Aquí saldrá `0` casi siempre: no hay red, ni disco, ni base de datos. La cifra es sintética; el sitio donde se toma, no.)\n\nY con esto se puede señalar el patrón entero. A esa línea final —una por petición, con todo lo que se sabe de ella— se le llama **línea de log canónica**, y merece la pena por un motivo muy concreto: **una línea ancha responde preguntas que diez estrechas no**. Con `url`, `status` y `ms` en el mismo evento, «¿qué rutas van lentas cuando devuelven 500?» es una consulta. Repartido en cinco líneas sueltas, es un trabajo de arqueología.\n\nLa regla práctica: **poco eventos, muchos campos**. Cada vez que estés a punto de emitir una segunda línea del mismo suceso, pregúntate si no era un campo más de la primera.\n\nY el puente hacia lo que viene después: esto es una traza pobre. Un identificador que se propaga, una duración, un nombre de operación — eso *es* un span. Cuando lo que hay debajo son cinco servicios en vez de dos capas, se saca de mano y se pone OpenTelemetry, pero el modelo mental ya lo tienes.\n\n**Mide la duración y métela en el mismo evento.**",
+        "en": "The most-asked question about a service is still missing: **how long did it take?** You measure it where you serve, not inside each branch:\n\n```js\nconst arranque = Date.now();\n// ...serve...\nlog('info', 'peticion', { duracion: Date.now() - arranque });\n```\n\n(Here it'll be `0` nearly always: no network, no disk, no database. The number is synthetic; where you take it isn't.)\n\nAnd with that the whole pattern can be named. That final line — one per request, with everything known about it — is called a **canonical log line**, and it's worth it for a very concrete reason: **one wide line answers questions ten narrow ones can't**. With `url`, `status` and `ms` in the same event, \"which routes are slow when they return 500?\" is one query. Spread across five loose lines, it's archaeology.\n\nThe practical rule: **few events, many fields**. Every time you're about to emit a second line about the same happening, ask whether it wasn't one more field on the first.\n\nAnd the bridge to what comes next: this is a poor man's trace. An identifier that propagates, a duration, an operation name — that *is* a span. Once what's underneath is five services instead of two layers, you drop the hand-rolled version and adopt OpenTelemetry, but the mental model is already yours.\n\n**Measure the duration and put it in the same event.**"
+      },
+      "task": {
+        "es": "Mide con `Date.now()` y añade `ms` al evento `http_request`.",
+        "en": "Measure with `Date.now()` and add `ms` to the `http_request` event."
+      },
+      "focusFile": "main.js",
+      "ruleIds": [
+        "mide-el-tiempo",
+        "duracion-registrada",
+        "id-en-la-peticion",
+        "registra-el-estado",
+        "id-en-la-capa-de-datos"
+      ],
+      "xp": 40,
+      "hints": [
+        {
+          "id": "h-medir",
+          "tier": 1,
+          "text": {
+            "es": "`const inicio = Date.now();` antes de `atender`, y `ms: Date.now() - inicio` dentro del objeto del log.",
+            "en": "`const inicio = Date.now();` before `atender`, and `ms: Date.now() - inicio` inside the log object."
+          },
+          "xpPenalty": 8,
+          "autoOfferAfterSeconds": 80
+        }
+      ],
+      "solution": [
+        {
+          "path": "main.js",
+          "content": "const http = require('http');\nconst { buscarPedidos } = require('./pedidos');\nconst { log } = require('./log');\n\nlet atendidas = 0;\n\nfunction atender(peticion, respuesta, requestId) {\n  if (peticion.url === '/api/pedidos') {\n    const pedidos = buscarPedidos(requestId);\n    respuesta.end(JSON.stringify(pedidos));\n    return;\n  }\n\n  if (peticion.url === '/') {\n    respuesta.end('Hola');\n    return;\n  }\n\n  respuesta.statusCode = 404;\n  respuesta.end('No encontrado');\n}\n\nconst servidor = http.createServer(function (peticion, respuesta) {\n  atendidas += 1;\n  const requestId = 'req-' + atendidas;\n  const inicio = Date.now();\n\n  atender(peticion, respuesta, requestId);\n\n  log(respuesta.statusCode >= 500 ? 'error' : 'info', 'http_request', {\n    requestId: requestId,\n    method: peticion.method,\n    url: peticion.url,\n    status: respuesta.statusCode,\n    ms: Date.now() - inicio,\n  });\n});\n\nservidor.listen(3000);\n"
+        },
+        {
+          "path": "pedidos.js",
+          "content": "const { log } = require('./log');\n\nfunction buscarPedidos(requestId) {\n  const pedidos = [{ id: 'A-1042' }, { id: 'A-1043' }];\n\n  log('info', 'consulta_pedidos', {\n    requestId: requestId,\n    encontrados: pedidos.length,\n  });\n\n  return pedidos;\n}\n\nmodule.exports = { buscarPedidos };\n"
+        }
+      ],
+      "bestPractice": {
+        "es": "**Estándar de la industria:** el identificador entra por cabecera (`traceparent` en OpenTelemetry, `X-Request-Id` en montones de sitios), se propaga a todo lo que se llame, y se devuelve al cliente. Y una línea canónica por petición con método, ruta, estado y duración — la ruta **con el patrón**, `/pedidos/:id`, no `/pedidos/1042`: si no, cada pedido es una serie distinta y no se puede agregar nada.",
+        "en": "**Industry standard:** the identifier comes in on a header (`traceparent` in OpenTelemetry, `X-Request-Id` in plenty of places), propagates to everything you call, and goes back to the client. Plus one canonical line per request with method, route, status and duration — the route **as a pattern**, `/pedidos/:id`, not `/pedidos/1042`: otherwise every order is its own series and nothing aggregates."
+      }
+    }
+  ],
+  "drills": [],
+  "reward": {
+    "baseXp": 160,
+    "flawlessBonus": 55,
+    "noHintBonus": 30,
+    "comboMultiplierCap": 3,
+    "achievements": []
+  },
+  "solution": {
+    "files": [
+      {
+        "path": "main.js",
+        "content": "const http = require('http');\nconst { buscarPedidos } = require('./pedidos');\nconst { log } = require('./log');\n\nlet atendidas = 0;\n\nfunction atender(peticion, respuesta, requestId) {\n  if (peticion.url === '/api/pedidos') {\n    const pedidos = buscarPedidos(requestId);\n    respuesta.end(JSON.stringify(pedidos));\n    return;\n  }\n\n  if (peticion.url === '/') {\n    respuesta.end('Hola');\n    return;\n  }\n\n  respuesta.statusCode = 404;\n  respuesta.end('No encontrado');\n}\n\nconst servidor = http.createServer(function (peticion, respuesta) {\n  atendidas += 1;\n  const requestId = 'req-' + atendidas;\n  const inicio = Date.now();\n\n  atender(peticion, respuesta, requestId);\n\n  log(respuesta.statusCode >= 500 ? 'error' : 'info', 'http_request', {\n    requestId: requestId,\n    method: peticion.method,\n    url: peticion.url,\n    status: respuesta.statusCode,\n    ms: Date.now() - inicio,\n  });\n});\n\nservidor.listen(3000);\n"
+      },
+      {
+        "path": "pedidos.js",
+        "content": "const { log } = require('./log');\n\nfunction buscarPedidos(requestId) {\n  const pedidos = [{ id: 'A-1042' }, { id: 'A-1043' }];\n\n  log('info', 'consulta_pedidos', {\n    requestId: requestId,\n    encontrados: pedidos.length,\n  });\n\n  return pedidos;\n}\n\nmodule.exports = { buscarPedidos };\n"
+      }
+    ],
+    "explanation": {
+      "es": "Un servicio observable emite un evento por petición atendida, con qué se pidió, qué se respondió y cuánto tardó. Y todas las líneas que produce esa petición —en la capa que sea— llevan el mismo identificador, generado al entrar y propagado hacia abajo como argumento, nunca en una variable global que la concurrencia estropea. Al final conviene concentrar todo lo que se sabe en una sola línea ancha: pocos eventos y muchos campos responden preguntas que muchas líneas estrechas no pueden.",
+      "en": "An observable service emits one event per served request, with what was asked, what was answered and how long it took. And every line that request produces — in whatever layer — carries the same identifier, generated on the way in and propagated downwards as an argument, never in a global variable that concurrency ruins. In the end it pays to concentrate everything known into one wide line: few events with many fields answer questions many narrow lines can't."
+    }
+  }
+}

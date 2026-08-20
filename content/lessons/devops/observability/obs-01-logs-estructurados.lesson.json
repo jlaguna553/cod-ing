@@ -1,0 +1,420 @@
+{
+  "$schema": "../../../schema/lesson.schema.json",
+  "schemaVersion": 1,
+  "id": "obs-01-logs-estructurados",
+  "track": "devops",
+  "module": "observability",
+  "order": 1,
+  "kind": "concept",
+  "difficulty": "apprentice",
+  "estimatedMinutes": 24,
+  "title": {
+    "es": "Logs que sirven a las tres de la mañana",
+    "en": "Logs that help at three in the morning"
+  },
+  "summary": {
+    "es": "«procesando pedido...» no le ha salvado la noche a nadie. Pasar de frases sueltas a eventos con estructura, con niveles de verdad y sin filtrar datos de nadie por el camino.",
+    "en": "\"processing order...\" has never saved anyone's night. Going from loose sentences to structured events, with real levels and without leaking anybody's data along the way."
+  },
+  "concepts": [
+    "observabilidad",
+    "logs",
+    "json",
+    "niveles",
+    "pii"
+  ],
+  "prerequisites": [
+    "node-01-modulos"
+  ],
+  "runtime": {
+    "kind": "node",
+    "dependencies": {},
+    "timeoutMs": 10000
+  },
+  "workspace": {
+    "entry": "main.js",
+    "allowCreate": false,
+    "allowDelete": false,
+    "files": [
+      {
+        "path": "main.js",
+        "active": true,
+        "content": "// Así está el servicio hoy. Cóbrale al primer pedido y mira la salida:\n// eso es todo lo que tendrás cuando algo falle un domingo por la noche.\n\nconst pedidos = require('./pedidos');\nconst { cobrar } = require('./cobros');\n\nconst pedido = pedidos[0];\n\nconsole.log('procesando pedido...');\ncobrar(pedido);\nconsole.log('ok');\n"
+      },
+      {
+        "path": "pedidos.js",
+        "readOnly": true,
+        "content": "// Los datos que llegan del checkout. No los toques: la lección es qué se\n// hace con ellos, y lo que NO se hace (mirar los dos últimos campos).\n\nmodule.exports = [\n  { id: 'A-1042', cliente: 'ana@ejemplo.com', total: 39.9, tarjeta: '4242 4242 4242 4242' },\n  { id: 'A-1043', cliente: 'luis@ejemplo.com', total: 149.5, tarjeta: '4000 0000 0000 0002' },\n];\n"
+      },
+      {
+        "path": "cobros.js",
+        "readOnly": true,
+        "content": "// La pasarela de pago, simulada. Por encima de 100 € pide autorización\n// manual, así que falla.\n\nfunction cobrar(pedido) {\n  if (pedido.total > 100) {\n    throw new Error('limite superado');\n  }\n  return { referencia: 'ref-' + pedido.id };\n}\n\nmodule.exports = { cobrar };\n"
+      },
+      {
+        "path": "log.js",
+        "content": "// Paso 3: aquí vive el logger. Ahora mismo no exporta nada.\n//\n// Tiene que poner el sello de tiempo y el nombre del servicio por su\n// cuenta: si eso depende de acordarse en cada llamada, alguien no se\n// acordará, y será justo la línea que hacía falta.\n"
+      }
+    ]
+  },
+  "rules": [
+    {
+      "id": "usa-json",
+      "kind": "regex-must",
+      "file": "main.js",
+      "pattern": "JSON\\.stringify",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "El log tiene que salir como JSON: `JSON.stringify({ ... })`.",
+        "en": "The log must come out as JSON: `JSON.stringify({ ... })`."
+      },
+      "successMessage": {
+        "es": "Una línea, un objeto.",
+        "en": "One line, one object."
+      },
+      "points": 20
+    },
+    {
+      "id": "evento-info",
+      "kind": "stdout-match",
+      "matches": "\"level\":\"info\"",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Falta el campo `level` con valor `info`: sin nivel no se puede filtrar nada.",
+        "en": "The `level` field with value `info` is missing: without a level you can't filter anything."
+      },
+      "successMessage": {
+        "es": "Nivel declarado.",
+        "en": "Level declared."
+      },
+      "points": 15
+    },
+    {
+      "id": "evento-nombrado",
+      "kind": "stdout-match",
+      "matches": "\"event\":\"pedido_cobrado\"",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Nombra el evento: `event: 'pedido_cobrado'`. Es lo que se busca y lo que se cuenta.",
+        "en": "Name the event: `event: 'pedido_cobrado'`. It's what you search for and what you count."
+      },
+      "successMessage": {
+        "es": "El evento tiene nombre.",
+        "en": "The event has a name."
+      },
+      "points": 20
+    },
+    {
+      "id": "con-contexto",
+      "kind": "stdout-match",
+      "matches": "\"pedidoId\":\"A-1042\"",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Incluye el identificador del pedido: un evento sin contexto no se puede seguir.",
+        "en": "Include the order's identifier: an event with no context can't be followed."
+      },
+      "successMessage": {
+        "es": "Con contexto.",
+        "en": "With context."
+      },
+      "points": 20
+    },
+    {
+      "id": "sin-datos-de-nadie",
+      "kind": "regex-forbid",
+      "file": "main.js",
+      "pattern": "tarjeta|cliente",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Ni la tarjeta ni el correo salen en un log. Un log se copia, se reenvía y se guarda meses.",
+        "en": "Neither the card nor the email goes into a log. A log gets copied, forwarded and kept for months."
+      },
+      "successMessage": {
+        "es": "Nada que no debiera estar ahí.",
+        "en": "Nothing that shouldn't be there."
+      },
+      "points": 25
+    },
+    {
+      "id": "nivel-error",
+      "kind": "stdout-match",
+      "matches": "\"level\":\"error\"",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "El cobro que falla se registra con `level: 'error'`, no con `info`.",
+        "en": "The failing charge is logged with `level: 'error'`, not `info`."
+      },
+      "successMessage": {
+        "es": "Un fallo, en su nivel.",
+        "en": "A failure, at its level."
+      },
+      "points": 20
+    },
+    {
+      "id": "motivo-del-fallo",
+      "kind": "stdout-match",
+      "matches": "limite superado",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Registra el motivo del fallo: `error.message` dice qué pasó.",
+        "en": "Log the reason for the failure: `error.message` says what happened."
+      },
+      "successMessage": {
+        "es": "Con el motivo dentro.",
+        "en": "With the reason inside."
+      },
+      "points": 20
+    },
+    {
+      "id": "sigue-vivo",
+      "kind": "stdout-match",
+      "matches": "\"event\":\"cobro_fallido\"",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "El pedido que falla necesita su propio evento: `cobro_fallido`.",
+        "en": "The failing order needs its own event: `cobro_fallido`."
+      },
+      "successMessage": {
+        "es": "Los dos pedidos dejan rastro.",
+        "en": "Both orders leave a trace."
+      },
+      "points": 15
+    },
+    {
+      "id": "logger-exportado",
+      "kind": "regex-must",
+      "file": "log.js",
+      "pattern": "module\\.exports",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "`log.js` tiene que exportar la función para que la use el servicio.",
+        "en": "`log.js` must export the function so the service can use it."
+      },
+      "successMessage": {
+        "es": "Logger disponible.",
+        "en": "Logger available."
+      },
+      "points": 15
+    },
+    {
+      "id": "sello-de-tiempo",
+      "kind": "regex-must",
+      "file": "log.js",
+      "pattern": "toISOString",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "El sello de tiempo lo pone el logger: `new Date().toISOString()`, en UTC y ordenable.",
+        "en": "The timestamp is the logger's job: `new Date().toISOString()`, UTC and sortable."
+      },
+      "successMessage": {
+        "es": "Cada línea sabe cuándo pasó.",
+        "en": "Every line knows when."
+      },
+      "points": 20
+    },
+    {
+      "id": "todo-por-el-logger",
+      "kind": "regex-forbid",
+      "file": "main.js",
+      "pattern": "console\\.log",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "En el servicio ya no queda ningún `console.log` suelto: todo pasa por `log()`.",
+        "en": "No loose `console.log` left in the service: everything goes through `log()`."
+      },
+      "successMessage": {
+        "es": "Un solo sitio por donde salen los logs.",
+        "en": "One single place logs come out of."
+      },
+      "points": 20
+    },
+    {
+      "id": "servicio-en-cada-linea",
+      "kind": "stdout-match",
+      "matches": "\"service\":\"cobros\"",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Cada línea lleva de qué servicio viene: en un sitio con veinte, sin eso no se sabe quién habla.",
+        "en": "Every line carries which service it came from: with twenty of them, otherwise you can't tell who's talking."
+      },
+      "successMessage": {
+        "es": "Con remite.",
+        "en": "With a return address."
+      },
+      "points": 15
+    }
+  ],
+  "steps": [
+    {
+      "id": "step-1-un-evento",
+      "title": {
+        "es": "De frase a evento",
+        "en": "From sentence to event"
+      },
+      "body": {
+        "es": "Ejecuta el código tal y como está. La salida es esta:\n\n```\nprocesando pedido...\nok\n```\n\nAhora imagina diez mil líneas así y una pregunta muy concreta: *¿se le cobró al pedido A-1042?* No hay forma de responderla. No porque falten logs — hay dos por pedido — sino porque **no son datos, son prosa**. No se pueden filtrar, ni contar, ni agrupar.\n\nUn log estructurado es otra cosa: **una línea, un objeto JSON**. Y lleva siempre tres piezas:\n\n- **`level`** — para qué urgencia es. Sirve para filtrar el ruido cuando hay prisa.\n- **`event`** — el nombre del suceso, en clave estable (`pedido_cobrado`), no una frase. Las frases cambian; las claves se cuentan.\n- **el contexto** — los identificadores por los que alguien va a buscar: el pedido, el usuario, la referencia.\n\nEl formato importa por un motivo práctico: cualquier herramienta que recoja logs sabe leer JSON, y a partir de ahí `pedidoId` es un campo por el que se busca, no un trozo de texto en medio de una frase.\n\n**Cambia los dos `console.log` por un único evento estructurado del cobro que salió bien.**",
+        "en": "Run the code as it stands. The output is this:\n\n```\nprocesando pedido...\nok\n```\n\nNow picture ten thousand lines like that and one very specific question: *did order A-1042 get charged?* There's no way to answer it. Not because logs are missing — there are two per order — but because **they're not data, they're prose**. They can't be filtered, counted or grouped.\n\nA structured log is a different thing: **one line, one JSON object**. And it always carries three pieces:\n\n- **`level`** — which urgency it's for. It's how you filter noise when you're in a hurry.\n- **`event`** — the name of what happened, as a stable key (`pedido_cobrado`), not a sentence. Sentences change; keys get counted.\n- **the context** — the identifiers somebody will search by: the order, the user, the reference.\n\nThe format matters for a practical reason: every log collector knows how to read JSON, and from there `pedidoId` is a field you search by, not a chunk of text inside a sentence.\n\n**Replace both `console.log` calls with a single structured event for the charge that succeeded.**"
+      },
+      "task": {
+        "es": "Imprime un solo JSON con `level`, `event`, `pedidoId`, `total` y la referencia del cobro.",
+        "en": "Print a single JSON with `level`, `event`, `pedidoId`, `total` and the charge's reference."
+      },
+      "focusFile": "main.js",
+      "ruleIds": [
+        "usa-json",
+        "evento-info",
+        "evento-nombrado",
+        "con-contexto",
+        "sin-datos-de-nadie"
+      ],
+      "xp": 30,
+      "hints": [
+        {
+          "id": "h-stringify",
+          "tier": 1,
+          "text": {
+            "es": "`console.log(JSON.stringify({ level: 'info', event: 'pedido_cobrado', ... }))`. Y guarda lo que devuelve `cobrar` para sacar la referencia.",
+            "en": "`console.log(JSON.stringify({ level: 'info', event: 'pedido_cobrado', ... }))`. And keep what `cobrar` returns so you can log the reference."
+          },
+          "xpPenalty": 6,
+          "autoOfferAfterSeconds": 70
+        }
+      ],
+      "solution": [
+        {
+          "path": "main.js",
+          "content": "const pedidos = require('./pedidos');\nconst { cobrar } = require('./cobros');\n\nconst pedido = pedidos[0];\nconst resultado = cobrar(pedido);\n\nconsole.log(\n  JSON.stringify({\n    level: 'info',\n    event: 'pedido_cobrado',\n    pedidoId: pedido.id,\n    total: pedido.total,\n    referencia: resultado.referencia,\n  }),\n);\n"
+        }
+      ]
+    },
+    {
+      "id": "step-2-niveles",
+      "title": {
+        "es": "Un fallo no es información",
+        "en": "A failure isn't information"
+      },
+      "body": {
+        "es": "El segundo pedido pasa de 100 € y la pasarela lo rechaza. Tal y como está el código, la excepción sube sin que nadie la recoja: el proceso se cae y el pedido que sí funcionó tampoco se llega a registrar.\n\nDos cosas se arreglan a la vez:\n\n**Los niveles.** No están para adornar, están para decidir a quién se despierta:\n\n| nivel | qué significa | quién lo mira |\n|---|---|---|\n| `debug` | detalle para reproducir un problema | tú, y solo mientras lo buscas |\n| `info` | algo normal que pasó | se cuenta, se agrega |\n| `warn` | algo raro de lo que el sistema se recuperó | se revisa al día siguiente |\n| `error` | algo que no se pudo hacer | alguien tiene que enterarse |\n\nEl error más común es que todo sea `info`: cuando todo tiene la misma urgencia, no hay ninguna.\n\n**El motivo.** Un `error` que solo dice «falló» no vale más que la prosa de antes. `error.message` es lo mínimo; el identificador de lo que se estaba haciendo, lo que lo hace útil.\n\n**Recorre los dos pedidos, captura el fallo y regístralo con su nivel y su motivo — sin que el bucle se detenga.**",
+        "en": "The second order is over €100 and the gateway rejects it. As the code stands, the exception travels up with nobody catching it: the process dies, and the order that did work never gets logged either.\n\nTwo things get fixed at once:\n\n**Levels.** They're not decoration, they're how you decide who gets woken up:\n\n| level | what it means | who looks at it |\n|---|---|---|\n| `debug` | detail for reproducing a problem | you, and only while hunting it |\n| `info` | something normal happened | it gets counted, aggregated |\n| `warn` | something odd the system recovered from | reviewed the next day |\n| `error` | something couldn't be done | somebody needs to know |\n\nThe commonest mistake is everything being `info`: when everything has the same urgency, nothing does.\n\n**The reason.** An `error` that only says \"failed\" is worth no more than the prose from before. `error.message` is the minimum; the identifier of what was being attempted is what makes it useful.\n\n**Loop over both orders, catch the failure and log it with its level and its reason — without stopping the loop.**"
+      },
+      "task": {
+        "es": "Recorre `pedidos`, y en el `catch` registra `cobro_fallido` con `level` de error y el motivo.",
+        "en": "Loop over `pedidos`, and in the `catch` log `cobro_fallido` with an error level and the reason."
+      },
+      "focusFile": "main.js",
+      "ruleIds": [
+        "nivel-error",
+        "motivo-del-fallo",
+        "sigue-vivo",
+        "evento-nombrado",
+        "sin-datos-de-nadie"
+      ],
+      "xp": 35,
+      "hints": [
+        {
+          "id": "h-try",
+          "tier": 1,
+          "text": {
+            "es": "`for (const pedido of pedidos) { try { ... } catch (error) { ... } }`, y dentro del `catch`, `motivo: error.message`.",
+            "en": "`for (const pedido of pedidos) { try { ... } catch (error) { ... } }`, and inside the `catch`, `motivo: error.message`."
+          },
+          "xpPenalty": 8,
+          "autoOfferAfterSeconds": 80
+        }
+      ],
+      "solution": [
+        {
+          "path": "main.js",
+          "content": "const pedidos = require('./pedidos');\nconst { cobrar } = require('./cobros');\n\nfor (const pedido of pedidos) {\n  try {\n    const resultado = cobrar(pedido);\n    console.log(\n      JSON.stringify({\n        level: 'info',\n        event: 'pedido_cobrado',\n        pedidoId: pedido.id,\n        total: pedido.total,\n        referencia: resultado.referencia,\n      }),\n    );\n  } catch (error) {\n    console.log(\n      JSON.stringify({\n        level: 'error',\n        event: 'cobro_fallido',\n        pedidoId: pedido.id,\n        motivo: error.message,\n      }),\n    );\n  }\n}\n"
+        }
+      ]
+    },
+    {
+      "id": "step-3-logger",
+      "title": {
+        "es": "Que no dependa de acordarse",
+        "en": "Not depending on remembering"
+      },
+      "body": {
+        "es": "Los dos eventos ya están bien, pero les falta lo que hace falta cuando los logs de veinte servicios caen en el mismo sitio:\n\n- **`ts`** — cuándo pasó, en ISO 8601 y en UTC. Ordenable como texto y sin discusiones de horario de verano.\n- **`service`** — quién lo dijo.\n\nY sobre todo: eso **no puede depender de que cada llamada se acuerde**. Si depende, alguien no se acordará, y será justo la línea que hacía falta a las tres de la mañana. Por eso el logger es una función y no una convención.\n\nEn `log.js`, una función `log(level, event, datos)` que ponga el sello y el servicio por su cuenta, esparza el contexto que le pasen y saque **una sola línea**. Luego el servicio la usa y no vuelve a tocar `console.log`.\n\nEsto es exactamente lo que hacen las bibliotecas serias del ecosistema (pino, winston, structlog): mismo objeto, mismos campos base, una línea JSON por evento. Escribirlo a mano una vez es lo que hace que después se entienda qué aporta cada una.\n\nUn apunte de los que se aprenden por las malas: **el logger nunca debe poder tumbar el servicio**. Si algo del contexto no se puede serializar y la línea explota, se ha cambiado un fallo que se veía por otro que no se ve.",
+        "en": "Both events are fine now, but they're missing what you need once twenty services' logs land in the same place:\n\n- **`ts`** — when it happened, ISO 8601, UTC. Sortable as text and with no daylight-saving arguments.\n- **`service`** — who said it.\n\nAnd above all: that **can't depend on each call remembering**. If it does, somebody won't, and it'll be exactly the line you needed at three in the morning. Which is why the logger is a function and not a convention.\n\nIn `log.js`, a `log(level, event, datos)` function that stamps the time and the service itself, spreads in whatever context it's given, and emits **a single line**. Then the service uses it and never touches `console.log` again.\n\nThis is precisely what the serious libraries in the ecosystem do (pino, winston, structlog): same object, same base fields, one JSON line per event. Writing it by hand once is what makes it clear afterwards what each of them adds.\n\nOne note of the learned-the-hard-way kind: **the logger must never be able to take the service down**. If some piece of context can't be serialised and the line blows up, you've traded a failure you could see for one you can't."
+      },
+      "task": {
+        "es": "Escribe `log(level, event, datos)` en `log.js` con `ts` y `service`, expórtala y úsala en los dos eventos.",
+        "en": "Write `log(level, event, datos)` in `log.js` with `ts` and `service`, export it and use it for both events."
+      },
+      "focusFile": "log.js",
+      "ruleIds": [
+        "logger-exportado",
+        "sello-de-tiempo",
+        "todo-por-el-logger",
+        "servicio-en-cada-linea",
+        "evento-nombrado",
+        "nivel-error"
+      ],
+      "xp": 45,
+      "hints": [
+        {
+          "id": "h-logger",
+          "tier": 1,
+          "text": {
+            "es": "El contexto se esparce dentro del objeto: `{ ts: ..., service: 'cobros', level, event, ...datos }`, y al final `module.exports = { log };`.",
+            "en": "The context spreads into the object: `{ ts: ..., service: 'cobros', level, event, ...datos }`, and at the end `module.exports = { log };`."
+          },
+          "xpPenalty": 10,
+          "autoOfferAfterSeconds": 90
+        }
+      ],
+      "solution": [
+        {
+          "path": "log.js",
+          "content": "function log(level, event, datos) {\n  console.log(\n    JSON.stringify({\n      ts: new Date().toISOString(),\n      service: 'cobros',\n      level: level,\n      event: event,\n      ...datos,\n    }),\n  );\n}\n\nmodule.exports = { log };\n"
+        },
+        {
+          "path": "main.js",
+          "content": "const pedidos = require('./pedidos');\nconst { cobrar } = require('./cobros');\nconst { log } = require('./log');\n\nfor (const pedido of pedidos) {\n  try {\n    const resultado = cobrar(pedido);\n    log('info', 'pedido_cobrado', {\n      pedidoId: pedido.id,\n      total: pedido.total,\n      referencia: resultado.referencia,\n    });\n  } catch (error) {\n    log('error', 'cobro_fallido', { pedidoId: pedido.id, motivo: error.message });\n  }\n}\n"
+        }
+      ],
+      "bestPractice": {
+        "es": "**Estándar de la industria:** logs en JSON, un evento por línea, a la salida estándar. Nada de rotar archivos ni de escribir en disco desde la aplicación: eso lo hace la plataforma. Y una lista corta de campos base —`ts`, `level`, `service`, `event`— que ninguna llamada tiene que recordar.",
+        "en": "**Industry standard:** JSON logs, one event per line, to standard output. No file rotation, no writing to disk from the application: the platform does that. Plus a short list of base fields — `ts`, `level`, `service`, `event` — that no call site has to remember."
+      }
+    }
+  ],
+  "drills": [],
+  "reward": {
+    "baseXp": 140,
+    "flawlessBonus": 50,
+    "noHintBonus": 25,
+    "comboMultiplierCap": 3,
+    "achievements": []
+  },
+  "solution": {
+    "files": [
+      {
+        "path": "log.js",
+        "content": "function log(level, event, datos) {\n  console.log(\n    JSON.stringify({\n      ts: new Date().toISOString(),\n      service: 'cobros',\n      level: level,\n      event: event,\n      ...datos,\n    }),\n  );\n}\n\nmodule.exports = { log };\n"
+      },
+      {
+        "path": "main.js",
+        "content": "const pedidos = require('./pedidos');\nconst { cobrar } = require('./cobros');\nconst { log } = require('./log');\n\nfor (const pedido of pedidos) {\n  try {\n    const resultado = cobrar(pedido);\n    log('info', 'pedido_cobrado', {\n      pedidoId: pedido.id,\n      total: pedido.total,\n      referencia: resultado.referencia,\n    });\n  } catch (error) {\n    log('error', 'cobro_fallido', { pedidoId: pedido.id, motivo: error.message });\n  }\n}\n"
+      }
+    ],
+    "explanation": {
+      "es": "Un log deja de ser prosa cuando es un objeto: nivel para filtrar, nombre de evento estable para contar, e identificadores para buscar. Los niveles solo valen si se usan de verdad —si todo es `info`, nada es urgente—, y los campos que tienen que estar siempre los pone el logger, no la persona que escribe la llamada. Lo que nunca entra es lo que no se puede desandar: tarjetas, correos, tokens. Un log se copia, se reenvía y se guarda meses.",
+      "en": "A log stops being prose once it's an object: a level to filter by, a stable event name to count, identifiers to search by. Levels only work if they're used for real — if everything is `info`, nothing is urgent — and the fields that must always be there are the logger's job, not the caller's. What never goes in is what can't be undone: cards, emails, tokens. A log gets copied, forwarded and kept for months."
+    }
+  }
+}

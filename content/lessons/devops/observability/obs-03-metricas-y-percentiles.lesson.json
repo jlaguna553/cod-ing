@@ -1,0 +1,403 @@
+{
+  "$schema": "../../../schema/lesson.schema.json",
+  "schemaVersion": 1,
+  "id": "obs-03-metricas-y-percentiles",
+  "track": "devops",
+  "module": "observability",
+  "order": 3,
+  "kind": "challenge",
+  "difficulty": "adept",
+  "estimatedMinutes": 28,
+  "title": {
+    "es": "La media miente",
+    "en": "The average lies"
+  },
+  "summary": {
+    "es": "Contar peticiones y errores, calcular percentiles a mano, y ver por qué un servicio con 143 ms de media puede estar dejando tirado a uno de cada veinte usuarios.",
+    "en": "Counting requests and errors, computing percentiles by hand, and seeing why a service averaging 143 ms can be failing one user in twenty."
+  },
+  "concepts": [
+    "observabilidad",
+    "metricas",
+    "percentiles",
+    "slo",
+    "alertas"
+  ],
+  "prerequisites": [
+    "obs-02-seguir-una-peticion"
+  ],
+  "runtime": {
+    "kind": "node",
+    "dependencies": {},
+    "timeoutMs": 10000
+  },
+  "workspace": {
+    "entry": "main.js",
+    "allowCreate": false,
+    "allowDelete": false,
+    "files": [
+      {
+        "path": "main.js",
+        "active": true,
+        "content": "// Cincuenta peticiones y ninguna respuesta a «¿va bien el servicio?».\n// Paso 1: cuenta cuántas fueron y cuántas fallaron.\n\nconst peticiones = require('./peticiones');\nconst { log } = require('./log');\n\nlog('info', 'arranque', { peticiones: peticiones.length });\n"
+      },
+      {
+        "path": "peticiones.js",
+        "readOnly": true,
+        "content": "// Una hora de tráfico, tal y como salió de los logs: cincuenta peticiones\n// con su ruta, lo que tardaron y con qué respondieron.\n\nmodule.exports = [\n  { ruta: '/api/clientes', ms: 66, status: 200 },\n  { ruta: '/api/pedidos', ms: 63, status: 200 },\n  { ruta: '/api/clientes', ms: 43, status: 200 },\n  { ruta: '/api/pedidos', ms: 64, status: 200 },\n  { ruta: '/api/clientes', ms: 63, status: 200 },\n  { ruta: '/api/clientes', ms: 37, status: 200 },\n  { ruta: '/api/pedidos/:id', ms: 130, status: 404 },\n  { ruta: '/api/clientes', ms: 480, status: 200 },\n  { ruta: '/api/pedidos', ms: 35, status: 200 },\n  { ruta: '/api/pedidos', ms: 45, status: 200 },\n  { ruta: '/api/clientes', ms: 49, status: 200 },\n  { ruta: '/api/pedidos', ms: 64, status: 200 },\n  { ruta: '/api/pedidos', ms: 64, status: 200 },\n  { ruta: '/api/clientes', ms: 37, status: 200 },\n  { ruta: '/api/pedidos/:id', ms: 30, status: 200 },\n  { ruta: '/', ms: 51, status: 200 },\n  { ruta: '/api/pedidos/:id', ms: 33, status: 200 },\n  { ruta: '/', ms: 38, status: 200 },\n  { ruta: '/api/pedidos/:id', ms: 46, status: 200 },\n  { ruta: '/api/pedidos/:id', ms: 30, status: 200 },\n  { ruta: '/api/pedidos', ms: 32, status: 200 },\n  { ruta: '/', ms: 37, status: 200 },\n  { ruta: '/', ms: 65, status: 200 },\n  { ruta: '/', ms: 31, status: 200 },\n  { ruta: '/', ms: 46, status: 200 },\n  { ruta: '/api/pedidos/:id', ms: 59, status: 200 },\n  { ruta: '/api/pedidos', ms: 1200, status: 500 },\n  { ruta: '/', ms: 31, status: 200 },\n  { ruta: '/api/pedidos', ms: 63, status: 200 },\n  { ruta: '/api/pedidos', ms: 55, status: 200 },\n  { ruta: '/api/pedidos', ms: 1900, status: 500 },\n  { ruta: '/', ms: 49, status: 200 },\n  { ruta: '/', ms: 32, status: 200 },\n  { ruta: '/api/pedidos', ms: 42, status: 200 },\n  { ruta: '/api/pedidos', ms: 70, status: 200 },\n  { ruta: '/api/pedidos/:id', ms: 33, status: 200 },\n  { ruta: '/', ms: 69, status: 200 },\n  { ruta: '/api/pedidos', ms: 67, status: 200 },\n  { ruta: '/', ms: 48, status: 200 },\n  { ruta: '/api/pedidos/:id', ms: 34, status: 200 },\n  { ruta: '/api/pedidos/:id', ms: 72, status: 200 },\n  { ruta: '/', ms: 54, status: 200 },\n  { ruta: '/', ms: 65, status: 200 },\n  { ruta: '/api/pedidos/:id', ms: 51, status: 200 },\n  { ruta: '/api/clientes', ms: 950, status: 500 },\n  { ruta: '/api/pedidos', ms: 51, status: 200 },\n  { ruta: '/api/pedidos', ms: 60, status: 200 },\n  { ruta: '/', ms: 32, status: 200 },\n  { ruta: '/api/pedidos', ms: 310, status: 200 },\n  { ruta: '/api/clientes', ms: 61, status: 200 },\n];\n"
+      },
+      {
+        "path": "log.js",
+        "readOnly": true,
+        "content": "// El mismo logger de siempre.\n\nfunction log(level, event, datos) {\n  console.log(\n    JSON.stringify({\n      ts: new Date().toISOString(),\n      service: 'pedidos-api',\n      level: level,\n      event: event,\n      ...datos,\n    }),\n  );\n}\n\nmodule.exports = { log };\n"
+      }
+    ]
+  },
+  "rules": [
+    {
+      "id": "cuenta-total",
+      "kind": "stdout-match",
+      "matches": "\"total\":50",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Cuenta cuántas peticiones hubo en total.",
+        "en": "Count how many requests there were in total."
+      },
+      "successMessage": {
+        "es": "Contadas.",
+        "en": "Counted."
+      },
+      "points": 15
+    },
+    {
+      "id": "cuenta-errores",
+      "kind": "stdout-match",
+      "matches": "\"errores\":3",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Errores del servidor son los 5xx. El 404 lo provocó quien pidió una ruta que no existe: no es una caída tuya.",
+        "en": "Server errors are the 5xx. The 404 was caused by whoever asked for a route that doesn't exist: it isn't your outage."
+      },
+      "successMessage": {
+        "es": "Los fallos que son tuyos, contados aparte.",
+        "en": "The failures that are yours, counted apart."
+      },
+      "points": 25
+    },
+    {
+      "id": "tasa-de-error",
+      "kind": "stdout-match",
+      "matches": "\"porcentajeError\":6",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Publica también la proporción: «3 errores» no significa nada sin saber sobre cuántas peticiones.",
+        "en": "Publish the ratio too: \"3 errors\" means nothing without knowing out of how many."
+      },
+      "successMessage": {
+        "es": "Una cifra que sí se puede comparar.",
+        "en": "A number you can actually compare."
+      },
+      "points": 20
+    },
+    {
+      "id": "hay-media",
+      "kind": "stdout-match",
+      "matches": "\"media\":143",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Calcula la media de las duraciones y redondéala con `Math.round`.",
+        "en": "Compute the mean of the durations and round it with `Math.round`."
+      },
+      "successMessage": {
+        "es": "La media, para poder desconfiar de ella.",
+        "en": "The mean, so you can distrust it."
+      },
+      "points": 15
+    },
+    {
+      "id": "orden-numerico",
+      "kind": "regex-must",
+      "file": "main.js",
+      "pattern": "sort\\s*\\(\\s*\\(?\\s*\\w+\\s*,\\s*\\w+",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "`sort()` a secas ordena como texto: 1000 va antes que 9. Pásale un comparador numérico.",
+        "en": "A bare `sort()` sorts as text: 1000 comes before 9. Give it a numeric comparator."
+      },
+      "successMessage": {
+        "es": "Ordenado por valor, no por letra.",
+        "en": "Sorted by value, not by letter."
+      },
+      "points": 20
+    },
+    {
+      "id": "percentil-50",
+      "kind": "stdout-match",
+      "matches": "\"p50\":51",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "El p50 es el valor que deja la mitad por debajo. Con la lista ordenada, es el de la posición `ceil(0.5 * n) - 1`.",
+        "en": "The p50 is the value leaving half below. On the sorted list, it's at index `ceil(0.5 * n) - 1`."
+      },
+      "successMessage": {
+        "es": "La mitad de las peticiones va rapidísima.",
+        "en": "Half the requests are extremely fast."
+      },
+      "points": 25
+    },
+    {
+      "id": "percentil-95",
+      "kind": "stdout-match",
+      "matches": "\"p95\":950",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "El p95 es el mismo cálculo con 95: lo que sufre una de cada veinte peticiones.",
+        "en": "The p95 is the same computation with 95: what one request in twenty suffers."
+      },
+      "successMessage": {
+        "es": "Ahí está la verdad del servicio.",
+        "en": "There's the truth about the service."
+      },
+      "points": 25
+    },
+    {
+      "id": "percentil-99",
+      "kind": "stdout-match",
+      "matches": "\"p99\":1900",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Y el p99: la peor experiencia que se está sirviendo de forma habitual.",
+        "en": "And the p99: the worst experience being served routinely."
+      },
+      "successMessage": {
+        "es": "La cola larga, medida.",
+        "en": "The long tail, measured."
+      },
+      "points": 20
+    },
+    {
+      "id": "alerta-slo",
+      "kind": "stdout-match",
+      "matches": "\"event\":\"slo_incumplido\"",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Compara el p95 con el presupuesto y emite `slo_incumplido` cuando se pase.",
+        "en": "Compare the p95 with the budget and emit `slo_incumplido` when it's exceeded."
+      },
+      "successMessage": {
+        "es": "El objetivo, comprobado y no supuesto.",
+        "en": "The objective, checked and not assumed."
+      },
+      "points": 25
+    },
+    {
+      "id": "alerta-con-nivel",
+      "kind": "stdout-match",
+      "matches": "\"exceso\":650",
+      "phase": "run",
+      "severity": "error",
+      "message": {
+        "es": "Di **por cuánto** se incumple: `p95 - presupuesto`. Una alerta sin magnitud no ayuda a priorizar.",
+        "en": "Say **by how much** it's breached: `p95 - budget`. An alert without magnitude doesn't help you prioritise."
+      },
+      "successMessage": {
+        "es": "Con la magnitud del problema.",
+        "en": "With the size of the problem."
+      },
+      "points": 20
+    },
+    {
+      "id": "nombra-la-alerta",
+      "kind": "regex-must",
+      "file": "main.js",
+      "pattern": "slo_incumplido",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "El evento de incumplimiento se llama `slo_incumplido`.",
+        "en": "The breach event is called `slo_incumplido`."
+      },
+      "successMessage": {
+        "es": "Con nombre estable.",
+        "en": "With a stable name."
+      },
+      "points": 10
+    },
+    {
+      "id": "presupuesto-declarado",
+      "kind": "regex-must",
+      "file": "main.js",
+      "pattern": "300",
+      "phase": "submit",
+      "severity": "error",
+      "message": {
+        "es": "Declara el presupuesto —300 ms— en una constante, no escondido en un `if`.",
+        "en": "Declare the budget — 300 ms — in a constant, not buried inside an `if`."
+      },
+      "successMessage": {
+        "es": "El objetivo, escrito.",
+        "en": "The objective, written down."
+      },
+      "points": 10
+    }
+  ],
+  "steps": [
+    {
+      "id": "step-1-contar",
+      "title": {
+        "es": "Contar antes que mirar",
+        "en": "Counting before looking"
+      },
+      "body": {
+        "es": "Con los logs de la lección anterior se puede reconstruir *una* petición. Lo que no se puede es responder «¿va bien el servicio?» — para eso hay que **agregar**.\n\nY esa es la diferencia real entre las dos cosas, que no es de formato:\n\n| | logs | métricas |\n|---|---|---|\n| qué son | un registro por suceso | números agregados en el tiempo |\n| cuánto ocupan | crecen con el tráfico | **coste constante** |\n| para qué | reconstruir un caso | ver tendencias y disparar alertas |\n\nUn servicio con diez mil peticiones por minuto genera diez mil líneas por minuto; sus métricas siguen siendo cuatro números. Por eso existen las dos cosas y no una.\n\nLas que se miran primero en cualquier servicio HTTP se conocen como **RED**: *Rate* (cuántas peticiones), *Errors* (cuántas fallaron), *Duration* (cuánto tardaron). Este paso son las dos primeras.\n\nUn detalle que decide bien: **un 404 no es un error tuyo**. Alguien pidió algo que no existe y el servicio contestó correctamente que no existe. Si lo cuentas como fallo, tu tasa de error sube con cada escáner que pasa por internet y la alerta acaba silenciada. Los 5xx sí: son tuyos.\n\n**Publica `total`, `errores` y el porcentaje de error.**",
+        "en": "With the previous lesson's logs you can reconstruct *one* request. What you can't do is answer \"is the service healthy?\" — for that you have to **aggregate**.\n\nAnd that's the real difference between the two, which isn't about format:\n\n| | logs | metrics |\n|---|---|---|\n| what they are | one record per happening | numbers aggregated over time |\n| what they cost | grow with traffic | **constant cost** |\n| what for | reconstructing one case | seeing trends and firing alerts |\n\nA service doing ten thousand requests a minute produces ten thousand lines a minute; its metrics are still four numbers. That's why both exist and not one.\n\nThe ones you look at first on any HTTP service are known as **RED**: *Rate* (how many requests), *Errors* (how many failed), *Duration* (how long they took). This step is the first two.\n\nOne detail that decides well: **a 404 is not your error**. Somebody asked for something that doesn't exist and the service correctly said so. Count it as a failure and your error rate climbs with every scanner crawling the internet, until the alert gets muted. The 5xx ones do count: those are yours.\n\n**Publish `total`, `errores` and the error percentage.**"
+      },
+      "task": {
+        "es": "Cuenta las peticiones y los fallos del servidor, y publica también el porcentaje redondeado.",
+        "en": "Count the requests and the server failures, and publish the rounded percentage too."
+      },
+      "focusFile": "main.js",
+      "ruleIds": [
+        "cuenta-total",
+        "cuenta-errores",
+        "tasa-de-error"
+      ],
+      "xp": 30,
+      "hints": [
+        {
+          "id": "h-filtrar",
+          "tier": 1,
+          "text": {
+            "es": "`peticiones.filter((p) => p.status >= 500).length`, y el porcentaje con `Math.round((errores / total) * 100)`.",
+            "en": "`peticiones.filter((p) => p.status >= 500).length`, and the percentage with `Math.round((errores / total) * 100)`."
+          },
+          "xpPenalty": 6,
+          "autoOfferAfterSeconds": 70
+        }
+      ],
+      "solution": [
+        {
+          "path": "main.js",
+          "content": "const peticiones = require('./peticiones');\nconst { log } = require('./log');\n\nconst total = peticiones.length;\nconst errores = peticiones.filter((p) => p.status >= 500).length;\n\nlog('info', 'metricas_peticiones', {\n  total: total,\n  errores: errores,\n  porcentajeError: Math.round((errores / total) * 100),\n});\n"
+        }
+      ]
+    },
+    {
+      "id": "step-2-percentiles",
+      "title": {
+        "es": "El número que no describe a nadie",
+        "en": "The number that describes nobody"
+      },
+      "body": {
+        "es": "Ahora la *D* de RED: la duración. Y aquí es donde se cuela el error más caro de la observabilidad, que es medir la latencia con **la media**.\n\nLa media de estas cincuenta peticiones son 143 ms. Suena bien. Y no describe a **nadie**: la mitad de las peticiones tardan 51 ms o menos, y hay una que tarda 1,9 segundos. La media es un punto intermedio en el que no vive ningún usuario — un dato que se calcula fácil y que oculta exactamente lo que hay que ver.\n\nLo que sí describe a alguien es un **percentil**. El p95 es el valor que deja al 95 % por debajo: si el p95 son 950 ms, **una de cada veinte peticiones tarda más de eso**. Eso ya es una frase sobre personas, y se puede comparar con un objetivo.\n\nCalcularlo es más simple de lo que parece: se ordena y se coge la posición correspondiente.\n\n```js\nconst lista = [...datos].sort((x, y) => x - y);\nconst posicion = Math.ceil((porcentaje / 100) * lista.length) - 1;\n```\n\nDos cosas que muerden aquí:\n\n- **`sort()` sin comparador ordena como texto.** `[9, 100, 20].sort()` da `[100, 20, 9]`. En un cálculo de percentiles eso no revienta: devuelve un número creíble y equivocado, que es peor.\n- **Se copia antes de ordenar.** `sort` ordena en el sitio, y una función de medir que te reordena los datos de entrada es una sorpresa desagradable esperando a pasar.\n\n**Calcula la media, el p50, el p95 y el p99, y publícalos juntos.**",
+        "en": "Now the *D* in RED: duration. And this is where observability's most expensive mistake sneaks in — measuring latency with **the average**.\n\nThe average of these fifty requests is 143 ms. Sounds fine. And it describes **nobody**: half the requests take 51 ms or less, and one takes 1.9 seconds. The average is a midpoint no user actually lives at — a number that's easy to compute and hides exactly what you need to see.\n\nWhat does describe somebody is a **percentile**. The p95 is the value leaving 95 % below it: if the p95 is 950 ms, **one request in twenty takes longer than that**. That's a sentence about people, and it can be compared against an objective.\n\nComputing it is simpler than it looks: sort, and take the matching position.\n\n```js\nconst lista = [...datos].sort((x, y) => x - y);\nconst posicion = Math.ceil((porcentaje / 100) * lista.length) - 1;\n```\n\nTwo things bite here:\n\n- **`sort()` with no comparator sorts as text.** `[9, 100, 20].sort()` gives `[100, 20, 9]`. In a percentile calculation that doesn't blow up: it returns a believable, wrong number, which is worse.\n- **Copy before sorting.** `sort` sorts in place, and a measuring function that reorders your input data is an unpleasant surprise waiting to happen.\n\n**Compute the mean, the p50, the p95 and the p99, and publish them together.**"
+      },
+      "task": {
+        "es": "Escribe `percentil(valores, p)` y publica `media`, `p50`, `p95` y `p99` en un evento aparte.",
+        "en": "Write `percentil(valores, p)` and publish `media`, `p50`, `p95` and `p99` in a separate event."
+      },
+      "focusFile": "main.js",
+      "ruleIds": [
+        "hay-media",
+        "orden-numerico",
+        "percentil-50",
+        "percentil-95",
+        "percentil-99"
+      ],
+      "xp": 45,
+      "hints": [
+        {
+          "id": "h-percentil",
+          "tier": 1,
+          "text": {
+            "es": "Las duraciones salen con `peticiones.map((p) => p.ms)`; la media con `reduce((a, b) => a + b, 0) / n` redondeada.",
+            "en": "Durations come from `peticiones.map((p) => p.ms)`; the mean from `reduce((a, b) => a + b, 0) / n`, rounded."
+          },
+          "xpPenalty": 10,
+          "autoOfferAfterSeconds": 90
+        }
+      ],
+      "solution": [
+        {
+          "path": "main.js",
+          "content": "const peticiones = require('./peticiones');\nconst { log } = require('./log');\n\nfunction percentil(valores, p) {\n  const ordenados = [...valores].sort((a, b) => a - b);\n  const indice = Math.ceil((p / 100) * ordenados.length) - 1;\n  return ordenados[indice];\n}\n\nconst total = peticiones.length;\nconst errores = peticiones.filter((p) => p.status >= 500).length;\nconst duraciones = peticiones.map((p) => p.ms);\nconst media = Math.round(duraciones.reduce((a, b) => a + b, 0) / duraciones.length);\n\nlog('info', 'metricas_peticiones', {\n  total: total,\n  errores: errores,\n  porcentajeError: Math.round((errores / total) * 100),\n});\n\nlog('info', 'metricas_latencia', {\n  media: media,\n  p50: percentil(duraciones, 50),\n  p95: percentil(duraciones, 95),\n  p99: percentil(duraciones, 99),\n});\n"
+        }
+      ]
+    },
+    {
+      "id": "step-3-objetivo",
+      "title": {
+        "es": "Un número al que rendir cuentas",
+        "en": "A number to answer to"
+      },
+      "body": {
+        "es": "Medir sin objetivo no sirve de nada: 950 ms de p95 solo son «mucho» o «poco» comparados con algo. Ese algo es un **SLO** — un objetivo declarado antes de que pase nada, del estilo de:\n\n> el 95 % de las peticiones responde en menos de 300 ms\n\nY tiene una propiedad que suele pasarse por alto: define también **cuánto se puede fallar**. Si el objetivo es el 95 %, el 5 % restante es presupuesto de error, y gastarlo no es un fracaso: es lo que permite desplegar los viernes. Un objetivo del 100 % no es ambicioso, es un objetivo que nadie va a poder usar para decidir nada.\n\nSobre qué se alerta, la regla que ahorra noches: **alerta de síntomas, no de causas**. La CPU al 90 % puede ser perfectamente normal; lo que no lo es, es que el 5 % de tus usuarios espere dos segundos. Si suena un aviso cada vez que un servidor respira fuerte, en tres semanas nadie los mira — y ese es el estado final de casi todos los sistemas de alertas mal montados.\n\nY una alerta útil dice **por cuánto** se incumple. «Se ha superado el objetivo» obliga a ir a mirar; «650 ms por encima» ya se puede priorizar sin abrir nada.\n\n**Declara el presupuesto en una constante, compáralo con el p95 y emite `slo_incumplido` —con nivel de error y el exceso— cuando no se cumpla.**",
+        "en": "Measuring without an objective is pointless: a p95 of 950 ms is only \"a lot\" or \"a little\" compared to something. That something is an **SLO** — an objective declared before anything happens, of the form:\n\n> 95 % of requests respond in under 300 ms\n\nAnd it has a property that's usually missed: it also defines **how much you're allowed to fail**. If the objective is 95 %, the remaining 5 % is error budget, and spending it isn't a failure: it's what lets you deploy on Fridays. A 100 % objective isn't ambitious, it's an objective nobody can use to decide anything.\n\nOn what to alert about, the rule that saves nights: **alert on symptoms, not causes**. CPU at 90 % can be perfectly normal; what isn't normal is 5 % of your users waiting two seconds. If a pager goes off every time a server breathes heavily, in three weeks nobody looks at them — and that's the end state of most badly built alerting systems.\n\nAnd a useful alert says **by how much** it's breached. \"Objective exceeded\" forces you to go and look; \"650 ms over\" can be prioritised without opening anything.\n\n**Declare the budget in a constant, compare it with the p95 and emit `slo_incumplido` — at error level and with the excess — when it isn't met.**"
+      },
+      "task": {
+        "es": "Con un presupuesto de 300 ms, emite `slo_incumplido` con nivel `error`, el p95 y cuánto se pasa.",
+        "en": "With a 300 ms budget, emit `slo_incumplido` at `error` level, with the p95 and how far over it is."
+      },
+      "focusFile": "main.js",
+      "ruleIds": [
+        "alerta-slo",
+        "alerta-con-nivel",
+        "nombra-la-alerta",
+        "presupuesto-declarado",
+        "percentil-95"
+      ],
+      "xp": 40,
+      "hints": [
+        {
+          "id": "h-slo",
+          "tier": 1,
+          "text": {
+            "es": "`const PRESUPUESTO_MS = 300;` arriba, y al final `if (p95 > PRESUPUESTO_MS) { log('error', 'slo_incumplido', { p95, exceso: p95 - PRESUPUESTO_MS }); }`.",
+            "en": "`const PRESUPUESTO_MS = 300;` at the top, and at the end `if (p95 > PRESUPUESTO_MS) { log('error', 'slo_incumplido', { p95, exceso: p95 - PRESUPUESTO_MS }); }`."
+          },
+          "xpPenalty": 9,
+          "autoOfferAfterSeconds": 85
+        }
+      ],
+      "solution": [
+        {
+          "path": "main.js",
+          "content": "const peticiones = require('./peticiones');\nconst { log } = require('./log');\n\nconst PRESUPUESTO_MS = 300;\n\nfunction percentil(valores, p) {\n  const ordenados = [...valores].sort((a, b) => a - b);\n  const indice = Math.ceil((p / 100) * ordenados.length) - 1;\n  return ordenados[indice];\n}\n\nconst total = peticiones.length;\nconst errores = peticiones.filter((p) => p.status >= 500).length;\nconst duraciones = peticiones.map((p) => p.ms);\nconst media = Math.round(duraciones.reduce((a, b) => a + b, 0) / duraciones.length);\nconst p95 = percentil(duraciones, 95);\n\nlog('info', 'metricas_peticiones', {\n  total: total,\n  errores: errores,\n  porcentajeError: Math.round((errores / total) * 100),\n});\n\nlog('info', 'metricas_latencia', {\n  media: media,\n  p50: percentil(duraciones, 50),\n  p95: p95,\n  p99: percentil(duraciones, 99),\n});\n\nif (p95 > PRESUPUESTO_MS) {\n  log('error', 'slo_incumplido', {\n    objetivo: 'p95 <= ' + PRESUPUESTO_MS + 'ms',\n    p95: p95,\n    exceso: p95 - PRESUPUESTO_MS,\n  });\n}\n"
+        }
+      ],
+      "bestPractice": {
+        "es": "**Estándar de la industria:** métricas RED por ruta y por estado, latencia en histograma (que es lo que permite calcular percentiles después, y por eso Prometheus mide así), y alertas atadas a un SLO con presupuesto de error. Cuidado con la cardinalidad: una etiqueta con el id del usuario multiplica las series por el número de usuarios y tumba el sistema de métricas — eso es lo que son los logs.",
+        "en": "**Industry standard:** RED metrics per route and status, latency as a histogram (which is what lets you compute percentiles afterwards, and why Prometheus measures that way), and alerts tied to an SLO with an error budget. Watch cardinality: a label carrying the user id multiplies series by the number of users and takes the metrics system down — that's what logs are for."
+      }
+    }
+  ],
+  "drills": [],
+  "reward": {
+    "baseXp": 170,
+    "flawlessBonus": 60,
+    "noHintBonus": 30,
+    "comboMultiplierCap": 3,
+    "achievements": []
+  },
+  "solution": {
+    "files": [
+      {
+        "path": "main.js",
+        "content": "const peticiones = require('./peticiones');\nconst { log } = require('./log');\n\nconst PRESUPUESTO_MS = 300;\n\nfunction percentil(valores, p) {\n  const ordenados = [...valores].sort((a, b) => a - b);\n  const indice = Math.ceil((p / 100) * ordenados.length) - 1;\n  return ordenados[indice];\n}\n\nconst total = peticiones.length;\nconst errores = peticiones.filter((p) => p.status >= 500).length;\nconst duraciones = peticiones.map((p) => p.ms);\nconst media = Math.round(duraciones.reduce((a, b) => a + b, 0) / duraciones.length);\nconst p95 = percentil(duraciones, 95);\n\nlog('info', 'metricas_peticiones', {\n  total: total,\n  errores: errores,\n  porcentajeError: Math.round((errores / total) * 100),\n});\n\nlog('info', 'metricas_latencia', {\n  media: media,\n  p50: percentil(duraciones, 50),\n  p95: p95,\n  p99: percentil(duraciones, 99),\n});\n\nif (p95 > PRESUPUESTO_MS) {\n  log('error', 'slo_incumplido', {\n    objetivo: 'p95 <= ' + PRESUPUESTO_MS + 'ms',\n    p95: p95,\n    exceso: p95 - PRESUPUESTO_MS,\n  });\n}\n"
+      }
+    ],
+    "explanation": {
+      "es": "Las métricas son lo que los logs no pueden ser: agregados de coste constante que responden «¿va bien el servicio?». De un servicio HTTP se miran tres —peticiones, errores y duración—, contando como error solo lo que es culpa del servidor. Y la duración no se mide con la media, que oculta la cola: se mide con percentiles, porque el p95 sí habla de personas concretas. Todo ello contra un objetivo declarado de antemano, que además dice cuánto se puede fallar sin que nadie tenga que levantarse de madrugada.",
+      "en": "Metrics are what logs can't be: constant-cost aggregates that answer \"is the service healthy?\". For an HTTP service you watch three — requests, errors and duration — counting as errors only what's the server's fault. And duration isn't measured with the mean, which hides the tail: it's measured with percentiles, because the p95 does talk about actual people. All of it against an objective declared up front, which also states how much you can fail without anyone having to get up at night."
+    }
+  }
+}
