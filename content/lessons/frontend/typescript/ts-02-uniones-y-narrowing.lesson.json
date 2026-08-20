@@ -38,7 +38,10 @@
       {
         "path": "main.ts",
         "active": true,
-        "content": "// Un identificador puede llegar como número (base de datos)\n// o como texto (una URL). Las dos cosas son legítimas.\n\ntype Id = string | number;\n\n// Paso 1: haz que esto compile SIN cambiar el tipo de Id.\nfunction describir(id: Id): string {\n  return 'ID de ' + id.length + ' caracteres';\n}\n\nconsole.log(describir('a1b2c3'));\n"
+        "content": {
+          "es": "// Un identificador puede llegar como número (base de datos)\n// o como texto (una URL). Las dos cosas son legítimas.\n\ntype Id = string | number;\n\n// Paso 1: haz que esto compile SIN cambiar el tipo de Id.\nfunction describir(id: Id): string {\n  return 'ID de ' + id.length + ' caracteres';\n}\n\nconsole.log(describir('a1b2c3'));\n",
+          "en": "// An identifier can arrive as a number (from a database)\n// or as text (from a URL). Both are legitimate.\n\ntype Id = string | number;\n\n// Step 1: make this compile WITHOUT changing the type of Id.\nfunction describir(id: Id): string {\n  return 'ID de ' + id.length + ' caracteres';\n}\n\nconsole.log(describir('a1b2c3'));\n"
+        }
       }
     ]
   },

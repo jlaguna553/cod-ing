@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { NODE_PRELUDE } from '@/lib/runners/node-prelude';
 import { LessonSchema } from '@/lib/content/lesson.schema';
+import { codigoDe } from '@/lib/content/localize';
 
 /**
  * Las lecciones de observabilidad, resueltas y comprobadas.
@@ -81,12 +82,12 @@ function ejecutar(
 function comprobarLeccion(id: string) {
   const lesson = leer(id);
   const archivos: Record<string, string> = Object.fromEntries(
-    lesson.workspace.files.map((f) => [f.path, f.content]),
+    lesson.workspace.files.map((f) => [f.path, codigoDe(f.content)]),
   );
   const reglas = new Map(lesson.rules.map((rule) => [rule.id, rule]));
 
   lesson.steps.forEach((step, indice) => {
-    for (const archivo of step.solution ?? []) archivos[archivo.path] = archivo.content;
+    for (const archivo of step.solution ?? []) archivos[archivo.path] = codigoDe(archivo.content);
 
     const salida = ejecutar(archivos, lesson.workspace.entry, lesson.runtime.requests);
 
@@ -140,7 +141,7 @@ test('⭐ obs-03: las cifras del enunciado son las que salen de verdad', () => {
  */
 test('⭐ los datos de obs-03 tienen cola: la media dobla con creces a la mediana', () => {
   const lesson = leer('obs-03-metricas-y-percentiles');
-  const fuente = lesson.workspace.files.find((f) => f.path === 'peticiones.js')!.content;
+  const fuente = codigoDe(lesson.workspace.files.find((f) => f.path === 'peticiones.js')!.content);
   const duraciones = [...fuente.matchAll(/ms: (\d+)/g)].map((m) => Number(m[1]));
 
   const media = duraciones.reduce((a, b) => a + b, 0) / duraciones.length;

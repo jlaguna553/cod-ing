@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { expect, test, type Page } from '@playwright/test';
+import { codigo } from './pasos';
 
 /**
  * C# con evaluador simulado (ADR-14).
@@ -95,7 +96,7 @@ for (const [lessonId, methodFile] of [
 
     let previous = -1;
     for (const step of lesson.steps) {
-      const code = step.solution?.find((file) => file.path === methodFile)?.content;
+      const code = codigo(step.solution?.find((file) => file.path === methodFile)?.content ?? '');
       expect(code, `${step.id} no trae solución para ${methodFile}`).toBeTruthy();
 
       await page.locator('.monaco-editor').click({ position: { x: 100, y: 40 } });

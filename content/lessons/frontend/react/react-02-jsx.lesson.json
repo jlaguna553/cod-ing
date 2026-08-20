@@ -1,16 +1,13 @@
 {
   "$schema": "../../../schema/lesson.schema.json",
   "schemaVersion": 1,
-
   "id": "react-02-jsx",
   "track": "frontend",
   "module": "react",
   "order": 2,
-
   "kind": "drill",
   "difficulty": "novice",
   "estimatedMinutes": 18,
-
   "title": {
     "es": "JSX: JavaScript disfrazado de HTML",
     "en": "JSX: JavaScript wearing an HTML costume"
@@ -19,24 +16,39 @@
     "es": "Las llaves, `className`, las listas con `key` y el renderizado condicional. Cuatro patrones que vas a escribir cientos de veces: aquí se graban en la memoria muscular.",
     "en": "Curly braces, `className`, lists with `key`, and conditional rendering. Four patterns you'll write hundreds of times: here's where they stick."
   },
-  "concepts": ["react", "jsx", "conditional-rendering", "lists", "keys"],
-  "prerequisites": ["react-01-components", "js-03-array-map"],
-
+  "concepts": [
+    "react",
+    "jsx",
+    "conditional-rendering",
+    "lists",
+    "keys"
+  ],
+  "prerequisites": [
+    "react-01-components",
+    "js-03-array-map"
+  ],
   "runtime": {
     "kind": "sandpack",
-    "dependencies": { "react": "^19.0.0", "react-dom": "^19.0.0" },
+    "dependencies": {
+      "react": "^19.0.0",
+      "react-dom": "^19.0.0"
+    },
     "timeoutMs": 15000
   },
-
   "workspace": {
     "entry": "src/App.jsx",
     "allowCreate": false,
     "allowDelete": false,
-    "protectedPaths": ["src/main.jsx"],
+    "protectedPaths": [
+      "src/main.jsx"
+    ],
     "files": [
       {
         "path": "src/App.jsx",
-        "content": "const player = { name: 'Ada', level: 7, online: true };\nconst skills = ['JavaScript', 'CSS', 'React'];\n\nexport default function App() {\n  return (\n    <div class=\"profile\">\n      {/* TODO 1: el atributo de clase está mal escrito para JSX */}\n\n      {/* TODO 2: pinta el nombre y el nivel del jugador */}\n      <h1>NOMBRE</h1>\n      <p>Nivel NIVEL</p>\n\n      {/* TODO 3: muestra \"En línea\" solo si player.online es true */}\n\n      {/* TODO 4: pinta un <li> por cada habilidad */}\n      <ul></ul>\n    </div>\n  );\n}\n",
+        "content": {
+          "es": "const player = { name: 'Ada', level: 7, online: true };\nconst skills = ['JavaScript', 'CSS', 'React'];\n\nexport default function App() {\n  return (\n    <div class=\"profile\">\n      {/* TODO 1: el atributo de clase está mal escrito para JSX */}\n\n      {/* TODO 2: pinta el nombre y el nivel del jugador */}\n      <h1>NOMBRE</h1>\n      <p>Nivel NIVEL</p>\n\n      {/* TODO 3: muestra \"En línea\" solo si player.online es true */}\n\n      {/* TODO 4: pinta un <li> por cada habilidad */}\n      <ul></ul>\n    </div>\n  );\n}\n",
+          "en": "const player = { name: 'Ada', level: 7, online: true };\nconst skills = ['JavaScript', 'CSS', 'React'];\n\nexport default function App() {\n  return (\n    <div class=\"profile\">\n      {/* TODO 1: the class attribute is spelled wrong for JSX */}\n\n      {/* TODO 2: render the player's name and level */}\n      <h1>NOMBRE</h1>\n      <p>Nivel NIVEL</p>\n\n      {/* TODO 3: show \"En línea\" only when player.online is true */}\n\n      {/* TODO 4: render one <li> per skill */}\n      <ul></ul>\n    </div>\n  );\n}\n"
+        },
         "active": true
       },
       {
@@ -46,7 +58,6 @@
       }
     ]
   },
-
   "rules": [
     {
       "id": "uses-classname",
@@ -129,7 +140,6 @@
       "points": 20
     }
   ],
-
   "steps": [
     {
       "id": "step-1-braces",
@@ -146,8 +156,16 @@
         "en": "Fix the class attribute, render the name and level, and show \"Online\" only when appropriate."
       },
       "focusFile": "src/App.jsx",
-      "focusLines": [6, 13],
-      "ruleIds": ["uses-classname", "no-class-attr", "interpolates-name", "conditional-online"],
+      "focusLines": [
+        6,
+        13
+      ],
+      "ruleIds": [
+        "uses-classname",
+        "no-class-attr",
+        "interpolates-name",
+        "conditional-online"
+      ],
       "xp": 45,
       "hints": [
         {
@@ -177,8 +195,14 @@
         "en": "Render one `<li>` per skill, each with its `key`."
       },
       "focusFile": "src/App.jsx",
-      "focusLines": [15, 16],
-      "ruleIds": ["list-with-map", "has-key"],
+      "focusLines": [
+        15,
+        16
+      ],
+      "ruleIds": [
+        "list-with-map",
+        "has-key"
+      ],
       "xp": 45,
       "bestPractice": {
         "es": "**Regla práctica sobre `key`:** usa el `id` del dato. Si no hay `id`, un campo único como el nombre. El índice solo es aceptable si la lista es estática y nunca se reordena ni se filtra — y en cuanto alguien añada un filtro, dejará de serlo sin que nadie se acuerde.",
@@ -186,7 +210,6 @@
       }
     }
   ],
-
   "drills": [
     {
       "id": "drill-1",
@@ -226,7 +249,10 @@
           "kind": "regex-must",
           "file": "src/App.jsx",
           "pattern": "isAdmin\\s*&&",
-          "message": { "es": "Usa `&&`.", "en": "Use `&&`." },
+          "message": {
+            "es": "Usa `&&`.",
+            "en": "Use `&&`."
+          },
           "points": 10
         }
       ]
@@ -246,7 +272,10 @@
           "kind": "regex-must",
           "file": "src/App.jsx",
           "pattern": "connected\\s*\\?[\\s\\S]*:",
-          "message": { "es": "Operador ternario.", "en": "Ternary operator." },
+          "message": {
+            "es": "Operador ternario.",
+            "en": "Ternary operator."
+          },
           "points": 10
         }
       ]
@@ -275,15 +304,15 @@
       ]
     }
   ],
-
   "reward": {
     "baseXp": 140,
     "flawlessBonus": 55,
     "noHintBonus": 30,
     "comboMultiplierCap": 3,
-    "achievements": ["jsx-fluent"]
+    "achievements": [
+      "jsx-fluent"
+    ]
   },
-
   "solution": {
     "files": [
       {

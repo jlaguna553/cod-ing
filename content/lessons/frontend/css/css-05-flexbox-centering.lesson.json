@@ -1,16 +1,13 @@
 {
   "$schema": "../../../schema/lesson.schema.json",
   "schemaVersion": 1,
-
   "id": "css-05-flexbox-centering",
   "track": "frontend",
   "module": "css",
   "order": 5,
-
   "kind": "drill",
   "difficulty": "apprentice",
   "estimatedMinutes": 18,
-
   "title": {
     "es": "Flexbox: los tres ejes que resuelven el 80%",
     "en": "Flexbox: the three axes that solve 80% of layouts"
@@ -19,15 +16,20 @@
     "es": "Centrar, repartir y alinear con Flexbox hasta que salga sin pensar. Tres propiedades bien entendidas cubren la mayoría de los layouts que vas a escribir.",
     "en": "Center, distribute and align with Flexbox until it comes out without thinking. Three properly understood properties cover most layouts you'll ever write."
   },
-  "concepts": ["css", "flexbox", "layout", "alignment"],
-  "prerequisites": ["css-03-box-model"],
-
+  "concepts": [
+    "css",
+    "flexbox",
+    "layout",
+    "alignment"
+  ],
+  "prerequisites": [
+    "css-03-box-model"
+  ],
   "runtime": {
     "kind": "dom",
     "dependencies": {},
     "timeoutMs": 5000
   },
-
   "workspace": {
     "entry": "styles.css",
     "allowCreate": false,
@@ -36,7 +38,10 @@
     "files": [
       {
         "path": "styles.css",
-        "content": ".card {\n  width: 320px;\n  height: 200px;\n  border: 2px solid #22d3ee;\n  border-radius: 12px;\n  /* TODO: centra .badge dentro de esta tarjeta */\n}\n\n.badge {\n  padding: 0.5rem 1rem;\n  background: #22d3ee;\n  color: #05070d;\n  border-radius: 999px;\n}\n",
+        "content": {
+          "es": ".card {\n  width: 320px;\n  height: 200px;\n  border: 2px solid #22d3ee;\n  border-radius: 12px;\n  /* TODO: centra .badge dentro de esta tarjeta */\n}\n\n.badge {\n  padding: 0.5rem 1rem;\n  background: #22d3ee;\n  color: #05070d;\n  border-radius: 999px;\n}\n",
+          "en": ".card {\n  width: 320px;\n  height: 200px;\n  border: 2px solid #22d3ee;\n  border-radius: 12px;\n  /* TODO: centre .badge inside this card */\n}\n\n.badge {\n  padding: 0.5rem 1rem;\n  background: #22d3ee;\n  color: #05070d;\n  border-radius: 999px;\n}\n"
+        },
         "active": true
       },
       {
@@ -46,7 +51,6 @@
       }
     ]
   },
-
   "rules": [
     {
       "id": "is-flex",
@@ -105,7 +109,6 @@
       "points": 0
     }
   ],
-
   "steps": [
     {
       "id": "step-1-axes",
@@ -122,8 +125,16 @@
         "en": "Center `.badge` inside `.card`, horizontally and vertically, using Flexbox."
       },
       "focusFile": "styles.css",
-      "focusLines": [1, 7],
-      "ruleIds": ["is-flex", "centered-both-axes", "centered-cross-axis", "no-magic-margins"],
+      "focusLines": [
+        1,
+        7
+      ],
+      "ruleIds": [
+        "is-flex",
+        "centered-both-axes",
+        "centered-cross-axis",
+        "no-magic-margins"
+      ],
       "xp": 45,
       "hints": [
         {
@@ -152,7 +163,6 @@
       }
     }
   ],
-
   "drills": [
     {
       "id": "drill-1",
@@ -247,15 +257,15 @@
       ]
     }
   ],
-
   "reward": {
     "baseXp": 130,
     "flawlessBonus": 60,
     "noHintBonus": 30,
     "comboMultiplierCap": 3,
-    "achievements": ["flex-master"]
+    "achievements": [
+      "flex-master"
+    ]
   },
-
   "solution": {
     "files": [
       {

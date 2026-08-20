@@ -19,6 +19,21 @@ interface Solucion {
   content: string;
 }
 
+/** Igual que `content` en el schema: una cadena, o los dos idiomas. */
+type Codigo = string | { es: string; en: string };
+
+/**
+ * El código de un archivo, en el idioma que juega el test.
+ *
+ * Desde que el código de las lecciones es bilingüe —los comentarios llevan la
+ * instrucción del paso, y un alumno en inglés los leía en castellano—,
+ * `content` puede ser `{es, en}`. Los tests juegan en `/es`, así que leen el
+ * castellano; sin esto, el editor recibiría «[object Object]».
+ */
+export function codigo(contenido: Codigo, locale: 'es' | 'en' = 'es'): string {
+  return typeof contenido === 'string' ? contenido : contenido[locale];
+}
+
 /** Busca el JSON de una lección por su id, sin saber en qué módulo vive. */
 function rutaDeLeccion(lessonId: string): string {
   const pila = [RAIZ];
@@ -36,9 +51,9 @@ function rutaDeLeccion(lessonId: string): string {
 /** Solución de referencia de un paso, tal y como la publica la lección. */
 export function solucionDelPaso(lessonId: string, stepIndex: number): Solucion[] {
   const lesson = JSON.parse(readFileSync(rutaDeLeccion(lessonId), 'utf8'));
-  const solution = lesson.steps[stepIndex]?.solution;
+  const solution: Array<{ path: string; content: Codigo }> = lesson.steps[stepIndex]?.solution;
   if (!solution) throw new Error(`${lessonId} paso ${stepIndex} no publica solución`);
-  return solution;
+  return solution.map((archivo) => ({ path: archivo.path, content: codigo(archivo.content) }));
 }
 
 /**
@@ -50,11 +65,11 @@ export function solucionDelPaso(lessonId: string, stepIndex: number): Solucion[]
 export function solucionFinal(lessonId: string): Record<string, string> {
   const lesson = JSON.parse(readFileSync(rutaDeLeccion(lessonId), 'utf8'));
   const archivos: Record<string, string> = Object.fromEntries(
-    lesson.workspace.files.map((f: Solucion) => [f.path, f.content]),
+    lesson.workspace.files.map((f: { path: string; content: Codigo }) => [f.path, codigo(f.content)]),
   );
 
   for (const archivo of lesson.steps.at(-1)?.solution ?? lesson.solution?.files ?? []) {
-    archivos[archivo.path] = archivo.content;
+    archivos[archivo.path] = codigo(archivo.content);
   }
   return archivos;
 }

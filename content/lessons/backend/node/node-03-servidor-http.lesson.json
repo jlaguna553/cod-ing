@@ -56,7 +56,10 @@
       {
         "path": "main.js",
         "active": true,
-        "content": "// Paso 1: crea el servidor y responde 'Hola' a todo.\n// Al llamar a listen se lanzan tres peticiones: /, /api/usuarios y /no-existe.\n\nconst http = require('http');\n\nconsole.log('todavía no hay servidor');\n"
+        "content": {
+          "es": "// Paso 1: crea el servidor y responde 'Hola' a todo.\n// Al llamar a listen se lanzan tres peticiones: /, /api/usuarios y /no-existe.\n\nconst http = require('http');\n\nconsole.log('todavía no hay servidor');\n",
+          "en": "// Step 1: create the server and answer 'Hola' to everything.\n// Calling listen fires three requests: /, /api/usuarios and /no-existe.\n\nconst http = require('http');\n\nconsole.log('todavía no hay servidor');\n"
+        }
       }
     ]
   },

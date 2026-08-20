@@ -229,7 +229,28 @@
                 "minLength": 1
               },
               "content": {
-                "type": "string"
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "es": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "en": {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    },
+                    "required": [
+                      "es",
+                      "en"
+                    ]
+                  }
+                ]
               },
               "readOnly": {
                 "default": false,
@@ -1818,7 +1839,28 @@
                   "type": "string"
                 },
                 "content": {
-                  "type": "string"
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "es": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "en": {
+                          "type": "string",
+                          "minLength": 1
+                        }
+                      },
+                      "required": [
+                        "es",
+                        "en"
+                      ]
+                    }
+                  ]
                 }
               },
               "required": [
@@ -3469,7 +3511,28 @@
                 "type": "string"
               },
               "content": {
-                "type": "string"
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "es": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "en": {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    },
+                    "required": [
+                      "es",
+                      "en"
+                    ]
+                  }
+                ]
               }
             },
             "required": [

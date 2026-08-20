@@ -1,16 +1,13 @@
 {
   "$schema": "../../../schema/lesson.schema.json",
   "schemaVersion": 1,
-
   "id": "js-06-dom-manipulation",
   "track": "frontend",
   "module": "javascript",
   "order": 6,
-
   "kind": "concept",
   "difficulty": "apprentice",
   "estimatedMinutes": 20,
-
   "title": {
     "es": "Tocar la página: seleccionar, leer y crear",
     "en": "Touching the page: select, read, create"
@@ -19,15 +16,21 @@
     "es": "Aprende a encontrar elementos, cambiar su contenido y construir nodos nuevos — y por qué `textContent` no es intercambiable con `innerHTML`.",
     "en": "Learn to find elements, change their content and build new nodes — and why `textContent` isn't interchangeable with `innerHTML`."
   },
-  "concepts": ["dom", "queryselector", "textcontent", "createelement", "xss"],
-  "prerequisites": ["js-03-array-map"],
-
+  "concepts": [
+    "dom",
+    "queryselector",
+    "textcontent",
+    "createelement",
+    "xss"
+  ],
+  "prerequisites": [
+    "js-03-array-map"
+  ],
   "runtime": {
     "kind": "dom",
     "dependencies": {},
     "timeoutMs": 6000
   },
-
   "workspace": {
     "entry": "app.js",
     "allowCreate": false,
@@ -36,7 +39,10 @@
     "files": [
       {
         "path": "app.js",
-        "content": "const players = [\n  { name: 'Ada', score: 120 },\n  { name: 'Linus', score: 95 },\n  { name: 'Grace', score: 210 },\n];\n\n// TODO 1: selecciona el <ul id=\"leaderboard\">\nconst list = null;\n\n// TODO 2: pinta un <li> por jugador con \"Nombre — puntos\"\n\n\n// TODO 3: escribe el total en el <span id=\"total\">\n",
+        "content": {
+          "es": "const players = [\n  { name: 'Ada', score: 120 },\n  { name: 'Linus', score: 95 },\n  { name: 'Grace', score: 210 },\n];\n\n// TODO 1: selecciona el <ul id=\"leaderboard\">\nconst list = null;\n\n// TODO 2: pinta un <li> por jugador con \"Nombre — puntos\"\n\n\n// TODO 3: escribe el total en el <span id=\"total\">\n",
+          "en": "const players = [\n  { name: 'Ada', score: 120 },\n  { name: 'Linus', score: 95 },\n  { name: 'Grace', score: 210 },\n];\n\n// TODO 1: select the <ul id=\"leaderboard\">\nconst list = null;\n\n// TODO 2: render one <li> per player with \"Name — points\"\n\n\n// TODO 3: write the total into the <span id=\"total\">\n"
+        },
         "active": true
       },
       {
@@ -46,7 +52,6 @@
       }
     ]
   },
-
   "rules": [
     {
       "id": "selects-list",
@@ -116,7 +121,6 @@
       "points": 25
     }
   ],
-
   "steps": [
     {
       "id": "step-1-select",
@@ -133,8 +137,13 @@
         "en": "Select the `#leaderboard` list and store it in `list`."
       },
       "focusFile": "app.js",
-      "focusLines": [7, 8],
-      "ruleIds": ["selects-list"],
+      "focusLines": [
+        7,
+        8
+      ],
+      "ruleIds": [
+        "selects-list"
+      ],
       "xp": 25
     },
     {
@@ -152,7 +161,12 @@
         "en": "Render one `<li>` per player reading \"Name — points\" and write the sum into `#total`."
       },
       "focusFile": "app.js",
-      "ruleIds": ["creates-items", "total-rendered", "uses-textcontent", "no-innerhtml-with-data"],
+      "ruleIds": [
+        "creates-items",
+        "total-rendered",
+        "uses-textcontent",
+        "no-innerhtml-with-data"
+      ],
       "xp": 55,
       "hints": [
         {
@@ -181,17 +195,16 @@
       }
     }
   ],
-
   "drills": [],
-
   "reward": {
     "baseXp": 150,
     "flawlessBonus": 60,
     "noHintBonus": 35,
     "comboMultiplierCap": 3,
-    "achievements": ["dom-apprentice"]
+    "achievements": [
+      "dom-apprentice"
+    ]
   },
-
   "solution": {
     "files": [
       {

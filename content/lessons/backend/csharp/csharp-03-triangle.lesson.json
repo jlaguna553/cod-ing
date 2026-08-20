@@ -1,16 +1,13 @@
 {
   "$schema": "../../../schema/lesson.schema.json",
   "schemaVersion": 1,
-
   "id": "csharp-03-triangle",
   "track": "backend",
   "module": "csharp",
   "order": 3,
-
   "kind": "challenge",
   "difficulty": "adept",
   "estimatedMinutes": 25,
-
   "title": {
     "es": "¿Es un triángulo? La validación que casi nadie completa",
     "en": "Is it a triangle? The validation almost nobody completes"
@@ -19,9 +16,16 @@
     "es": "Tres números no son un triángulo por tener tres lados. Faltan dos condiciones, y una de ellas se escribe mal con un solo carácter.",
     "en": "Three numbers aren't a triangle just by having three sides. Two conditions are missing, and one of them is a single character away from wrong."
   },
-  "concepts": ["csharp", "validacion", "desigualdad-triangular", "casos-borde"],
-  "prerequisites": ["csharp-01-leap-year", "csharp-02-fizzbuzz"],
-
+  "concepts": [
+    "csharp",
+    "validacion",
+    "desigualdad-triangular",
+    "casos-borde"
+  ],
+  "prerequisites": [
+    "csharp-01-leap-year",
+    "csharp-02-fizzbuzz"
+  ],
   "runtime": {
     "kind": "cli-sim",
     "cliScenario": "dotnet/xunit",
@@ -30,34 +34,49 @@
     "timeoutMs": 15000,
     "terminal": {
       "enabled": true,
-      "allowedCommands": ["dotnet", "ls", "cat", "cd", "pwd", "clear"]
+      "allowedCommands": [
+        "dotnet",
+        "ls",
+        "cat",
+        "cd",
+        "pwd",
+        "clear"
+      ]
     }
   },
-
   "workspace": {
     "entry": "Triangle.cs",
     "allowCreate": false,
     "allowDelete": false,
-    "protectedPaths": ["TriangleTests.cs"],
+    "protectedPaths": [
+      "TriangleTests.cs"
+    ],
     "files": [
       {
         "path": "Triangle.cs",
         "active": true,
-        "content": "namespace Geometria;\n\npublic static class Triangle\n{\n    // TODO: ¿pueden estos tres lados formar un triángulo?\n    // Ahora mismo acepta cualquier cosa.\n    public static bool EsValido(int a, int b, int c) => true;\n}\n"
+        "content": {
+          "es": "namespace Geometria;\n\npublic static class Triangle\n{\n    // TODO: ¿pueden estos tres lados formar un triángulo?\n    // Ahora mismo acepta cualquier cosa.\n    public static bool EsValido(int a, int b, int c) => true;\n}\n",
+          "en": "namespace Geometria;\n\npublic static class Triangle\n{\n    // TODO: can these three sides form a triangle?\n    // Right now it accepts anything.\n    public static bool EsValido(int a, int b, int c) => true;\n}\n"
+        }
       },
       {
         "path": "TriangleTests.cs",
         "readOnly": true,
-        "content": "using Xunit;\n\nnamespace Geometria.Tests;\n\npublic class TriangleTests\n{\n    [InlineData(3, 4, 5, true)]     // clásico\n    [InlineData(10, 10, 10, true)]  // equilátero\n    [InlineData(0, 0, 0, false)]    // no hay lados\n    [InlineData(3, 4, -5, false)]   // lado negativo\n    [InlineData(1, 1, 3, false)]    // dos lados no alcanzan al tercero\n    [InlineData(7, 3, 2, false)]\n    [InlineData(1, 1, 2, false)]    // degenerado: cae en línea recta\n    [InlineData(5, 5, 9, true)]\n    [Theory]\n    public void EsValido(int a, int b, int c, bool expected) =>\n        Assert.Equal(expected, Triangle.EsValido(a, b, c));\n}\n"
+        "content": {
+          "es": "using Xunit;\n\nnamespace Geometria.Tests;\n\npublic class TriangleTests\n{\n    [InlineData(3, 4, 5, true)]     // clásico\n    [InlineData(10, 10, 10, true)]  // equilátero\n    [InlineData(0, 0, 0, false)]    // no hay lados\n    [InlineData(3, 4, -5, false)]   // lado negativo\n    [InlineData(1, 1, 3, false)]    // dos lados no alcanzan al tercero\n    [InlineData(7, 3, 2, false)]\n    [InlineData(1, 1, 2, false)]    // degenerado: cae en línea recta\n    [InlineData(5, 5, 9, true)]\n    [Theory]\n    public void EsValido(int a, int b, int c, bool expected) =>\n        Assert.Equal(expected, Triangle.EsValido(a, b, c));\n}\n",
+          "en": "using Xunit;\n\nnamespace Geometria.Tests;\n\npublic class TriangleTests\n{\n    [InlineData(3, 4, 5, true)]     // classic\n    [InlineData(10, 10, 10, true)]  // equilateral\n    [InlineData(0, 0, 0, false)]    // no sides at all\n    [InlineData(3, 4, -5, false)]   // negative side\n    [InlineData(1, 1, 3, false)]    // two sides don't reach the third\n    [InlineData(7, 3, 2, false)]\n    [InlineData(1, 1, 2, false)]    // degenerate: it collapses into a straight line\n    [InlineData(5, 5, 9, true)]\n    [Theory]\n    public void EsValido(int a, int b, int c, bool expected) =>\n        Assert.Equal(expected, Triangle.EsValido(a, b, c));\n}\n"
+        }
       }
     ]
   },
-
   "rules": [
     {
       "id": "ran-tests",
       "kind": "cli-transcript",
-      "expectedCommands": ["dotnet test"],
+      "expectedCommands": [
+        "dotnet test"
+      ],
       "allowExtra": true,
       "phase": "run",
       "severity": "error",
@@ -128,7 +147,6 @@
       "points": 30
     }
   ],
-
   "steps": [
     {
       "id": "step-1-positive",
@@ -145,8 +163,15 @@
         "en": "Reject inputs where any side isn't positive, and run `dotnet test`."
       },
       "focusFile": "Triangle.cs",
-      "focusLines": [7, 7],
-      "ruleIds": ["rejects-non-positive", "positives-pass", "ran-tests"],
+      "focusLines": [
+        7,
+        7
+      ],
+      "ruleIds": [
+        "rejects-non-positive",
+        "positives-pass",
+        "ran-tests"
+      ],
       "xp": 35,
       "solution": [
         {
@@ -170,7 +195,10 @@
         "en": "Add the triangle inequality in all three combinations and run `dotnet test`."
       },
       "focusFile": "Triangle.cs",
-      "ruleIds": ["ran-tests", "rejects-non-positive"],
+      "ruleIds": [
+        "ran-tests",
+        "rejects-non-positive"
+      ],
       "xp": 45,
       "hints": [
         {
@@ -206,7 +234,11 @@
         "en": "Get all eight cases green, with the degenerate `(1,1,2)` rejected. Run `dotnet test`."
       },
       "focusFile": "Triangle.cs",
-      "ruleIds": ["all-green", "strict-inequality", "ran-tests"],
+      "ruleIds": [
+        "all-green",
+        "strict-inequality",
+        "ran-tests"
+      ],
       "xp": 45,
       "solution": [
         {
@@ -220,9 +252,7 @@
       }
     }
   ],
-
   "drills": [],
-
   "reward": {
     "baseXp": 130,
     "flawlessBonus": 50,
@@ -230,7 +260,6 @@
     "comboMultiplierCap": 3,
     "achievements": []
   },
-
   "solution": {
     "files": [
       {

@@ -42,7 +42,10 @@
       {
         "path": "query.sql",
         "active": true,
-        "content": "-- Cuenta cuántos productos hay en total.\n-- El paso 2 pide algo bastante más útil.\nSELECT COUNT(*) AS total FROM productos;\n"
+        "content": {
+          "es": "-- Cuenta cuántos productos hay en total.\n-- El paso 2 pide algo bastante más útil.\nSELECT COUNT(*) AS total FROM productos;\n",
+          "en": "-- Count how many products there are in total.\n-- Step 2 asks for something rather more useful.\nSELECT COUNT(*) AS total FROM productos;\n"
+        }
       },
       {
         "path": "schema.sql",

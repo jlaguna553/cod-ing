@@ -54,7 +54,10 @@
       {
         "path": "app/page.tsx",
         "active": true,
-        "content": "// Paso 1: ejecuta `next build` y lee el error.\n// Este componente usa un hook y no ha dicho que sea de cliente.\n\nimport { useState } from 'react';\n\nexport default function Page() {\n  const [abierto, setAbierto] = useState(false);\n\n  return (\n    <main>\n      <h1>Catálogo</h1>\n      <button onClick={() => setAbierto(!abierto)}>Filtros</button>\n    </main>\n  );\n}\n"
+        "content": {
+          "es": "// Paso 1: ejecuta `next build` y lee el error.\n// Este componente usa un hook y no ha dicho que sea de cliente.\n\nimport { useState } from 'react';\n\nexport default function Page() {\n  const [abierto, setAbierto] = useState(false);\n\n  return (\n    <main>\n      <h1>Catálogo</h1>\n      <button onClick={() => setAbierto(!abierto)}>Filtros</button>\n    </main>\n  );\n}\n",
+          "en": "// Step 1: run `next build` and read the error.\n// This component uses a hook and hasn't said it's a client one.\n\nimport { useState } from 'react';\n\nexport default function Page() {\n  const [abierto, setAbierto] = useState(false);\n\n  return (\n    <main>\n      <h1>Catálogo</h1>\n      <button onClick={() => setAbierto(!abierto)}>Filtros</button>\n    </main>\n  );\n}\n"
+        }
       },
       {
         "path": "app/layout.tsx",

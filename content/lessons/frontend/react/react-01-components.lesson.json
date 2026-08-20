@@ -1,16 +1,13 @@
 {
   "$schema": "../../../schema/lesson.schema.json",
   "schemaVersion": 1,
-
   "id": "react-01-components",
   "track": "frontend",
   "module": "react",
   "order": 1,
-
   "kind": "concept",
   "difficulty": "novice",
   "estimatedMinutes": 16,
-
   "title": {
     "es": "Un componente es una función que devuelve interfaz",
     "en": "A component is a function that returns UI"
@@ -19,24 +16,37 @@
     "es": "Descubre que React no inventa nada raro: un componente es una función de JavaScript normal. Aprende las tres reglas que el compilador te va a exigir desde el primer día.",
     "en": "Discover that React invents nothing exotic: a component is an ordinary JavaScript function. Learn the three rules the compiler will hold you to from day one."
   },
-  "concepts": ["react", "components", "jsx", "composition"],
-  "prerequisites": ["js-02-functions"],
-
+  "concepts": [
+    "react",
+    "components",
+    "jsx",
+    "composition"
+  ],
+  "prerequisites": [
+    "js-02-functions"
+  ],
   "runtime": {
     "kind": "sandpack",
-    "dependencies": { "react": "^19.0.0", "react-dom": "^19.0.0" },
+    "dependencies": {
+      "react": "^19.0.0",
+      "react-dom": "^19.0.0"
+    },
     "timeoutMs": 15000
   },
-
   "workspace": {
     "entry": "src/App.jsx",
     "allowCreate": true,
     "allowDelete": false,
-    "protectedPaths": ["src/main.jsx"],
+    "protectedPaths": [
+      "src/main.jsx"
+    ],
     "files": [
       {
         "path": "src/App.jsx",
-        "content": "// TODO 1: este componente no cumple una de las tres reglas\nfunction welcomeCard() {\n  return <p>Bienvenida a la partida</p>;\n}\n\n// TODO 2: falta que devuelva algo\nfunction ScoreBadge() {\n  <span>0 puntos</span>;\n}\n\nexport default function App() {\n  return (\n    <div>\n      {/* TODO 3: usa aquí los dos componentes de arriba */}\n    </div>\n  );\n}\n",
+        "content": {
+          "es": "// TODO 1: este componente no cumple una de las tres reglas\nfunction welcomeCard() {\n  return <p>Bienvenida a la partida</p>;\n}\n\n// TODO 2: falta que devuelva algo\nfunction ScoreBadge() {\n  <span>0 puntos</span>;\n}\n\nexport default function App() {\n  return (\n    <div>\n      {/* TODO 3: usa aquí los dos componentes de arriba */}\n    </div>\n  );\n}\n",
+          "en": "// TODO 1: this component breaks one of the three rules\nfunction welcomeCard() {\n  return <p>Bienvenida a la partida</p>;\n}\n\n// TODO 2: it still has to return something\nfunction ScoreBadge() {\n  <span>0 puntos</span>;\n}\n\nexport default function App() {\n  return (\n    <div>\n      {/* TODO 3: use the two components above here */}\n    </div>\n  );\n}\n"
+        },
         "active": true
       },
       {
@@ -46,7 +56,6 @@
       }
     ]
   },
-
   "rules": [
     {
       "id": "capitalized-component",
@@ -119,7 +128,6 @@
       "points": 20
     }
   ],
-
   "steps": [
     {
       "id": "step-1-just-functions",
@@ -136,8 +144,15 @@
         "en": "Fix the two broken components: one breaks the naming rule, the other the `return` rule."
       },
       "focusFile": "src/App.jsx",
-      "focusLines": [1, 9],
-      "ruleIds": ["capitalized-component", "score-returns", "no-lowercase-usage"],
+      "focusLines": [
+        1,
+        9
+      ],
+      "ruleIds": [
+        "capitalized-component",
+        "score-returns",
+        "no-lowercase-usage"
+      ],
       "xp": 40,
       "hints": [
         {
@@ -167,8 +182,14 @@
         "en": "Use `WelcomeCard` and `ScoreBadge` inside `App`."
       },
       "focusFile": "src/App.jsx",
-      "focusLines": [11, 17],
-      "ruleIds": ["both-used", "renders-text"],
+      "focusLines": [
+        11,
+        17
+      ],
+      "ruleIds": [
+        "both-used",
+        "renders-text"
+      ],
       "xp": 40,
       "bestPractice": {
         "es": "**Un componente, una responsabilidad:** si una función de componente pasa de unas 60 líneas o mezcla varias ideas distintas, casi siempre esconde dos componentes dentro. Partirlo no es purismo: es lo que permite que el siguiente cambio toque un solo archivo.",
@@ -176,17 +197,16 @@
       }
     }
   ],
-
   "drills": [],
-
   "reward": {
     "baseXp": 110,
     "flawlessBonus": 45,
     "noHintBonus": 25,
     "comboMultiplierCap": 3,
-    "achievements": ["component-crafter"]
+    "achievements": [
+      "component-crafter"
+    ]
   },
-
   "solution": {
     "files": [
       {

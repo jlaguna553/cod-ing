@@ -41,12 +41,18 @@
     "files": [
       {
         "path": "src/App.vue",
-        "content": "<script setup>\nimport { ref } from 'vue';\n\nconst quests = ref([\n  { id: 1, title: 'Aprender directivas', xp: 40, done: true },\n  { id: 2, title: 'Dominar los componentes', xp: 60, done: false },\n  { id: 3, title: 'Vencer al boss', xp: 120, done: false },\n]);\n\nfunction toggle(id) {\n  const quest = quests.value.find((item) => item.id === id);\n  if (quest) quest.done = !quest.done;\n}\n</script>\n\n<template>\n  <main>\n    <h1>Misiones</h1>\n\n    <!--\n      TODO: sustituye este bloque por un componente <QuestCard>.\n      Cada tarjeta recibe su misión por props y avisa al pulsar el botón.\n    -->\n    <ul class=\"quests\">\n      <li v-for=\"quest in quests\" :key=\"quest.id\" class=\"quest\">\n        <span>{{ quest.title }}</span>\n        <span>{{ quest.xp }} XP</span>\n        <button @click=\"toggle(quest.id)\">\n          {{ quest.done ? 'Hecha' : 'Pendiente' }}\n        </button>\n      </li>\n    </ul>\n  </main>\n</template>\n",
+        "content": {
+          "es": "<script setup>\nimport { ref } from 'vue';\n\nconst quests = ref([\n  { id: 1, title: 'Aprender directivas', xp: 40, done: true },\n  { id: 2, title: 'Dominar los componentes', xp: 60, done: false },\n  { id: 3, title: 'Vencer al boss', xp: 120, done: false },\n]);\n\nfunction toggle(id) {\n  const quest = quests.value.find((item) => item.id === id);\n  if (quest) quest.done = !quest.done;\n}\n</script>\n\n<template>\n  <main>\n    <h1>Misiones</h1>\n\n    <!--\n      TODO: sustituye este bloque por un componente <QuestCard>.\n      Cada tarjeta recibe su misión por props y avisa al pulsar el botón.\n    -->\n    <ul class=\"quests\">\n      <li v-for=\"quest in quests\" :key=\"quest.id\" class=\"quest\">\n        <span>{{ quest.title }}</span>\n        <span>{{ quest.xp }} XP</span>\n        <button @click=\"toggle(quest.id)\">\n          {{ quest.done ? 'Hecha' : 'Pendiente' }}\n        </button>\n      </li>\n    </ul>\n  </main>\n</template>\n",
+          "en": "<script setup>\nimport { ref } from 'vue';\n\nconst quests = ref([\n  { id: 1, title: 'Aprender directivas', xp: 40, done: true },\n  { id: 2, title: 'Dominar los componentes', xp: 60, done: false },\n  { id: 3, title: 'Vencer al boss', xp: 120, done: false },\n]);\n\nfunction toggle(id) {\n  const quest = quests.value.find((item) => item.id === id);\n  if (quest) quest.done = !quest.done;\n}\n</script>\n\n<template>\n  <main>\n    <h1>Misiones</h1>\n\n    <!--\n      TODO: replace this block with a <QuestCard> component.\n      Each card gets its mission through props and reports the button press.\n    -->\n    <ul class=\"quests\">\n      <li v-for=\"quest in quests\" :key=\"quest.id\" class=\"quest\">\n        <span>{{ quest.title }}</span>\n        <span>{{ quest.xp }} XP</span>\n        <button @click=\"toggle(quest.id)\">\n          {{ quest.done ? 'Hecha' : 'Pendiente' }}\n        </button>\n      </li>\n    </ul>\n  </main>\n</template>\n"
+        },
         "active": true
       },
       {
         "path": "src/QuestCard.vue",
-        "content": "<!-- TODO: construye aquí el componente de una misión. -->\n<script setup>\n</script>\n\n<template>\n</template>\n"
+        "content": {
+          "es": "<!-- TODO: construye aquí el componente de una misión. -->\n<script setup>\n</script>\n\n<template>\n</template>\n",
+          "en": "<!-- TODO: build the component for a single mission here. -->\n<script setup>\n</script>\n\n<template>\n</template>\n"
+        }
       },
       {
         "path": "src/main.js",

@@ -38,7 +38,10 @@
       {
         "path": "carrito.php",
         "active": true,
-        "content": "<?php\n\n$productos = ['Teclado', 'Monitor', 'Cable'];\n\n// Paso 1: imprime una línea por producto, en este formato:\n//   1. Teclado\n//   2. Monitor\n//   3. Cable\n"
+        "content": {
+          "es": "<?php\n\n$productos = ['Teclado', 'Monitor', 'Cable'];\n\n// Paso 1: imprime una línea por producto, en este formato:\n//   1. Teclado\n//   2. Monitor\n//   3. Cable\n",
+          "en": "<?php\n\n$productos = ['Teclado', 'Monitor', 'Cable'];\n\n// Step 1: print one line per product, in this format:\n//   1. Teclado\n//   2. Monitor\n//   3. Cable\n"
+        }
       }
     ]
   },

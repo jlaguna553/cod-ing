@@ -38,11 +38,17 @@
       {
         "path": "main.js",
         "active": true,
-        "content": "// Paso 1: predice el orden y luego ejecútalo.\n// Escribe los cuatro console.log para que salga: 1, 4, 3, 2\n\nconsole.log('todavía nada');\n"
+        "content": {
+          "es": "// Paso 1: predice el orden y luego ejecútalo.\n// Escribe los cuatro console.log para que salga: 1, 4, 3, 2\n\nconsole.log('todavía nada');\n",
+          "en": "// Step 1: predict the order, then run it.\n// Write the four console.log calls so the output is: 1, 4, 3, 2\n\nconsole.log('todavía nada');\n"
+        }
       },
       {
         "path": "usuarios.js",
-        "content": "// Un almacén que tarda en contestar, como cualquier base de datos.\n// La versión de callbacks es la que había antes de las promesas.\n\nconst DATOS = { 1: 'Ada', 2: 'Grace' };\n\nfunction buscarCallback(id, callback) {\n  setTimeout(function () {\n    const nombre = DATOS[id];\n    if (!nombre) {\n      callback(new Error('No existe el usuario ' + id));\n      return;\n    }\n    callback(null, nombre);\n  }, 10);\n}\n\nmodule.exports = { buscarCallback };\n"
+        "content": {
+          "es": "// Un almacén que tarda en contestar, como cualquier base de datos.\n// La versión de callbacks es la que había antes de las promesas.\n\nconst DATOS = { 1: 'Ada', 2: 'Grace' };\n\nfunction buscarCallback(id, callback) {\n  setTimeout(function () {\n    const nombre = DATOS[id];\n    if (!nombre) {\n      callback(new Error('No existe el usuario ' + id));\n      return;\n    }\n    callback(null, nombre);\n  }, 10);\n}\n\nmodule.exports = { buscarCallback };\n",
+          "en": "// A store that takes its time answering, like any database.\n// The callback version is what there was before promises.\n\nconst DATOS = { 1: 'Ada', 2: 'Grace' };\n\nfunction buscarCallback(id, callback) {\n  setTimeout(function () {\n    const nombre = DATOS[id];\n    if (!nombre) {\n      callback(new Error('No existe el usuario ' + id));\n      return;\n    }\n    callback(null, nombre);\n  }, 10);\n}\n\nmodule.exports = { buscarCallback };\n"
+        }
       }
     ]
   },

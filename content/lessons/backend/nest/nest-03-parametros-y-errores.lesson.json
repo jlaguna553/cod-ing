@@ -58,11 +58,17 @@
       {
         "path": "usuarios.controller.ts",
         "active": true,
-        "content": "// Paso 1: falta la ruta que devuelve UN usuario.\n\nimport { Controller, Get } from '@nestjs/common';\nimport { UsuariosService } from './usuarios.service';\n\n@Controller('usuarios')\nexport class UsuariosController {\n  constructor(private readonly usuarios: UsuariosService) {}\n\n  @Get()\n  todos() {\n    return this.usuarios.todos();\n  }\n}\n"
+        "content": {
+          "es": "// Paso 1: falta la ruta que devuelve UN usuario.\n\nimport { Controller, Get } from '@nestjs/common';\nimport { UsuariosService } from './usuarios.service';\n\n@Controller('usuarios')\nexport class UsuariosController {\n  constructor(private readonly usuarios: UsuariosService) {}\n\n  @Get()\n  todos() {\n    return this.usuarios.todos();\n  }\n}\n",
+          "en": "// Step 1: the route returning ONE user is missing.\n\nimport { Controller, Get } from '@nestjs/common';\nimport { UsuariosService } from './usuarios.service';\n\n@Controller('usuarios')\nexport class UsuariosController {\n  constructor(private readonly usuarios: UsuariosService) {}\n\n  @Get()\n  todos() {\n    return this.usuarios.todos();\n  }\n}\n"
+        }
       },
       {
         "path": "usuarios.service.ts",
-        "content": "import { Injectable } from '@nestjs/common';\n\n@Injectable()\nexport class UsuariosService {\n  private usuarios = [\n    { id: 1, nombre: 'Ana' },\n    { id: 2, nombre: 'Luis' },\n  ];\n\n  todos() {\n    return this.usuarios;\n  }\n\n  // Devuelve undefined si no lo encuentra. Eso, por HTTP, es un 200 vacio.\n  uno(id: number) {\n    return this.usuarios.find((usuario) => usuario.id === id);\n  }\n}\n"
+        "content": {
+          "es": "import { Injectable } from '@nestjs/common';\n\n@Injectable()\nexport class UsuariosService {\n  private usuarios = [\n    { id: 1, nombre: 'Ana' },\n    { id: 2, nombre: 'Luis' },\n  ];\n\n  todos() {\n    return this.usuarios;\n  }\n\n  // Devuelve undefined si no lo encuentra. Eso, por HTTP, es un 200 vacio.\n  uno(id: number) {\n    return this.usuarios.find((usuario) => usuario.id === id);\n  }\n}\n",
+          "en": "import { Injectable } from '@nestjs/common';\n\n@Injectable()\nexport class UsuariosService {\n  private usuarios = [\n    { id: 1, nombre: 'Ana' },\n    { id: 2, nombre: 'Luis' },\n  ];\n\n  todos() {\n    return this.usuarios;\n  }\n\n  // Returns undefined when it isn't there. Over HTTP, that's an empty 200.\n  uno(id: number) {\n    return this.usuarios.find((usuario) => usuario.id === id);\n  }\n}\n"
+        }
       },
       {
         "path": "app.module.ts",

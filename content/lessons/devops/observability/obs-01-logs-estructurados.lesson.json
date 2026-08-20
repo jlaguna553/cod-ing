@@ -39,21 +39,33 @@
       {
         "path": "main.js",
         "active": true,
-        "content": "// Así está el servicio hoy. Cóbrale al primer pedido y mira la salida:\n// eso es todo lo que tendrás cuando algo falle un domingo por la noche.\n\nconst pedidos = require('./pedidos');\nconst { cobrar } = require('./cobros');\n\nconst pedido = pedidos[0];\n\nconsole.log('procesando pedido...');\ncobrar(pedido);\nconsole.log('ok');\n"
+        "content": {
+          "es": "// Así está el servicio hoy. Cóbrale al primer pedido y mira la salida:\n// eso es todo lo que tendrás cuando algo falle un domingo por la noche.\n\nconst pedidos = require('./pedidos');\nconst { cobrar } = require('./cobros');\n\nconst pedido = pedidos[0];\n\nconsole.log('procesando pedido...');\ncobrar(pedido);\nconsole.log('ok');\n",
+          "en": "// This is the service today. Charge the first order and look at the output:\n// that's everything you'll have when something breaks on a Sunday night.\n\nconst pedidos = require('./pedidos');\nconst { cobrar } = require('./cobros');\n\nconst pedido = pedidos[0];\n\nconsole.log('procesando pedido...');\ncobrar(pedido);\nconsole.log('ok');\n"
+        }
       },
       {
         "path": "pedidos.js",
         "readOnly": true,
-        "content": "// Los datos que llegan del checkout. No los toques: la lección es qué se\n// hace con ellos, y lo que NO se hace (mirar los dos últimos campos).\n\nmodule.exports = [\n  { id: 'A-1042', cliente: 'ana@ejemplo.com', total: 39.9, tarjeta: '4242 4242 4242 4242' },\n  { id: 'A-1043', cliente: 'luis@ejemplo.com', total: 149.5, tarjeta: '4000 0000 0000 0002' },\n];\n"
+        "content": {
+          "es": "// Los datos que llegan del checkout. No los toques: la lección es qué se\n// hace con ellos, y lo que NO se hace (mirar los dos últimos campos).\n\nmodule.exports = [\n  { id: 'A-1042', cliente: 'ana@ejemplo.com', total: 39.9, tarjeta: '4242 4242 4242 4242' },\n  { id: 'A-1043', cliente: 'luis@ejemplo.com', total: 149.5, tarjeta: '4000 0000 0000 0002' },\n];\n",
+          "en": "// The data arriving from checkout. Don't touch it: the lesson is what you do\n// with it, and what you do NOT do (look at the last two fields).\n\nmodule.exports = [\n  { id: 'A-1042', cliente: 'ana@ejemplo.com', total: 39.9, tarjeta: '4242 4242 4242 4242' },\n  { id: 'A-1043', cliente: 'luis@ejemplo.com', total: 149.5, tarjeta: '4000 0000 0000 0002' },\n];\n"
+        }
       },
       {
         "path": "cobros.js",
         "readOnly": true,
-        "content": "// La pasarela de pago, simulada. Por encima de 100 € pide autorización\n// manual, así que falla.\n\nfunction cobrar(pedido) {\n  if (pedido.total > 100) {\n    throw new Error('limite superado');\n  }\n  return { referencia: 'ref-' + pedido.id };\n}\n\nmodule.exports = { cobrar };\n"
+        "content": {
+          "es": "// La pasarela de pago, simulada. Por encima de 100 € pide autorización\n// manual, así que falla.\n\nfunction cobrar(pedido) {\n  if (pedido.total > 100) {\n    throw new Error('limite superado');\n  }\n  return { referencia: 'ref-' + pedido.id };\n}\n\nmodule.exports = { cobrar };\n",
+          "en": "// The payment gateway, simulated. Over 100 € it needs manual\n// authorisation, so it fails.\n\nfunction cobrar(pedido) {\n  if (pedido.total > 100) {\n    throw new Error('limite superado');\n  }\n  return { referencia: 'ref-' + pedido.id };\n}\n\nmodule.exports = { cobrar };\n"
+        }
       },
       {
         "path": "log.js",
-        "content": "// Paso 3: aquí vive el logger. Ahora mismo no exporta nada.\n//\n// Tiene que poner el sello de tiempo y el nombre del servicio por su\n// cuenta: si eso depende de acordarse en cada llamada, alguien no se\n// acordará, y será justo la línea que hacía falta.\n"
+        "content": {
+          "es": "// Paso 3: aquí vive el logger. Ahora mismo no exporta nada.\n//\n// Tiene que poner el sello de tiempo y el nombre del servicio por su\n// cuenta: si eso depende de acordarse en cada llamada, alguien no se\n// acordará, y será justo la línea que hacía falta.\n",
+          "en": "// Step 3: the logger lives here. Right now it exports nothing.\n//\n// It has to stamp the time and the service name on its own: if that\n// depends on remembering at every call site, somebody won't remember, and\n// it will be exactly the line that was needed.\n"
+        }
       }
     ]
   },

@@ -48,16 +48,25 @@
       {
         "path": "usuarios.controller.ts",
         "active": true,
-        "content": "// Un controlador que hace de todo: atiende la peticion Y guarda los datos.\n// Paso 1: sacale los datos a un servicio y pideselo por el constructor.\n\nimport { Controller, Get } from '@nestjs/common';\n\n@Controller('usuarios')\nexport class UsuariosController {\n  private usuarios = [\n    { id: 1, nombre: 'Ana' },\n    { id: 2, nombre: 'Luis' },\n  ];\n\n  @Get()\n  todos() {\n    return this.usuarios;\n  }\n}\n"
+        "content": {
+          "es": "// Un controlador que hace de todo: atiende la peticion Y guarda los datos.\n// Paso 1: sacale los datos a un servicio y pideselo por el constructor.\n\nimport { Controller, Get } from '@nestjs/common';\n\n@Controller('usuarios')\nexport class UsuariosController {\n  private usuarios = [\n    { id: 1, nombre: 'Ana' },\n    { id: 2, nombre: 'Luis' },\n  ];\n\n  @Get()\n  todos() {\n    return this.usuarios;\n  }\n}\n",
+          "en": "// A controller doing everything: serving the request AND holding the data.\n// Step 1: pull the data out into a service and ask for it in the constructor.\n\nimport { Controller, Get } from '@nestjs/common';\n\n@Controller('usuarios')\nexport class UsuariosController {\n  private usuarios = [\n    { id: 1, nombre: 'Ana' },\n    { id: 2, nombre: 'Luis' },\n  ];\n\n  @Get()\n  todos() {\n    return this.usuarios;\n  }\n}\n"
+        }
       },
       {
         "path": "usuarios.service.ts",
-        "content": "// Paso 1: aqui van los datos y la logica. Ahora mismo esta vacio.\n//\n// Un servicio es una clase normal con @Injectable() encima. Ese decorador\n// no la hace especial: hace que TypeScript apunte que necesita su\n// constructor, que es lo unico que el contenedor sabe leer.\n"
+        "content": {
+          "es": "// Paso 1: aqui van los datos y la logica. Ahora mismo esta vacio.\n//\n// Un servicio es una clase normal con @Injectable() encima. Ese decorador\n// no la hace especial: hace que TypeScript apunte que necesita su\n// constructor, que es lo unico que el contenedor sabe leer.\n",
+          "en": "// Step 1: the data and the logic go here. Right now it's empty.\n//\n// A service is an ordinary class with @Injectable() on top. That decorator\n// doesn't make it special: it makes TypeScript note down what its\n// constructor needs, the only thing the container knows how to read.\n"
+        }
       },
       {
         "path": "auditoria.service.ts",
         "readOnly": true,
-        "content": "// Un servicio que no depende de nadie y del que dependen otros.\n// Lleva la cuenta de lo que se le pide: por eso se nota si el contenedor\n// crea una instancia o veinte.\n\nimport { Injectable } from '@nestjs/common';\n\n@Injectable()\nexport class AuditoriaService {\n  private consultas = 0;\n\n  registrar(evento: string) {\n    this.consultas = this.consultas + 1;\n    console.log(JSON.stringify({ event: evento, consultas: this.consultas }));\n  }\n}\n"
+        "content": {
+          "es": "// Un servicio que no depende de nadie y del que dependen otros.\n// Lleva la cuenta de lo que se le pide: por eso se nota si el contenedor\n// crea una instancia o veinte.\n\nimport { Injectable } from '@nestjs/common';\n\n@Injectable()\nexport class AuditoriaService {\n  private consultas = 0;\n\n  registrar(evento: string) {\n    this.consultas = this.consultas + 1;\n    console.log(JSON.stringify({ event: evento, consultas: this.consultas }));\n  }\n}\n",
+          "en": "// A service that depends on nobody and that others depend on.\n// It counts what it's asked for: that's how you notice whether the container\n// creates one instance or twenty.\n\nimport { Injectable } from '@nestjs/common';\n\n@Injectable()\nexport class AuditoriaService {\n  private consultas = 0;\n\n  registrar(evento: string) {\n    this.consultas = this.consultas + 1;\n    console.log(JSON.stringify({ event: evento, consultas: this.consultas }));\n  }\n}\n"
+        }
       },
       {
         "path": "app.module.ts",

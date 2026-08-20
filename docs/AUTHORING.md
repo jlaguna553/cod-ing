@@ -30,6 +30,8 @@ El nombre del archivo **es** el id de la lección: `js-03-array-map.lesson.json`
 | Anti-spoiler | De `adept` en adelante, el enunciado no contiene la solución |
 | Paridad i18n | `messages/es.json` y `en.json` con las mismas claves y placeholders |
 | **Test de oro** | Tus reglas **pasan** con tu solución y **fallan** con el código de partida |
+| Código bilingüe | Un archivo con comentarios de dos o más palabras declara `content: { es, en }` |
+| Traducción limpia | Entre los dos idiomas de un archivo **solo** cambian los comentarios |
 
 El último es el que más problemas encuentra. Si tu regla falla contra tu propia
 solución, la regla está mal — no la solución.
@@ -117,6 +119,35 @@ Es lo que separa «funciona» de «se hace así en un equipo».
 
 Ambos son obligatorios y el schema no deja mergear sin ellos. No traduzcas literalmente:
 adapta. Si `es` y `en` son idénticos en una descripción, el test de logros lo detecta.
+
+### El código también
+
+**Los comentarios del código son contenido**, y normalmente el más importante: ahí es
+donde suele estar la instrucción concreta —«// Paso 1: …»— que el alumno lee con el
+cursor puesto. Durante ocho fases viajaron en castellano para todo el mundo mientras el
+enunciado de al lado sí estaba traducido.
+
+Por eso `content` admite dos formas:
+
+```jsonc
+// Código sin prosa: una cadena y ya.
+{ "path": "datos.js", "content": "module.exports = [1, 2, 3];\n" }
+
+// Con comentarios: los dos idiomas.
+{
+  "path": "main.js",
+  "content": {
+    "es": "// Paso 1: imprime el saludo\nconsole.log('Hola');\n",
+    "en": "// Step 1: print the greeting\nconsole.log('Hola');\n"
+  }
+}
+```
+
+Lo que **no** se traduce: identificadores, literales, nombres de columna, clases CSS ni
+salidas esperadas. Las reglas y los `stdout-match` se escriben una sola vez, así que un
+`nombre` que cambiara de idioma dejaría la lección rota en el otro — y rota solo ahí,
+que es peor. El CI lo comprueba quitando los comentarios de las dos versiones y
+exigiendo que el resto sea idéntico.
 
 ---
 

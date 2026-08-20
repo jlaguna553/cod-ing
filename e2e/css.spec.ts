@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { expect, test, type Page } from '@playwright/test';
+import { codigo } from './pasos';
 
 /**
  * Las lecciones de CSS afirman colores computados concretos. Eso solo se puede
@@ -20,7 +21,7 @@ test('⭐ css-01: la especificidad decide los colores que la lección promete', 
     readFileSync('content/lessons/frontend/css/css-01-selectors.lesson.json', 'utf8'),
   ) as { steps: Array<{ id: string; solution?: Array<{ path: string; content: string }> }> };
   const cssOf = (id: string) =>
-    lesson.steps.find((step) => step.id === id)?.solution?.[0]?.content ?? '';
+    codigo(lesson.steps.find((step) => step.id === id)?.solution?.[0]?.content ?? '');
 
   await page.goto('/es/play/frontend/css-01-selectors');
   await waitForEditor(page);
@@ -103,7 +104,7 @@ test('⭐ html-03: el formulario pasa de decorativo a usable', async ({ page }) 
   };
 
   const solucionDe = (id: string) =>
-    lesson.steps.find((step) => step.id === id)?.solution?.[0]?.content ?? '';
+    codigo(lesson.steps.find((step) => step.id === id)?.solution?.[0]?.content ?? '');
 
   await aplicar(solucionDe('step-1-labels'));
   await expect.poll(formulario, { timeout: 60_000 }).toMatchObject({ labels: 2, etiquetado: true });

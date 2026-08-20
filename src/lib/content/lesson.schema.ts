@@ -119,10 +119,29 @@ export const RuntimeSpecSchema = z.object({
 
 /* ──────────────────────────  Workspace  ─────────────────────────── */
 
+/**
+ * El código de un archivo, en uno o en dos idiomas.
+ *
+ * **El código también es contenido bilingüe.** Se pasó por alto durante ocho
+ * fases: los enunciados, las pistas y los mensajes de las reglas viajaban en
+ * los dos idiomas desde el ADR-01, pero el archivo que el alumno tiene delante
+ * —donde suele estar la instrucción concreta, el «// Paso 1: …»— iba en
+ * castellano para todo el mundo.
+ *
+ * Se admite una cadena suelta porque la mayoría de los archivos son código sin
+ * prosa: unos datos, una plantilla, un `package.json`. En cuanto hay un
+ * comentario con dos palabras, `validate-content.ts` exige los dos idiomas.
+ *
+ * Lo que **no** se traduce son los identificadores ni los literales: las
+ * reglas y las salidas esperadas se escriben una sola vez, y un `nombre` que
+ * cambiara de idioma rompería la lección en el otro.
+ */
+export const CodeContentSchema = z.union([z.string(), LocalizedTextSchema]);
+
 export const WorkspaceFileSchema = z.object({
   path: z.string().min(1),
-  /** Contenido inicial. Soporta marcadores `/* TODO:key *\/` sustituidos por i18n. */
-  content: z.string(),
+  /** Contenido inicial. Bilingüe si lleva comentarios con prosa. */
+  content: CodeContentSchema,
   /** Visible pero no editable (código de soporte, tests). */
   readOnly: z.boolean().default(false),
   /** Existe para el runner pero no se muestra en el árbol. */
@@ -400,7 +419,7 @@ export const StepSchema = z.object({
    * **Nunca viaja al cliente** (`toClientLesson` la recorta) y el comprobador
    * de spoilers la trata igual que la solución de la lección.
    */
-  solution: z.array(z.object({ path: z.string(), content: z.string() })).optional(),
+  solution: z.array(z.object({ path: z.string(), content: CodeContentSchema })).optional(),
 });
 
 /**
@@ -505,7 +524,7 @@ export const LessonSchema = z.object({
 
   /** Solución de referencia, desbloqueable tras completar o rendirse. */
   solution: z.object({
-    files: z.array(z.object({ path: z.string(), content: z.string() })),
+    files: z.array(z.object({ path: z.string(), content: CodeContentSchema })),
     explanation: LocalizedMarkdownSchema,
   }).optional(),
 })

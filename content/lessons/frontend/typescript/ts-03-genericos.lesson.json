@@ -38,7 +38,10 @@
       {
         "path": "main.ts",
         "active": true,
-        "content": "// Esta función acepta cualquier lista… y devuelve `any`.\n// Con `any`, quien la use pierde toda la ayuda del compilador.\n\nfunction primero(items: any[]): any {\n  return items[0];\n}\n\nconst nombres = ['Ada', 'Linus'];\nconsole.log(primero(nombres).toUpperCase());\n"
+        "content": {
+          "es": "// Esta función acepta cualquier lista… y devuelve `any`.\n// Con `any`, quien la use pierde toda la ayuda del compilador.\n\nfunction primero(items: any[]): any {\n  return items[0];\n}\n\nconst nombres = ['Ada', 'Linus'];\nconsole.log(primero(nombres).toUpperCase());\n",
+          "en": "// This function accepts any list… and returns `any`.\n// With `any`, whoever uses it loses all the compiler's help.\n\nfunction primero(items: any[]): any {\n  return items[0];\n}\n\nconst nombres = ['Ada', 'Linus'];\nconsole.log(primero(nombres).toUpperCase());\n"
+        }
       }
     ]
   },

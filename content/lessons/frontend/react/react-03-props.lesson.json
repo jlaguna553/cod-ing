@@ -1,16 +1,13 @@
 {
   "$schema": "../../../schema/lesson.schema.json",
   "schemaVersion": 1,
-
   "id": "react-03-props",
   "track": "frontend",
   "module": "react",
   "order": 3,
-
   "kind": "challenge",
   "difficulty": "apprentice",
   "estimatedMinutes": 24,
-
   "title": {
     "es": "Props: los parámetros de un componente",
     "en": "Props: a component's parameters"
@@ -19,24 +16,38 @@
     "es": "Convierte un componente rígido en uno reutilizable pasándole datos desde fuera. Y entiende por qué las props son de solo lectura, que es lo que hace predecible a React.",
     "en": "Turn a rigid component into a reusable one by passing data from outside. And understand why props are read-only — the thing that makes React predictable."
   },
-  "concepts": ["react", "props", "composition", "children", "unidirectional-data-flow"],
-  "prerequisites": ["react-02-jsx"],
-
+  "concepts": [
+    "react",
+    "props",
+    "composition",
+    "children",
+    "unidirectional-data-flow"
+  ],
+  "prerequisites": [
+    "react-02-jsx"
+  ],
   "runtime": {
     "kind": "sandpack",
-    "dependencies": { "react": "^19.0.0", "react-dom": "^19.0.0" },
+    "dependencies": {
+      "react": "^19.0.0",
+      "react-dom": "^19.0.0"
+    },
     "timeoutMs": 15000
   },
-
   "workspace": {
     "entry": "src/App.jsx",
     "allowCreate": true,
     "allowDelete": false,
-    "protectedPaths": ["src/main.jsx"],
+    "protectedPaths": [
+      "src/main.jsx"
+    ],
     "files": [
       {
         "path": "src/App.jsx",
-        "content": "const players = [\n  { id: 1, name: 'Ada', level: 7, badge: 'Algoritmos' },\n  { id: 2, name: 'Linus', level: 4, badge: 'Kernel' },\n  { id: 3, name: 'Grace', level: 9, badge: 'Compiladores' },\n];\n\n// Este componente solo sabe pintar a Ada. Hazlo reutilizable.\nfunction PlayerCard() {\n  return (\n    <article className=\"card\">\n      <h2>Ada</h2>\n      <p>Nivel 7</p>\n      <span>Algoritmos</span>\n    </article>\n  );\n}\n\nexport default function App() {\n  return (\n    <section>\n      {/* TODO: pinta una tarjeta por jugador */}\n      <PlayerCard />\n    </section>\n  );\n}\n",
+        "content": {
+          "es": "const players = [\n  { id: 1, name: 'Ada', level: 7, badge: 'Algoritmos' },\n  { id: 2, name: 'Linus', level: 4, badge: 'Kernel' },\n  { id: 3, name: 'Grace', level: 9, badge: 'Compiladores' },\n];\n\n// Este componente solo sabe pintar a Ada. Hazlo reutilizable.\nfunction PlayerCard() {\n  return (\n    <article className=\"card\">\n      <h2>Ada</h2>\n      <p>Nivel 7</p>\n      <span>Algoritmos</span>\n    </article>\n  );\n}\n\nexport default function App() {\n  return (\n    <section>\n      {/* TODO: pinta una tarjeta por jugador */}\n      <PlayerCard />\n    </section>\n  );\n}\n",
+          "en": "const players = [\n  { id: 1, name: 'Ada', level: 7, badge: 'Algoritmos' },\n  { id: 2, name: 'Linus', level: 4, badge: 'Kernel' },\n  { id: 3, name: 'Grace', level: 9, badge: 'Compiladores' },\n];\n\n// This component only knows how to render Ada. Make it reusable.\nfunction PlayerCard() {\n  return (\n    <article className=\"card\">\n      <h2>Ada</h2>\n      <p>Nivel 7</p>\n      <span>Algoritmos</span>\n    </article>\n  );\n}\n\nexport default function App() {\n  return (\n    <section>\n      {/* TODO: render one card per player */}\n      <PlayerCard />\n    </section>\n  );\n}\n"
+        },
         "active": true
       },
       {
@@ -46,7 +57,6 @@
       }
     ]
   },
-
   "rules": [
     {
       "id": "receives-props",
@@ -129,7 +139,6 @@
       "points": 25
     }
   ],
-
   "steps": [
     {
       "id": "step-1-parameters",
@@ -146,8 +155,14 @@
         "en": "Turn `PlayerCard` into a component that receives the player's data through props."
       },
       "focusFile": "src/App.jsx",
-      "focusLines": [7, 16],
-      "ruleIds": ["receives-props", "no-hardcoded-name"],
+      "focusLines": [
+        7,
+        16
+      ],
+      "ruleIds": [
+        "receives-props",
+        "no-hardcoded-name"
+      ],
       "xp": 45,
       "hints": [
         {
@@ -177,8 +192,15 @@
         "en": "Render one `PlayerCard` per player in the array, each with its `key`."
       },
       "focusFile": "src/App.jsx",
-      "focusLines": [18, 25],
-      "ruleIds": ["renders-all-cards", "list-has-key", "shows-all-names"],
+      "focusLines": [
+        18,
+        25
+      ],
+      "ruleIds": [
+        "renders-all-cards",
+        "list-has-key",
+        "shows-all-names"
+      ],
       "xp": 50
     },
     {
@@ -196,7 +218,9 @@
         "en": "No code change: identify who owns `players` and where a level change would have to travel."
       },
       "focusFile": "src/App.jsx",
-      "ruleIds": ["no-prop-mutation"],
+      "ruleIds": [
+        "no-prop-mutation"
+      ],
       "xp": 35,
       "bestPractice": {
         "es": "**Flujo unidireccional:** esta es la idea que React popularizó y que hoy siguen Vue, Svelte y Angular moderno. El dato baja, los eventos suben. Cuando un componente necesita un dato que no le pertenece, se «eleva el estado» al ancestro común más cercano en lugar de duplicarlo.",
@@ -204,17 +228,16 @@
       }
     }
   ],
-
   "drills": [],
-
   "reward": {
     "baseXp": 170,
     "flawlessBonus": 65,
     "noHintBonus": 35,
     "comboMultiplierCap": 3,
-    "achievements": ["prop-plumber"]
+    "achievements": [
+      "prop-plumber"
+    ]
   },
-
   "solution": {
     "files": [
       {

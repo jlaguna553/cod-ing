@@ -36,7 +36,10 @@
     "files": [
       {
         "path": "index.js",
-        "content": "const prices = [10, 25, 40, 5];\n\n// TODO: crea `withTax` aplicando un 21% a cada precio\nconst withTax = null;\n\nconsole.log(withTax);\n",
+        "content": {
+          "es": "const prices = [10, 25, 40, 5];\n\n// TODO: crea `withTax` aplicando un 21% a cada precio\nconst withTax = null;\n\nconsole.log(withTax);\n",
+          "en": "const prices = [10, 25, 40, 5];\n\n// TODO: create `withTax` applying 21% to each price\nconst withTax = null;\n\nconsole.log(withTax);\n"
+        },
         "active": true
       },
       {

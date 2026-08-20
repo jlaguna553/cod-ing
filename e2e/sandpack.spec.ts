@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { expect, test, type Page } from '@playwright/test';
+import { codigo } from './pasos';
 
 /**
  * Sandpack: que compile, y que el evaluador pueda leer lo que renderiza.
@@ -98,7 +99,7 @@ test('⭐ react-05: los tres pasos renderizan lo que prometen', async ({ page })
     });
 
   for (const step of lesson.steps) {
-    const code = step.solution?.find((file) => file.path === 'src/App.jsx')?.content;
+    const code = codigo(step.solution?.find((file) => file.path === 'src/App.jsx')?.content ?? '');
     expect(code, `${step.id} no trae solución`).toBeTruthy();
 
     await page.locator('.monaco-editor').click({ position: { x: 100, y: 40 } });

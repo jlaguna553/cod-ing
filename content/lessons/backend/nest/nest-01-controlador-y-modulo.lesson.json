@@ -53,7 +53,10 @@
       {
         "path": "usuarios.controller.ts",
         "active": true,
-        "content": "// Paso 1: esto todavia no es un controlador. Es una clase normal.\n\nexport class UsuariosController {\n  todos() {\n    return [{ id: 1, nombre: 'Ana' }];\n  }\n}\n"
+        "content": {
+          "es": "// Paso 1: esto todavia no es un controlador. Es una clase normal.\n\nexport class UsuariosController {\n  todos() {\n    return [{ id: 1, nombre: 'Ana' }];\n  }\n}\n",
+          "en": "// Step 1: this isn't a controller yet. It's an ordinary class.\n\nexport class UsuariosController {\n  todos() {\n    return [{ id: 1, nombre: 'Ana' }];\n  }\n}\n"
+        }
       },
       {
         "path": "app.module.ts",
@@ -62,7 +65,10 @@
       {
         "path": "main.ts",
         "readOnly": true,
-        "content": "// El arranque. En un proyecto de Nest esto no se toca casi nunca.\n\nimport { NestFactory } from '@nestjs/core';\nimport { AppModule } from './app.module';\n\nasync function bootstrap() {\n  const app = await NestFactory.create(AppModule);\n  await app.listen(3000);\n}\n\nbootstrap();\n"
+        "content": {
+          "es": "// El arranque. En un proyecto de Nest esto no se toca casi nunca.\n\nimport { NestFactory } from '@nestjs/core';\nimport { AppModule } from './app.module';\n\nasync function bootstrap() {\n  const app = await NestFactory.create(AppModule);\n  await app.listen(3000);\n}\n\nbootstrap();\n",
+          "en": "// The bootstrap. In a Nest project this is barely ever touched.\n\nimport { NestFactory } from '@nestjs/core';\nimport { AppModule } from './app.module';\n\nasync function bootstrap() {\n  const app = await NestFactory.create(AppModule);\n  await app.listen(3000);\n}\n\nbootstrap();\n"
+        }
       }
     ]
   },

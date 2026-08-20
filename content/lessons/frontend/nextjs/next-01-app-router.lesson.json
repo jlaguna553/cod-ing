@@ -54,7 +54,10 @@
       {
         "path": "app/page.tsx",
         "active": true,
-        "content": "// Esta es la página de `/`. Falta el layout raíz para que Next arranque.\n\nexport default function Page() {\n  return <h1>Portada</h1>;\n}\n"
+        "content": {
+          "es": "// Esta es la página de `/`. Falta el layout raíz para que Next arranque.\n\nexport default function Page() {\n  return <h1>Portada</h1>;\n}\n",
+          "en": "// This is the page for `/`. The root layout is missing for Next to start.\n\nexport default function Page() {\n  return <h1>Portada</h1>;\n}\n"
+        }
       },
       {
         "path": "package.json",

@@ -38,7 +38,10 @@
       {
         "path": "main.ts",
         "active": true,
-        "content": "// Paso 1: haz que esto NO compile.\n// Cambia el 42 por un texto y ejecuta para leer el error.\n\nfunction doble(n: number): number {\n  return n * 2;\n}\n\nconsole.log(doble(42));\n"
+        "content": {
+          "es": "// Paso 1: haz que esto NO compile.\n// Cambia el 42 por un texto y ejecuta para leer el error.\n\nfunction doble(n: number): number {\n  return n * 2;\n}\n\nconsole.log(doble(42));\n",
+          "en": "// Step 1: make this NOT compile.\n// Change the 42 for a text and run to read the error.\n\nfunction doble(n: number): number {\n  return n * 2;\n}\n\nconsole.log(doble(42));\n"
+        }
       }
     ]
   },

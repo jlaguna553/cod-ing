@@ -1,16 +1,13 @@
 {
   "$schema": "../../../schema/lesson.schema.json",
   "schemaVersion": 1,
-
   "id": "vue-05-word-count",
   "track": "frontend",
   "module": "vue",
   "order": 5,
-
   "kind": "challenge",
   "difficulty": "adept",
   "estimatedMinutes": 28,
-
   "title": {
     "es": "Contar palabras: el ejercicio donde el enunciado miente",
     "en": "Word count: the exercise where the statement lies"
@@ -19,25 +16,37 @@
     "es": "«Cuenta cuántas veces aparece cada palabra» parece una línea de código. Las mayúsculas y la puntuación deciden que no lo sea.",
     "en": "\"Count how many times each word appears\" looks like one line of code. Case and punctuation decide otherwise."
   },
-  "concepts": ["vue", "computed", "reduce", "normalizacion", "sort"],
-  "prerequisites": ["vue-03-reactivity", "vue-04-todo-list"],
-
+  "concepts": [
+    "vue",
+    "computed",
+    "reduce",
+    "normalizacion",
+    "sort"
+  ],
+  "prerequisites": [
+    "vue-03-reactivity",
+    "vue-04-todo-list"
+  ],
   "runtime": {
     "kind": "vue",
     "dependencies": {},
     "timeoutMs": 15000
   },
-
   "workspace": {
     "entry": "src/App.vue",
     "allowCreate": false,
     "allowDelete": false,
-    "protectedPaths": ["src/main.js"],
+    "protectedPaths": [
+      "src/main.js"
+    ],
     "files": [
       {
         "path": "src/App.vue",
         "active": true,
-        "content": "<script setup>\nimport { ref } from 'vue';\n\n// Diez palabras, y ninguna cuenta lo que parece.\nconst frase = ref('Un gato, y un perro; y otro perro. Y ya.');\n</script>\n\n<template>\n  <section>\n    <p class=\"frase\">{{ frase }}</p>\n\n    <!-- TODO: una <li class=\"palabra\"> por palabra distinta,\n         con el formato \"palabra: veces\". -->\n    <ul class=\"conteo\"></ul>\n  </section>\n</template>\n"
+        "content": {
+          "es": "<script setup>\nimport { ref } from 'vue';\n\n// Diez palabras, y ninguna cuenta lo que parece.\nconst frase = ref('Un gato, y un perro; y otro perro. Y ya.');\n</script>\n\n<template>\n  <section>\n    <p class=\"frase\">{{ frase }}</p>\n\n    <!-- TODO: una <li class=\"palabra\"> por palabra distinta,\n         con el formato \"palabra: veces\". -->\n    <ul class=\"conteo\"></ul>\n  </section>\n</template>\n",
+          "en": "<script setup>\nimport { ref } from 'vue';\n\n// Ten words, and not one of them counts what it looks like.\nconst frase = ref('Un gato, y un perro; y otro perro. Y ya.');\n</script>\n\n<template>\n  <section>\n    <p class=\"frase\">{{ frase }}</p>\n\n    <!-- TODO: one <li class=\"palabra\"> per distinct word,\n         formatted as \"word: times\". -->\n    <ul class=\"conteo\"></ul>\n  </section>\n</template>\n"
+        }
       },
       {
         "path": "src/main.js",
@@ -46,7 +55,6 @@
       }
     ]
   },
-
   "rules": [
     {
       "id": "naive-count",
@@ -145,7 +153,6 @@
       "points": 15
     }
   ],
-
   "steps": [
     {
       "id": "step-1-naive",
@@ -162,7 +169,10 @@
         "en": "Count the words by splitting on whitespace and render one `<li class=\"palabra\">` each, in the form `word: count`."
       },
       "focusFile": "src/App.vue",
-      "ruleIds": ["naive-count", "uses-computed"],
+      "ruleIds": [
+        "naive-count",
+        "uses-computed"
+      ],
       "xp": 40,
       "hints": [
         {
@@ -198,7 +208,10 @@
         "en": "Normalize before counting: same word in upper and lower case must add together, edge punctuation doesn't count, and no empty entries. Six should remain."
       },
       "focusFile": "src/App.vue",
-      "ruleIds": ["normalized-count", "uses-computed"],
+      "ruleIds": [
+        "normalized-count",
+        "uses-computed"
+      ],
       "xp": 50,
       "hints": [
         {
@@ -247,7 +260,12 @@
         "en": "Sort the count from most to least frequent. The first entry must be `y: 3`."
       },
       "focusFile": "src/App.vue",
-      "ruleIds": ["top-word", "sorts", "normalized-count", "no-hardcoded-result"],
+      "ruleIds": [
+        "top-word",
+        "sorts",
+        "normalized-count",
+        "no-hardcoded-result"
+      ],
       "xp": 45,
       "hints": [
         {
@@ -273,9 +291,7 @@
       }
     }
   ],
-
   "drills": [],
-
   "reward": {
     "baseXp": 145,
     "flawlessBonus": 55,
@@ -283,7 +299,6 @@
     "comboMultiplierCap": 3,
     "achievements": []
   },
-
   "solution": {
     "files": [
       {

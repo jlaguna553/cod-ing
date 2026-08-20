@@ -3,7 +3,7 @@ import test from 'node:test';
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { LessonSchema } from '@/lib/content/lesson.schema';
-import { localize } from '@/lib/content/localize';
+import { codigoDe, localize } from '@/lib/content/localize';
 import type { Lesson } from '@/lib/content/types';
 import { emptyContext, evaluateRule } from '@/lib/engine';
 import type { SqlQueryResult } from '@/lib/engine/context';
@@ -50,7 +50,7 @@ async function runQuery(lesson: Lesson, sql: string): Promise<SqlQueryResult | {
     .filter((file) => file !== lesson.workspace.entry && file.endsWith('.sql'))
     .sort();
 
-  for (const seed of seeds) await db.exec(files[seed]);
+  for (const seed of seeds) await db.exec(codigoDe(files[seed]));
 
   await db.exec('BEGIN');
   try {
@@ -94,9 +94,10 @@ for (const lesson of sqlLessons()) {
 
     if (sqlRules.length === 0) continue;
 
-    const reference = (step.solution ?? lesson.solution?.files ?? []).find(
+    const referenciaCruda = (step.solution ?? lesson.solution?.files ?? []).find(
       (file) => file.path === lesson.workspace.entry,
     )?.content;
+    const reference = referenciaCruda === undefined ? undefined : codigoDe(referenciaCruda);
 
     test(`⭐ ${lesson.id} · paso ${index + 1} (${step.id}): la consulta de referencia cumple lo que promete`, async () => {
       assert.ok(
@@ -125,9 +126,10 @@ for (const lesson of sqlLessons()) {
   }
 
   test(`⭐ ${lesson.id}: la consulta de partida NO pasa las comprobaciones`, async () => {
-    const starter = lesson.workspace.files.find(
+    const partida = lesson.workspace.files.find(
       (file) => file.path === lesson.workspace.entry,
     )?.content;
+    const starter = partida === undefined ? undefined : codigoDe(partida);
     assert.ok(starter);
 
     const outcome = await runQuery(lesson, starter);

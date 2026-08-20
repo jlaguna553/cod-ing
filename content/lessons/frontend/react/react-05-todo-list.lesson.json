@@ -1,16 +1,13 @@
 {
   "$schema": "../../../schema/lesson.schema.json",
   "schemaVersion": 1,
-
   "id": "react-05-todo-list",
   "track": "frontend",
   "module": "react",
   "order": 5,
-
   "kind": "challenge",
   "difficulty": "apprentice",
   "estimatedMinutes": 26,
-
   "title": {
     "es": "La lista de tareas en React: derivar en vez de duplicar",
     "en": "The todo list in React: derive instead of duplicating"
@@ -19,25 +16,41 @@
     "es": "TodoMVC otra vez, ahora con la trampa propia de React: el `useState` de más que se queda desincronizado y nadie sabe por qué.",
     "en": "TodoMVC again, now with React's own trap: the extra `useState` that goes out of sync and nobody knows why."
   },
-  "concepts": ["react", "useState", "estado-derivado", "key", "listas"],
-  "prerequisites": ["react-02-jsx", "react-03-props", "react-04-state-and-events"],
-
+  "concepts": [
+    "react",
+    "useState",
+    "estado-derivado",
+    "key",
+    "listas"
+  ],
+  "prerequisites": [
+    "react-02-jsx",
+    "react-03-props",
+    "react-04-state-and-events"
+  ],
   "runtime": {
     "kind": "sandpack",
-    "dependencies": { "react": "^19.0.0", "react-dom": "^19.0.0" },
+    "dependencies": {
+      "react": "^19.0.0",
+      "react-dom": "^19.0.0"
+    },
     "timeoutMs": 20000
   },
-
   "workspace": {
     "entry": "src/App.jsx",
     "allowCreate": false,
     "allowDelete": false,
-    "protectedPaths": ["src/main.jsx"],
+    "protectedPaths": [
+      "src/main.jsx"
+    ],
     "files": [
       {
         "path": "src/App.jsx",
         "active": true,
-        "content": "import { useState } from 'react';\n\nconst INICIALES = [\n  { id: 1, texto: 'Aprender useState', hecha: true },\n  { id: 2, texto: 'Dominar las listas', hecha: false },\n  { id: 3, texto: 'Vencer al boss', hecha: false },\n];\n\nexport default function App() {\n  const [tareas] = useState(INICIALES);\n\n  return (\n    <section>\n      <h1>Mis tareas</h1>\n\n      {/* TODO 1: pinta un <li className=\"tarea\"> por tarea.\n          Las hechas llevan además la clase \"hecha\". */}\n      <ul></ul>\n    </section>\n  );\n}\n"
+        "content": {
+          "es": "import { useState } from 'react';\n\nconst INICIALES = [\n  { id: 1, texto: 'Aprender useState', hecha: true },\n  { id: 2, texto: 'Dominar las listas', hecha: false },\n  { id: 3, texto: 'Vencer al boss', hecha: false },\n];\n\nexport default function App() {\n  const [tareas] = useState(INICIALES);\n\n  return (\n    <section>\n      <h1>Mis tareas</h1>\n\n      {/* TODO 1: pinta un <li className=\"tarea\"> por tarea.\n          Las hechas llevan además la clase \"hecha\". */}\n      <ul></ul>\n    </section>\n  );\n}\n",
+          "en": "import { useState } from 'react';\n\nconst INICIALES = [\n  { id: 1, texto: 'Aprender useState', hecha: true },\n  { id: 2, texto: 'Dominar las listas', hecha: false },\n  { id: 3, texto: 'Vencer al boss', hecha: false },\n];\n\nexport default function App() {\n  const [tareas] = useState(INICIALES);\n\n  return (\n    <section>\n      <h1>Mis tareas</h1>\n\n      {/* TODO 1: render one <li className=\"tarea\"> per task.\n          Done ones also carry the class \"hecha\". */}\n      <ul></ul>\n    </section>\n  );\n}\n"
+        }
       },
       {
         "path": "src/main.jsx",
@@ -46,7 +59,6 @@
       }
     ]
   },
-
   "rules": [
     {
       "id": "renders-three",
@@ -155,7 +167,6 @@
       "points": 25
     }
   ],
-
   "steps": [
     {
       "id": "step-1-render",
@@ -172,8 +183,16 @@
         "en": "Render one `<li className=\"tarea\">` per task with its text, keyed by `id`, and add the `hecha` class to completed ones."
       },
       "focusFile": "src/App.jsx",
-      "focusLines": [16, 18],
-      "ruleIds": ["renders-three", "marks-done", "stable-key", "no-index-key"],
+      "focusLines": [
+        16,
+        18
+      ],
+      "ruleIds": [
+        "renders-three",
+        "marks-done",
+        "stable-key",
+        "no-index-key"
+      ],
       "xp": 45,
       "hints": [
         {
@@ -213,7 +232,12 @@
         "en": "Show how many tasks are left in a `<p className=\"pendientes\">`, computed from the array — no `useState`, no `useEffect`."
       },
       "focusFile": "src/App.jsx",
-      "ruleIds": ["shows-pending", "no-derived-state", "no-useeffect-sync", "renders-three"],
+      "ruleIds": [
+        "shows-pending",
+        "no-derived-state",
+        "no-useeffect-sync",
+        "renders-three"
+      ],
       "xp": 50,
       "hints": [
         {
@@ -253,7 +277,12 @@
         "en": "Make clicking a task toggle its done state, without mutating the array or the objects. The count must stay correct."
       },
       "focusFile": "src/App.jsx",
-      "ruleIds": ["renders-three", "marks-done", "shows-pending", "no-derived-state"],
+      "ruleIds": [
+        "renders-three",
+        "marks-done",
+        "shows-pending",
+        "no-derived-state"
+      ],
       "xp": 55,
       "hints": [
         {
@@ -275,9 +304,7 @@
       ]
     }
   ],
-
   "drills": [],
-
   "reward": {
     "baseXp": 140,
     "flawlessBonus": 50,
@@ -285,7 +312,6 @@
     "comboMultiplierCap": 3,
     "achievements": []
   },
-
   "solution": {
     "files": [
       {

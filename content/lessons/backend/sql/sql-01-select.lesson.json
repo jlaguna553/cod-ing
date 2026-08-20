@@ -39,12 +39,18 @@
       {
         "path": "query.sql",
         "active": true,
-        "content": "-- Paso 1: devuelve SOLO la columna `nombre` de todos los productos.\n-- Pulsa Ejecutar para verla correr contra un PostgreSQL de verdad.\nSELECT * FROM productos;\n"
+        "content": {
+          "es": "-- Paso 1: devuelve SOLO la columna `nombre` de todos los productos.\n-- Pulsa Ejecutar para verla correr contra un PostgreSQL de verdad.\nSELECT * FROM productos;\n",
+          "en": "-- Step 1: return ONLY the `nombre` column of every product.\n-- Press Run to watch it run against a real PostgreSQL.\nSELECT * FROM productos;\n"
+        }
       },
       {
         "path": "schema.sql",
         "readOnly": true,
-        "content": "CREATE TABLE productos (\n  id          SERIAL PRIMARY KEY,\n  nombre      TEXT NOT NULL,\n  categoria   TEXT NOT NULL,\n  precio      NUMERIC(10,2) NOT NULL,\n  stock       INTEGER NOT NULL,\n  -- Sin valor cuando el producto nunca ha estado en oferta.\n  descuento   NUMERIC(5,2),\n  descatalogado BOOLEAN NOT NULL DEFAULT FALSE\n);\n\nINSERT INTO productos (nombre, categoria, precio, stock, descuento, descatalogado) VALUES\n  ('Teclado mecánico',  'periféricos', 89.90,  12, 10.00, FALSE),\n  ('Ratón vertical',    'periféricos', 45.50,   0, NULL,  FALSE),\n  ('Monitor 27\"',       'pantallas',  219.00,   5, 15.00, FALSE),\n  ('Monitor 24\"',       'pantallas',  149.00,  18, NULL,  FALSE),\n  ('Webcam 1080p',      'video',       59.90,   3, NULL,  TRUE),\n  ('Micrófono USB',     'audio',       79.00,   7,  5.00, FALSE),\n  ('Alfombrilla XL',    'periféricos',  19.90, 140, NULL,  FALSE);\n"
+        "content": {
+          "es": "CREATE TABLE productos (\n  id          SERIAL PRIMARY KEY,\n  nombre      TEXT NOT NULL,\n  categoria   TEXT NOT NULL,\n  precio      NUMERIC(10,2) NOT NULL,\n  stock       INTEGER NOT NULL,\n  -- Sin valor cuando el producto nunca ha estado en oferta.\n  descuento   NUMERIC(5,2),\n  descatalogado BOOLEAN NOT NULL DEFAULT FALSE\n);\n\nINSERT INTO productos (nombre, categoria, precio, stock, descuento, descatalogado) VALUES\n  ('Teclado mecánico',  'periféricos', 89.90,  12, 10.00, FALSE),\n  ('Ratón vertical',    'periféricos', 45.50,   0, NULL,  FALSE),\n  ('Monitor 27\"',       'pantallas',  219.00,   5, 15.00, FALSE),\n  ('Monitor 24\"',       'pantallas',  149.00,  18, NULL,  FALSE),\n  ('Webcam 1080p',      'video',       59.90,   3, NULL,  TRUE),\n  ('Micrófono USB',     'audio',       79.00,   7,  5.00, FALSE),\n  ('Alfombrilla XL',    'periféricos',  19.90, 140, NULL,  FALSE);\n",
+          "en": "CREATE TABLE productos (\n  id          SERIAL PRIMARY KEY,\n  nombre      TEXT NOT NULL,\n  categoria   TEXT NOT NULL,\n  precio      NUMERIC(10,2) NOT NULL,\n  stock       INTEGER NOT NULL,\n  -- No value when the product has never been on sale.\n  descuento   NUMERIC(5,2),\n  descatalogado BOOLEAN NOT NULL DEFAULT FALSE\n);\n\nINSERT INTO productos (nombre, categoria, precio, stock, descuento, descatalogado) VALUES\n  ('Teclado mecánico',  'periféricos', 89.90,  12, 10.00, FALSE),\n  ('Ratón vertical',    'periféricos', 45.50,   0, NULL,  FALSE),\n  ('Monitor 27\"',       'pantallas',  219.00,   5, 15.00, FALSE),\n  ('Monitor 24\"',       'pantallas',  149.00,  18, NULL,  FALSE),\n  ('Webcam 1080p',      'video',       59.90,   3, NULL,  TRUE),\n  ('Micrófono USB',     'audio',       79.00,   7,  5.00, FALSE),\n  ('Alfombrilla XL',    'periféricos',  19.90, 140, NULL,  FALSE);\n"
+        }
       }
     ]
   },
@@ -97,11 +103,11 @@
         },
         {
           "nombre": "Monitor 27\"",
-          "precio": 219.0
+          "precio": 219
         },
         {
           "nombre": "Monitor 24\"",
-          "precio": 149.0
+          "precio": 149
         }
       ],
       "ordered": false,

@@ -1,16 +1,13 @@
 {
   "$schema": "../../../schema/lesson.schema.json",
   "schemaVersion": 1,
-
   "id": "html-03-forms",
   "track": "frontend",
   "module": "html",
   "order": 3,
-
   "kind": "challenge",
   "difficulty": "apprentice",
   "estimatedMinutes": 22,
-
   "title": {
     "es": "Formularios: el placeholder no es una etiqueta",
     "en": "Forms: a placeholder is not a label"
@@ -19,15 +16,21 @@
     "es": "Un formulario que se ve bien y no se puede usar con teclado, ni con lector de pantalla, ni cuando el usuario ya ha empezado a escribir.",
     "en": "A form that looks fine and can't be used with a keyboard, or a screen reader, or once the user has started typing."
   },
-  "concepts": ["html", "formularios", "accesibilidad", "label", "validacion"],
-  "prerequisites": ["html-02-semantic-structure"],
-
+  "concepts": [
+    "html",
+    "formularios",
+    "accesibilidad",
+    "label",
+    "validacion"
+  ],
+  "prerequisites": [
+    "html-02-semantic-structure"
+  ],
   "runtime": {
     "kind": "dom",
     "dependencies": {},
     "timeoutMs": 5000
   },
-
   "workspace": {
     "entry": "index.html",
     "allowCreate": false,
@@ -37,11 +40,13 @@
       {
         "path": "index.html",
         "active": true,
-        "content": "<!doctype html>\n<html lang=\"es\">\n  <head>\n    <meta charset=\"utf-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />\n    <title>Alta de jugador</title>\n  </head>\n  <body>\n    <main>\n      <h1>Únete a la partida</h1>\n\n      <form>\n        <!-- TODO 1: cada campo necesita su <label> asociada -->\n        <input placeholder=\"Correo\" />\n        <input placeholder=\"Contraseña\" />\n\n        <!-- TODO 3: esto parece un botón y no lo es -->\n        <div class=\"boton\" onclick=\"enviar()\">Crear cuenta</div>\n      </form>\n    </main>\n  </body>\n</html>\n"
+        "content": {
+          "es": "<!doctype html>\n<html lang=\"es\">\n  <head>\n    <meta charset=\"utf-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />\n    <title>Alta de jugador</title>\n  </head>\n  <body>\n    <main>\n      <h1>Únete a la partida</h1>\n\n      <form>\n        <!-- TODO 1: cada campo necesita su <label> asociada -->\n        <input placeholder=\"Correo\" />\n        <input placeholder=\"Contraseña\" />\n\n        <!-- TODO 3: esto parece un botón y no lo es -->\n        <div class=\"boton\" onclick=\"enviar()\">Crear cuenta</div>\n      </form>\n    </main>\n  </body>\n</html>\n",
+          "en": "<!doctype html>\n<html lang=\"es\">\n  <head>\n    <meta charset=\"utf-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />\n    <title>Alta de jugador</title>\n  </head>\n  <body>\n    <main>\n      <h1>Únete a la partida</h1>\n\n      <form>\n        <!-- TODO 1: every field needs its own associated <label> -->\n        <input placeholder=\"Correo\" />\n        <input placeholder=\"Contraseña\" />\n\n        <!-- TODO 3: this looks like a button and isn't one -->\n        <div class=\"boton\" onclick=\"enviar()\">Crear cuenta</div>\n      </form>\n    </main>\n  </body>\n</html>\n"
+        }
       }
     ]
   },
-
   "rules": [
     {
       "id": "label-exists",
@@ -177,7 +182,6 @@
       "points": 20
     }
   ],
-
   "steps": [
     {
       "id": "step-1-labels",
@@ -194,8 +198,16 @@
         "en": "Associate a `<label>` with each field via `for`/`id` (`correo` and `clave`), without leaving the `placeholder` as the only name."
       },
       "focusFile": "index.html",
-      "focusLines": [13, 15],
-      "ruleIds": ["label-exists", "input-has-id", "two-labels", "placeholder-not-label"],
+      "focusLines": [
+        13,
+        15
+      ],
+      "ruleIds": [
+        "label-exists",
+        "input-has-id",
+        "two-labels",
+        "placeholder-not-label"
+      ],
       "xp": 40,
       "hints": [
         {
@@ -212,7 +224,10 @@
       "solution": [
         {
           "path": "index.html",
-          "content": "<!doctype html>\n<html lang=\"es\">\n  <head>\n    <meta charset=\"utf-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />\n    <title>Alta de jugador</title>\n  </head>\n  <body>\n    <main>\n      <h1>Únete a la partida</h1>\n\n      <form>\n        <label for=\"correo\">Correo</label>\n        <input id=\"correo\" placeholder=\"tucorreo@ejemplo.com\" />\n\n        <label for=\"clave\">Contraseña</label>\n        <input id=\"clave\" />\n\n        <!-- TODO 3: esto parece un botón y no lo es -->\n        <div class=\"boton\" onclick=\"enviar()\">Crear cuenta</div>\n      </form>\n    </main>\n  </body>\n</html>\n"
+          "content": {
+            "es": "<!doctype html>\n<html lang=\"es\">\n  <head>\n    <meta charset=\"utf-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />\n    <title>Alta de jugador</title>\n  </head>\n  <body>\n    <main>\n      <h1>Únete a la partida</h1>\n\n      <form>\n        <label for=\"correo\">Correo</label>\n        <input id=\"correo\" placeholder=\"tucorreo@ejemplo.com\" />\n\n        <label for=\"clave\">Contraseña</label>\n        <input id=\"clave\" />\n\n        <!-- TODO 3: esto parece un botón y no lo es -->\n        <div class=\"boton\" onclick=\"enviar()\">Crear cuenta</div>\n      </form>\n    </main>\n  </body>\n</html>\n",
+            "en": "<!doctype html>\n<html lang=\"es\">\n  <head>\n    <meta charset=\"utf-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />\n    <title>Alta de jugador</title>\n  </head>\n  <body>\n    <main>\n      <h1>Únete a la partida</h1>\n\n      <form>\n        <label for=\"correo\">Correo</label>\n        <input id=\"correo\" placeholder=\"tucorreo@ejemplo.com\" />\n\n        <label for=\"clave\">Contraseña</label>\n        <input id=\"clave\" />\n\n        <!-- TODO 3: this looks like a button and isn't one -->\n        <div class=\"boton\" onclick=\"enviar()\">Crear cuenta</div>\n      </form>\n    </main>\n  </body>\n</html>\n"
+          }
         }
       ]
     },
@@ -231,12 +246,20 @@
         "en": "Set `type=\"email\"` and `type=\"password\"` on their fields, and mark both as `required`."
       },
       "focusFile": "index.html",
-      "ruleIds": ["email-type", "password-type", "required-fields", "two-labels"],
+      "ruleIds": [
+        "email-type",
+        "password-type",
+        "required-fields",
+        "two-labels"
+      ],
       "xp": 40,
       "solution": [
         {
           "path": "index.html",
-          "content": "<!doctype html>\n<html lang=\"es\">\n  <head>\n    <meta charset=\"utf-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />\n    <title>Alta de jugador</title>\n  </head>\n  <body>\n    <main>\n      <h1>Únete a la partida</h1>\n\n      <form>\n        <label for=\"correo\">Correo</label>\n        <input id=\"correo\" type=\"email\" placeholder=\"tucorreo@ejemplo.com\" required />\n\n        <label for=\"clave\">Contraseña</label>\n        <input id=\"clave\" type=\"password\" required />\n\n        <!-- TODO 3: esto parece un botón y no lo es -->\n        <div class=\"boton\" onclick=\"enviar()\">Crear cuenta</div>\n      </form>\n    </main>\n  </body>\n</html>\n"
+          "content": {
+            "es": "<!doctype html>\n<html lang=\"es\">\n  <head>\n    <meta charset=\"utf-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />\n    <title>Alta de jugador</title>\n  </head>\n  <body>\n    <main>\n      <h1>Únete a la partida</h1>\n\n      <form>\n        <label for=\"correo\">Correo</label>\n        <input id=\"correo\" type=\"email\" placeholder=\"tucorreo@ejemplo.com\" required />\n\n        <label for=\"clave\">Contraseña</label>\n        <input id=\"clave\" type=\"password\" required />\n\n        <!-- TODO 3: esto parece un botón y no lo es -->\n        <div class=\"boton\" onclick=\"enviar()\">Crear cuenta</div>\n      </form>\n    </main>\n  </body>\n</html>\n",
+            "en": "<!doctype html>\n<html lang=\"es\">\n  <head>\n    <meta charset=\"utf-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />\n    <title>Alta de jugador</title>\n  </head>\n  <body>\n    <main>\n      <h1>Únete a la partida</h1>\n\n      <form>\n        <label for=\"correo\">Correo</label>\n        <input id=\"correo\" type=\"email\" placeholder=\"tucorreo@ejemplo.com\" required />\n\n        <label for=\"clave\">Contraseña</label>\n        <input id=\"clave\" type=\"password\" required />\n\n        <!-- TODO 3: this looks like a button and isn't one -->\n        <div class=\"boton\" onclick=\"enviar()\">Crear cuenta</div>\n      </form>\n    </main>\n  </body>\n</html>\n"
+          }
         }
       ],
       "bestPractice": {
@@ -259,7 +282,12 @@
         "en": "Replace the `<div onclick>` with a real `<button type=\"submit\">`."
       },
       "focusFile": "index.html",
-      "ruleIds": ["real-button", "no-div-button", "two-labels", "email-type"],
+      "ruleIds": [
+        "real-button",
+        "no-div-button",
+        "two-labels",
+        "email-type"
+      ],
       "xp": 45,
       "solution": [
         {
@@ -273,9 +301,7 @@
       }
     }
   ],
-
   "drills": [],
-
   "reward": {
     "baseXp": 120,
     "flawlessBonus": 45,
@@ -283,7 +309,6 @@
     "comboMultiplierCap": 3,
     "achievements": []
   },
-
   "solution": {
     "files": [
       {

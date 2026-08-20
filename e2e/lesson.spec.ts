@@ -86,6 +86,24 @@ test('⭐ cambiar de idioma conserva el código escrito (ADR-01)', async ({ page
   await expect(page.locator('.view-lines')).toContainText('1.21');
 });
 
+test('⭐ el código de partida también está traducido', async ({ page }) => {
+  /*
+   * Los comentarios del código son contenido, y durante ocho fases fueron el
+   * único que no se traducía: el enunciado salía en inglés y el archivo de al
+   * lado —donde está la instrucción del paso— seguía en castellano.
+   */
+  await page.goto('/es/play/frontend/js-03-array-map');
+  await waitForPristineEditor(page);
+  await expect(page.locator('.view-lines')).toContainText('TODO: crea');
+
+  await page.goto('/en/play/frontend/js-03-array-map');
+  await waitForPristineEditor(page);
+  await expect(page.locator('.view-lines')).toContainText('TODO: create');
+
+  // Y lo que NO se traduce: el identificador que piden las reglas sigue igual.
+  await expect(page.locator('.view-lines')).toContainText('withTax');
+});
+
 test('el runner de DOM ejecuta el código y evalúa las reglas', async ({ page }) => {
   await page.goto(LESSON);
   await waitForPristineEditor(page);

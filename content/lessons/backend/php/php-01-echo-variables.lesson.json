@@ -36,7 +36,10 @@
       {
         "path": "saludo.php",
         "active": true,
-        "content": "<?php\n\n$nombre = 'Ada';\n\n// Paso 1: imprime exactamente  Hola, Ada.\n// Usa la variable, no escribas «Ada» a mano.\necho 'Hola.';\n"
+        "content": {
+          "es": "<?php\n\n$nombre = 'Ada';\n\n// Paso 1: imprime exactamente  Hola, Ada.\n// Usa la variable, no escribas «Ada» a mano.\necho 'Hola.';\n",
+          "en": "<?php\n\n$nombre = 'Ada';\n\n// Step 1: print exactly  Hola, Ada.\n// Use the variable, don't type «Ada» by hand.\necho 'Hola.';\n"
+        }
       }
     ]
   },

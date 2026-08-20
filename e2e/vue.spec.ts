@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { expect, test, type Page } from '@playwright/test';
+import { codigo } from './pasos';
 
 /**
  * Vue sin bundler ni terceros (ADR-13).
@@ -180,7 +181,7 @@ test('⭐ vue-05: las cuentas que promete la lección son las que salen', async 
     steps: Array<{ id: string; solution?: Array<{ path: string; content: string }> }>;
   };
   const solutionOf = (id: string) =>
-    lesson.steps.find((step) => step.id === id)?.solution?.[0]?.content ?? '';
+    codigo(lesson.steps.find((step) => step.id === id)?.solution?.[0]?.content ?? '');
 
   await page.goto('/es/play/frontend/vue-05-word-count');
   await waitForEditor(page);

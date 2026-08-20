@@ -1,16 +1,13 @@
 {
   "$schema": "../../../schema/lesson.schema.json",
   "schemaVersion": 1,
-
   "id": "css-01-selectors",
   "track": "frontend",
   "module": "css",
   "order": 1,
-
   "kind": "concept",
   "difficulty": "novice",
   "estimatedMinutes": 20,
-
   "title": {
     "es": "Por qué no se aplica tu CSS: especificidad y orden",
     "en": "Why your CSS isn't applying: specificity and order"
@@ -19,20 +16,27 @@
     "es": "La regla que escribes es correcta y el color no cambia. No es un bug del navegador: es que otra regla gana, y hay dos motivos por los que puede ganar.",
     "en": "The rule you wrote is correct and the colour doesn't change. It isn't a browser bug: another rule wins, and there are two reasons it can."
   },
-  "concepts": ["css", "selectores", "especificidad", "cascada"],
-  "prerequisites": ["html-01-first-page"],
-
+  "concepts": [
+    "css",
+    "selectores",
+    "especificidad",
+    "cascada"
+  ],
+  "prerequisites": [
+    "html-01-first-page"
+  ],
   "runtime": {
     "kind": "dom",
     "dependencies": {},
     "timeoutMs": 5000
   },
-
   "workspace": {
     "entry": "index.html",
     "allowCreate": false,
     "allowDelete": false,
-    "protectedPaths": ["index.html"],
+    "protectedPaths": [
+      "index.html"
+    ],
     "files": [
       {
         "path": "index.html",
@@ -42,11 +46,13 @@
       {
         "path": "styles.css",
         "active": true,
-        "content": "body {\n  margin: 0;\n  font-family: system-ui, sans-serif;\n  background: #0b1220;\n}\n\n.menu {\n  display: flex;\n  gap: 16px;\n  padding: 16px;\n}\n\n/* Alguien escribió esto hace meses y no se ha vuelto a tocar. */\n#menu a {\n  color: #38bdf8;\n  text-decoration: none;\n}\n\n/* TODO 1: dale a todos los enlaces el gris #94a3b8 */\n"
+        "content": {
+          "es": "body {\n  margin: 0;\n  font-family: system-ui, sans-serif;\n  background: #0b1220;\n}\n\n.menu {\n  display: flex;\n  gap: 16px;\n  padding: 16px;\n}\n\n/* Alguien escribió esto hace meses y no se ha vuelto a tocar. */\n#menu a {\n  color: #38bdf8;\n  text-decoration: none;\n}\n\n/* TODO 1: dale a todos los enlaces el gris #94a3b8 */\n",
+          "en": "body {\n  margin: 0;\n  font-family: system-ui, sans-serif;\n  background: #0b1220;\n}\n\n.menu {\n  display: flex;\n  gap: 16px;\n  padding: 16px;\n}\n\n/* Somebody wrote this months ago and nobody has touched it since. */\n#menu a {\n  color: #38bdf8;\n  text-decoration: none;\n}\n\n/* TODO 1: give every link the grey #94a3b8 */\n"
+        }
       }
     ]
   },
-
   "rules": [
     {
       "id": "link-rule-exists",
@@ -162,7 +168,6 @@
       "points": 25
     }
   ],
-
   "steps": [
     {
       "id": "step-1-base",
@@ -179,12 +184,17 @@
         "en": "Add `.link { color: #94a3b8; }` at the end of the sheet and run. Check the links are still blue."
       },
       "focusFile": "styles.css",
-      "ruleIds": ["link-rule-exists"],
+      "ruleIds": [
+        "link-rule-exists"
+      ],
       "xp": 30,
       "solution": [
         {
           "path": "styles.css",
-          "content": "body {\n  margin: 0;\n  font-family: system-ui, sans-serif;\n  background: #0b1220;\n}\n\n.menu {\n  display: flex;\n  gap: 16px;\n  padding: 16px;\n}\n\n/* Alguien escribió esto hace meses y no se ha vuelto a tocar. */\n#menu a {\n  color: #38bdf8;\n  text-decoration: none;\n}\n\n.link {\n  color: #94a3b8;\n}\n"
+          "content": {
+            "es": "body {\n  margin: 0;\n  font-family: system-ui, sans-serif;\n  background: #0b1220;\n}\n\n.menu {\n  display: flex;\n  gap: 16px;\n  padding: 16px;\n}\n\n/* Alguien escribió esto hace meses y no se ha vuelto a tocar. */\n#menu a {\n  color: #38bdf8;\n  text-decoration: none;\n}\n\n.link {\n  color: #94a3b8;\n}\n",
+            "en": "body {\n  margin: 0;\n  font-family: system-ui, sans-serif;\n  background: #0b1220;\n}\n\n.menu {\n  display: flex;\n  gap: 16px;\n  padding: 16px;\n}\n\n/* Somebody wrote this months ago and nobody has touched it since. */\n#menu a {\n  color: #38bdf8;\n  text-decoration: none;\n}\n\n.link {\n  color: #94a3b8;\n}\n"
+          }
         }
       ]
     },
@@ -203,8 +213,16 @@
         "en": "Lower `#menu a` to a selector without an `id`, keep the links grey, and add `.destacado { color: #f59e0b; }` for the offer one."
       },
       "focusFile": "styles.css",
-      "focusLines": [14, 17],
-      "ruleIds": ["no-id-selector", "base-color-applies", "highlight-applies", "no-important"],
+      "focusLines": [
+        14,
+        17
+      ],
+      "ruleIds": [
+        "no-id-selector",
+        "base-color-applies",
+        "highlight-applies",
+        "no-important"
+      ],
       "xp": 50,
       "hints": [
         {
@@ -244,7 +262,12 @@
         "en": "Make the help link come out `#475569` by adding `.apagado`, with no `!important` and without raising specificity."
       },
       "focusFile": "styles.css",
-      "ruleIds": ["muted-wins", "highlight-applies", "no-specificity-escalation", "no-important"],
+      "ruleIds": [
+        "muted-wins",
+        "highlight-applies",
+        "no-specificity-escalation",
+        "no-important"
+      ],
       "xp": 45,
       "hints": [
         {
@@ -270,9 +293,7 @@
       }
     }
   ],
-
   "drills": [],
-
   "reward": {
     "baseXp": 115,
     "flawlessBonus": 45,
@@ -280,7 +301,6 @@
     "comboMultiplierCap": 3,
     "achievements": []
   },
-
   "solution": {
     "files": [
       {

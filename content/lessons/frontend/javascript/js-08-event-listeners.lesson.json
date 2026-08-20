@@ -1,16 +1,13 @@
 {
   "$schema": "../../../schema/lesson.schema.json",
   "schemaVersion": 1,
-
   "id": "js-08-event-listeners",
   "track": "frontend",
   "module": "javascript",
   "order": 8,
-
   "kind": "challenge",
   "difficulty": "apprentice",
   "estimatedMinutes": 22,
-
   "title": {
     "es": "Responder al usuario: eventos y el objeto `event`",
     "en": "Responding to the user: events and the `event` object"
@@ -19,15 +16,21 @@
     "es": "Registra manejadores, entiende qué trae el objeto `event`, y aprende a distinguir «pasar la función» de «llamarla» — el error que rompe más formularios de principiante.",
     "en": "Register handlers, learn what the `event` object carries, and tell \"passing the function\" apart from \"calling it\" — the mistake that breaks the most beginner forms."
   },
-  "concepts": ["dom", "events", "addeventlistener", "preventdefault", "forms"],
-  "prerequisites": ["js-06-dom-manipulation"],
-
+  "concepts": [
+    "dom",
+    "events",
+    "addeventlistener",
+    "preventdefault",
+    "forms"
+  ],
+  "prerequisites": [
+    "js-06-dom-manipulation"
+  ],
   "runtime": {
     "kind": "dom",
     "dependencies": {},
     "timeoutMs": 6000
   },
-
   "workspace": {
     "entry": "app.js",
     "allowCreate": false,
@@ -36,7 +39,10 @@
     "files": [
       {
         "path": "app.js",
-        "content": "const form = document.querySelector('#add-task');\nconst input = document.querySelector('#task-name');\nconst list = document.querySelector('#tasks');\n\nfunction addTask() {\n  const name = input.value.trim();\n  if (!name) return;\n\n  const item = document.createElement('li');\n  item.textContent = name;\n  list.appendChild(item);\n\n  input.value = '';\n}\n\n// TODO: al enviar el formulario, añade la tarea SIN recargar la página\nform.addEventListener('submit', addTask());\n",
+        "content": {
+          "es": "const form = document.querySelector('#add-task');\nconst input = document.querySelector('#task-name');\nconst list = document.querySelector('#tasks');\n\nfunction addTask() {\n  const name = input.value.trim();\n  if (!name) return;\n\n  const item = document.createElement('li');\n  item.textContent = name;\n  list.appendChild(item);\n\n  input.value = '';\n}\n\n// TODO: al enviar el formulario, añade la tarea SIN recargar la página\nform.addEventListener('submit', addTask());\n",
+          "en": "const form = document.querySelector('#add-task');\nconst input = document.querySelector('#task-name');\nconst list = document.querySelector('#tasks');\n\nfunction addTask() {\n  const name = input.value.trim();\n  if (!name) return;\n\n  const item = document.createElement('li');\n  item.textContent = name;\n  list.appendChild(item);\n\n  input.value = '';\n}\n\n// TODO: when the form is submitted, add the task WITHOUT reloading the page\nform.addEventListener('submit', addTask());\n"
+        },
         "active": true
       },
       {
@@ -46,7 +52,6 @@
       }
     ]
   },
-
   "rules": [
     {
       "id": "passes-reference",
@@ -118,7 +123,6 @@
       "points": 15
     }
   ],
-
   "steps": [
     {
       "id": "step-1-reference",
@@ -135,8 +139,14 @@
         "en": "Fix the handler registration so the function is passed without being called."
       },
       "focusFile": "app.js",
-      "focusLines": [16, 17],
-      "ruleIds": ["has-listener", "passes-reference"],
+      "focusLines": [
+        16,
+        17
+      ],
+      "ruleIds": [
+        "has-listener",
+        "passes-reference"
+      ],
       "xp": 30
     },
     {
@@ -154,8 +164,15 @@
         "en": "Make `addTask` receive the event and stop the page from reloading."
       },
       "focusFile": "app.js",
-      "focusLines": [5, 7],
-      "ruleIds": ["receives-event", "prevents-default", "task-added"],
+      "focusLines": [
+        5,
+        7
+      ],
+      "ruleIds": [
+        "receives-event",
+        "prevents-default",
+        "task-added"
+      ],
       "xp": 50,
       "hints": [
         {
@@ -175,17 +192,16 @@
       }
     }
   ],
-
   "drills": [],
-
   "reward": {
     "baseXp": 160,
     "flawlessBonus": 60,
     "noHintBonus": 35,
     "comboMultiplierCap": 3,
-    "achievements": ["event-listener"]
+    "achievements": [
+      "event-listener"
+    ]
   },
-
   "solution": {
     "files": [
       {

@@ -1,16 +1,13 @@
 {
   "$schema": "../../../schema/lesson.schema.json",
   "schemaVersion": 1,
-
   "id": "csharp-02-fizzbuzz",
   "track": "backend",
   "module": "csharp",
   "order": 2,
-
   "kind": "challenge",
   "difficulty": "apprentice",
   "estimatedMinutes": 22,
-
   "title": {
     "es": "FizzBuzz: el orden de las preguntas es la respuesta",
     "en": "FizzBuzz: the order of the questions is the answer"
@@ -19,9 +16,16 @@
     "es": "El ejercicio más famoso de las entrevistas, y el que más gente resuelve mal por un motivo que no es la lógica sino la secuencia.",
     "en": "The most famous interview exercise, and the one most people get wrong for a reason that isn't logic but sequence."
   },
-  "concepts": ["csharp", "condicionales", "ternario", "orden", "modulo"],
-  "prerequisites": ["csharp-01-leap-year"],
-
+  "concepts": [
+    "csharp",
+    "condicionales",
+    "ternario",
+    "orden",
+    "modulo"
+  ],
+  "prerequisites": [
+    "csharp-01-leap-year"
+  ],
   "runtime": {
     "kind": "cli-sim",
     "cliScenario": "dotnet/xunit",
@@ -30,20 +34,31 @@
     "timeoutMs": 15000,
     "terminal": {
       "enabled": true,
-      "allowedCommands": ["dotnet", "ls", "cat", "cd", "pwd", "clear"]
+      "allowedCommands": [
+        "dotnet",
+        "ls",
+        "cat",
+        "cd",
+        "pwd",
+        "clear"
+      ]
     }
   },
-
   "workspace": {
     "entry": "FizzBuzz.cs",
     "allowCreate": false,
     "allowDelete": false,
-    "protectedPaths": ["FizzBuzzTests.cs"],
+    "protectedPaths": [
+      "FizzBuzzTests.cs"
+    ],
     "files": [
       {
         "path": "FizzBuzz.cs",
         "active": true,
-        "content": "namespace Juego;\n\npublic static class FizzBuzz\n{\n    // TODO: devuelve \"Fizz\", \"Buzz\", \"FizzBuzz\" o el número.\n    // Ahora mismo devuelve siempre el número.\n    public static string Convertir(int n) => n + \"\";\n}\n"
+        "content": {
+          "es": "namespace Juego;\n\npublic static class FizzBuzz\n{\n    // TODO: devuelve \"Fizz\", \"Buzz\", \"FizzBuzz\" o el número.\n    // Ahora mismo devuelve siempre el número.\n    public static string Convertir(int n) => n + \"\";\n}\n",
+          "en": "namespace Juego;\n\npublic static class FizzBuzz\n{\n    // TODO: return \"Fizz\", \"Buzz\", \"FizzBuzz\" or the number.\n    // Right now it always returns the number.\n    public static string Convertir(int n) => n + \"\";\n}\n"
+        }
       },
       {
         "path": "FizzBuzzTests.cs",
@@ -52,12 +67,13 @@
       }
     ]
   },
-
   "rules": [
     {
       "id": "ran-tests",
       "kind": "cli-transcript",
-      "expectedCommands": ["dotnet test"],
+      "expectedCommands": [
+        "dotnet test"
+      ],
       "allowExtra": true,
       "phase": "run",
       "severity": "error",
@@ -128,7 +144,6 @@
       "points": 30
     }
   ],
-
   "steps": [
     {
       "id": "step-1-fizz",
@@ -145,8 +160,15 @@
         "en": "Return `\"Fizz\"` for multiples of 3 and the number otherwise. Run `dotnet test`."
       },
       "focusFile": "FizzBuzz.cs",
-      "focusLines": [7, 7],
-      "ruleIds": ["handles-fizz", "fizz-cases-pass", "ran-tests"],
+      "focusLines": [
+        7,
+        7
+      ],
+      "ruleIds": [
+        "handles-fizz",
+        "fizz-cases-pass",
+        "ran-tests"
+      ],
       "xp": 35,
       "solution": [
         {
@@ -170,7 +192,10 @@
         "en": "Complete all three rules in the right order and get all eight cases green."
       },
       "focusFile": "FizzBuzz.cs",
-      "ruleIds": ["all-green", "ran-tests"],
+      "ruleIds": [
+        "all-green",
+        "ran-tests"
+      ],
       "xp": 45,
       "hints": [
         {
@@ -210,7 +235,10 @@
         "en": "Drop the `% 15` and express it as a multiple of 3 and of 5. All eight cases must stay green."
       },
       "focusFile": "FizzBuzz.cs",
-      "ruleIds": ["no-magic-fifteen", "all-green"],
+      "ruleIds": [
+        "no-magic-fifteen",
+        "all-green"
+      ],
       "xp": 35,
       "solution": [
         {
@@ -224,9 +252,7 @@
       }
     }
   ],
-
   "drills": [],
-
   "reward": {
     "baseXp": 115,
     "flawlessBonus": 45,
@@ -234,7 +260,6 @@
     "comboMultiplierCap": 3,
     "achievements": []
   },
-
   "solution": {
     "files": [
       {

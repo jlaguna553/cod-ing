@@ -43,7 +43,10 @@
       {
         "path": "query.sql",
         "active": true,
-        "content": "-- Punto de partida: solo salen las categorías que tienen productos.\n-- Faltan dos, y el informe no dice que falten.\nSELECT   c.nombre AS categoria, COUNT(p.id) AS productos\nFROM     categorias c\nJOIN     productos p ON p.categoria_id = c.id\nWHERE    p.descatalogado = FALSE\nGROUP BY c.nombre\nORDER BY c.nombre;\n"
+        "content": {
+          "es": "-- Punto de partida: solo salen las categorías que tienen productos.\n-- Faltan dos, y el informe no dice que falten.\nSELECT   c.nombre AS categoria, COUNT(p.id) AS productos\nFROM     categorias c\nJOIN     productos p ON p.categoria_id = c.id\nWHERE    p.descatalogado = FALSE\nGROUP BY c.nombre\nORDER BY c.nombre;\n",
+          "en": "-- Starting point: only the categories that have products show up.\n-- Two are missing, and the report doesn't say they are.\nSELECT   c.nombre AS categoria, COUNT(p.id) AS productos\nFROM     categorias c\nJOIN     productos p ON p.categoria_id = c.id\nWHERE    p.descatalogado = FALSE\nGROUP BY c.nombre\nORDER BY c.nombre;\n"
+        }
       },
       {
         "path": "schema.sql",

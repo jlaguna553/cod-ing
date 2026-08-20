@@ -4,6 +4,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { assembleDocument } from '@/lib/runners/dom';
 import { LessonSchema } from '@/lib/content/lesson.schema';
+import { codigoDe } from '@/lib/content/localize';
 
 test('inyecta el CSS del workspace en lugar del <link>', () => {
   const document = assembleDocument(
@@ -95,7 +96,7 @@ test('las lecciones `dom` reales se ensamblan con su código de partida dentro',
     assert.equal(lesson.runtime.kind, 'dom', `${lesson.id} debería usar el runner de DOM`);
 
     const files = Object.fromEntries(
-      lesson.workspace.files.map((entry) => [entry.path, entry.content]),
+      lesson.workspace.files.map((entry) => [entry.path, codigoDe(entry.content)]),
     );
     const document = assembleDocument(files, 1);
 
@@ -105,7 +106,7 @@ test('las lecciones `dom` reales se ensamblan con su código de partida dentro',
       if (!/\.(css|js)$/.test(entry.path)) continue;
       if (!files['index.html']?.includes(entry.path.replace(/^\.\//, ''))) continue;
 
-      const firstLine = entry.content.split('\n').find((line) => line.trim().length > 12);
+      const firstLine = codigoDe(entry.content).split('\n').find((line) => line.trim().length > 12);
       if (firstLine) {
         assert.ok(
           document.includes(firstLine.trim()),
@@ -164,7 +165,7 @@ test('⭐ TODAS las lecciones `dom` acaban con su código en el documento', () =
     if (lesson.runtime.kind !== 'dom') continue;
 
     const files = Object.fromEntries(
-      lesson.workspace.files.map((entry) => [entry.path, entry.content]),
+      lesson.workspace.files.map((entry) => [entry.path, codigoDe(entry.content)]),
     );
     const document = assembleDocument(files, 1, lesson.workspace.entry);
 

@@ -6,7 +6,14 @@ import { readFileSync } from 'node:fs';
 import { readdir } from 'node:fs/promises';
 import path from 'node:path';
 import { LessonSchema } from '../src/lib/content/lesson.schema';
-import type { Difficulty } from '../src/lib/content/types';
+import { codigoDe } from '../src/lib/content/localize';
+import {
+  comentariosDe,
+  pareceCastellano,
+  sinComentarios,
+  tieneProsa,
+} from '../src/lib/content/comentarios';
+import type { Difficulty, LocalizedText } from '../src/lib/content/types';
 
 const CONTENT_ROOT = path.resolve(import.meta.dirname, '../content/lessons');
 
@@ -57,17 +64,93 @@ function findPassiveSteps(lesson: ReturnType<typeof LessonSchema.parse>): string
   return lesson.steps.filter((step) => step.ruleIds.length === 0).map((step) => step.id);
 }
 
+/**
+ * Código con prosa dentro y un solo idioma.
+ *
+ * El archivo que el alumno tiene delante lleva casi siempre la instrucción
+ * concreta —«// Paso 1: …»—, y durante ocho fases viajó en castellano para
+ * todo el mundo mientras el enunciado de al lado sí estaba traducido. Esto es
+ * lo que impide que vuelva a pasar: en cuanto un comentario tiene dos
+ * palabras, el contenido tiene que ser `{es, en}`.
+ */
+function findMonolingualCode(lesson: ReturnType<typeof LessonSchema.parse>): string[] {
+  const archivos = [
+    ...lesson.workspace.files,
+    ...lesson.steps.flatMap((step) => step.solution ?? []),
+    ...(lesson.solution?.files ?? []),
+  ];
+
+  return archivos
+    .filter((file) => typeof file.content === 'string' && tieneProsa(file.path, file.content))
+    .map((file) => file.path)
+    .filter((path, indice, todas) => todas.indexOf(path) === indice);
+}
+
+/**
+ * Traducciones que se han llevado por delante algo que no era prosa.
+ *
+ * Entre los dos idiomas de un archivo solo pueden cambiar los comentarios. Un
+ * identificador o un literal traducido «de más» rompería la lección en ese
+ * idioma —y contra unas reglas que se escriben una sola vez—, con el agravante
+ * de que en castellano seguiría pasando todo.
+ */
+function findDivergentCode(lesson: ReturnType<typeof LessonSchema.parse>): string[] {
+  const archivos = [
+    ...lesson.workspace.files,
+    ...lesson.steps.flatMap((step) => step.solution ?? []),
+    ...(lesson.solution?.files ?? []),
+  ];
+
+  return archivos
+    .filter((file) => typeof file.content !== 'string')
+    .filter(
+      (file) =>
+        sinComentarios(file.path, codigoDe(file.content, 'es')) !==
+        sinComentarios(file.path, codigoDe(file.content, 'en')),
+    )
+    .map((file) => file.path);
+}
+
+/**
+ * Comentarios «traducidos» que siguen en castellano.
+ *
+ * El fallo natural al añadir el segundo idioma es copiar el bloque y traducir
+ * media docena de líneas. Se mira solo dentro de los comentarios de la versión
+ * inglesa, así que un identificador en castellano —`nombre`, `usuarios`— no
+ * cuenta: esos no se traducen a propósito.
+ */
+function findUntranslated(lesson: ReturnType<typeof LessonSchema.parse>): string[] {
+  const archivos = [
+    ...lesson.workspace.files,
+    ...lesson.steps.flatMap((step) => step.solution ?? []),
+    ...(lesson.solution?.files ?? []),
+  ];
+
+  return archivos
+    .filter((file) => typeof file.content !== 'string')
+    .filter((file) =>
+      comentariosDe(file.path, codigoDe(file.content, 'en')).some(pareceCastellano),
+    )
+    .map((file) => file.path);
+}
+
 function findSolutionSpoilers(lesson: ReturnType<typeof LessonSchema.parse>): string[] {
   if (!lesson.solution) return [];
   if (!SPOILER_ENFORCED_FROM.includes(lesson.difficulty)) return [];
 
   // Lo que ya está en el código de partida no es un secreto: el usuario lo
   // tiene delante. Solo cuenta como spoiler lo que la solución AÑADE.
-  const starterLines = new Set(
-    lesson.workspace.files.flatMap((file) =>
-      file.content.split('\n').map((line) => line.trim()),
-    ),
-  );
+  // En los DOS idiomas: el enunciado en inglés tampoco puede traer el código
+  // que resuelve el paso, y desde que el código es bilingüe son textos
+  // distintos.
+  const lineasDe = (file: { content: string | LocalizedText }) =>
+    (['es', 'en'] as const).flatMap((locale) =>
+      codigoDe(file.content, locale)
+        .split('\n')
+        .map((line) => line.trim()),
+    );
+
+  const starterLines = new Set(lesson.workspace.files.flatMap(lineasDe));
 
   /*
    * También cuentan las soluciones por paso: si el enunciado del paso 2 trae
@@ -80,9 +163,7 @@ function findSolutionSpoilers(lesson: ReturnType<typeof LessonSchema.parse>): st
   ];
 
   const solutionLines = solutionFiles.flatMap((file) =>
-    file.content
-      .split('\n')
-      .map((line) => line.trim())
+    lineasDe(file)
       .filter((line) => !starterLines.has(line))
       // Líneas cortas o triviales (`}`, `WORKDIR /app`) coinciden por azar.
       // 16 es empírico: `npm ci --omit=dev` (17) es una fuga real y debe
@@ -169,6 +250,35 @@ async function main() {
       console.error(`\n✖ ${rel}\n    el enunciado contiene la solución literal:`);
       for (const line of spoilers.slice(0, 5)) console.error(`      « ${line} »`);
       if (spoilers.length > 5) console.error(`      … y ${spoilers.length - 5} líneas más`);
+      continue;
+    }
+
+    const monolingue = findMonolingualCode(lesson);
+    if (monolingue.length > 0) {
+      failed++;
+      console.error(
+        `\n✖ ${rel}\n    código con comentarios en un solo idioma ` +
+          `(usa { es, en } en \`content\`):`,
+      );
+      for (const archivo of monolingue) console.error(`      « ${archivo} »`);
+      continue;
+    }
+
+    const divergente = findDivergentCode(lesson);
+    if (divergente.length > 0) {
+      failed++;
+      console.error(
+        `\n✖ ${rel}\n    la traducción cambió el código, no solo los comentarios:`,
+      );
+      for (const archivo of divergente) console.error(`      « ${archivo} »`);
+      continue;
+    }
+
+    const sinTraducir = findUntranslated(lesson);
+    if (sinTraducir.length > 0) {
+      failed++;
+      console.error(`\n✖ ${rel}\n    comentarios en castellano dentro de la versión inglesa:`);
+      for (const archivo of sinTraducir) console.error(`      « ${archivo} »`);
       continue;
     }
 

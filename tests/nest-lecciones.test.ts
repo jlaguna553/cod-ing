@@ -3,7 +3,7 @@ import test from 'node:test';
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { LessonSchema } from '@/lib/content/lesson.schema';
-import { localize } from '@/lib/content/localize';
+import { codigoDe, localize } from '@/lib/content/localize';
 import type { Lesson } from '@/lib/content/types';
 import { emptyContext, evaluateRule } from '@/lib/engine';
 import { NODE_PRELUDE } from '@/lib/runners/node-prelude';
@@ -118,7 +118,7 @@ for (const leccion of leccionesDeNest()) {
   const porId = new Map(localizada.rules.map((regla) => [regla.id, regla]));
 
   const archivos: Record<string, string> = Object.fromEntries(
-    leccion.workspace.files.map((archivo) => [archivo.path, archivo.content]),
+    leccion.workspace.files.map((archivo) => [archivo.path, codigoDe(archivo.content)]),
   );
 
   /*
@@ -128,7 +128,7 @@ for (const leccion of leccionesDeNest()) {
   for (const [indice, paso] of localizada.steps.entries()) {
     test(`⭐ ${leccion.id} · paso ${indice + 1} (${paso.id}): la solución cumple lo que promete`, async () => {
       assert.ok(paso.solution?.length, `el paso ${paso.id} no publica solución`);
-      for (const archivo of paso.solution) archivos[archivo.path] = archivo.content;
+      for (const archivo of paso.solution) archivos[archivo.path] = codigoDe(archivo.content);
 
       const stdout = await ejecutar(
         archivos,
@@ -156,7 +156,7 @@ for (const leccion of leccionesDeNest()) {
 
   test(`⭐ ${leccion.id}: el proyecto de partida deja algo que hacer`, async () => {
     const partida: Record<string, string> = Object.fromEntries(
-      leccion.workspace.files.map((archivo) => [archivo.path, archivo.content]),
+      leccion.workspace.files.map((archivo) => [archivo.path, codigoDe(archivo.content)]),
     );
 
     const stdout = await ejecutar(

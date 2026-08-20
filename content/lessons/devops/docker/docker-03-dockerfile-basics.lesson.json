@@ -1,16 +1,13 @@
 {
   "$schema": "../../../schema/lesson.schema.json",
   "schemaVersion": 1,
-
   "id": "docker-03-dockerfile-basics",
   "track": "devops",
   "module": "docker",
   "order": 3,
-
   "kind": "concept",
   "difficulty": "apprentice",
   "estimatedMinutes": 22,
-
   "title": {
     "es": "El Dockerfile: una receta que se ejecuta igual en todas partes",
     "en": "The Dockerfile: a recipe that runs the same everywhere"
@@ -19,9 +16,14 @@
     "es": "Cinco instrucciones bastan para empaquetar una aplicación entera. Qué hace cada una, por qué `:latest` es una trampa y qué separa un `RUN` de un `CMD`.",
     "en": "Five instructions are enough to package a whole application. What each one does, why `:latest` is a trap, and what separates a `RUN` from a `CMD`."
   },
-  "concepts": ["docker", "dockerfile", "image", "container", "build"],
+  "concepts": [
+    "docker",
+    "dockerfile",
+    "image",
+    "container",
+    "build"
+  ],
   "prerequisites": [],
-
   "runtime": {
     "kind": "cli-sim",
     "cliScenario": "docker/basics",
@@ -30,20 +32,34 @@
     "timeoutMs": 15000,
     "terminal": {
       "enabled": true,
-      "allowedCommands": ["docker", "ls", "cat", "cd", "pwd", "echo", "clear", "node"]
+      "allowedCommands": [
+        "docker",
+        "ls",
+        "cat",
+        "cd",
+        "pwd",
+        "echo",
+        "clear",
+        "node"
+      ]
     }
   },
-
   "workspace": {
     "entry": "Dockerfile",
     "allowCreate": true,
     "allowDelete": false,
-    "protectedPaths": ["package.json", "src/server.js"],
+    "protectedPaths": [
+      "package.json",
+      "src/server.js"
+    ],
     "files": [
       {
         "path": "Dockerfile",
         "active": true,
-        "content": "# Una receta a medio escribir: arranca de una imagen base\n# y no hace nada más con ella.\nFROM node\n"
+        "content": {
+          "es": "# Una receta a medio escribir: arranca de una imagen base\n# y no hace nada más con ella.\nFROM node\n",
+          "en": "# A half-written recipe: it starts from a base image\n# and does nothing else with it.\nFROM node\n"
+        }
       },
       {
         "path": "package.json",
@@ -57,12 +73,13 @@
       }
     ]
   },
-
   "rules": [
     {
       "id": "built-once",
       "kind": "cli-transcript",
-      "expectedCommands": ["docker build"],
+      "expectedCommands": [
+        "docker build"
+      ],
       "allowExtra": true,
       "phase": "run",
       "severity": "error",
@@ -80,7 +97,9 @@
       "id": "pinned-image",
       "kind": "dockerfile-lint",
       "file": "Dockerfile",
-      "rules": ["pinned-base-image"],
+      "rules": [
+        "pinned-base-image"
+      ],
       "phase": "submit",
       "severity": "error",
       "message": {
@@ -153,7 +172,9 @@
       "id": "dockerignore",
       "kind": "dockerfile-lint",
       "file": "Dockerfile",
-      "rules": ["has-dockerignore"],
+      "rules": [
+        "has-dockerignore"
+      ],
       "phase": "submit",
       "severity": "warn",
       "message": {
@@ -163,7 +184,6 @@
       "points": 15
     }
   ],
-
   "steps": [
     {
       "id": "step-1-anatomy",
@@ -180,7 +200,9 @@
         "en": "Run `docker build -t api .` in the terminal and watch the output layer by layer."
       },
       "focusFile": "Dockerfile",
-      "ruleIds": ["built-once"],
+      "ruleIds": [
+        "built-once"
+      ],
       "xp": 25
     },
     {
@@ -198,8 +220,17 @@
         "en": "Write the complete Dockerfile: pinned base image, `WORKDIR`, `COPY`, dependency install, and `CMD` in list form. Build again to check it."
       },
       "focusFile": "Dockerfile",
-      "focusLines": [3, 3],
-      "ruleIds": ["pinned-image", "has-workdir", "installs-dependencies", "has-cmd", "no-run-as-start"],
+      "focusLines": [
+        3,
+        3
+      ],
+      "ruleIds": [
+        "pinned-image",
+        "has-workdir",
+        "installs-dependencies",
+        "has-cmd",
+        "no-run-as-start"
+      ],
       "xp": 60,
       "hints": [
         {
@@ -242,7 +273,9 @@
         "en": "Create a `.dockerignore` in the file tree excluding at least `node_modules`, and rebuild."
       },
       "focusFile": "Dockerfile",
-      "ruleIds": ["dockerignore"],
+      "ruleIds": [
+        "dockerignore"
+      ],
       "xp": 30,
       "bestPractice": {
         "es": "**Seguridad (OWASP):** una imagen es un artefacto distribuible. Cualquiera que la descargue puede extraer su sistema de archivos capa por capa, así que un `.env` copiado por accidente es una credencial publicada — y borrarlo en una capa posterior no la elimina, solo la oculta.",
@@ -250,9 +283,7 @@
       }
     }
   ],
-
   "drills": [],
-
   "reward": {
     "baseXp": 115,
     "flawlessBonus": 45,
@@ -260,7 +291,6 @@
     "comboMultiplierCap": 3,
     "achievements": []
   },
-
   "solution": {
     "files": [
       {

@@ -12,6 +12,22 @@ export function t(text: LocalizedText, locale: Locale): string {
 }
 
 /**
+ * El código de un archivo de lección, en un idioma.
+ *
+ * `content` admite las dos formas del schema: una cadena suelta cuando el
+ * archivo es código sin prosa, o `{es, en}` cuando lleva comentarios. Al
+ * pasar por `localize` el segundo caso ya llega colapsado, así que esto solo
+ * hace falta donde se lee la lección **en bruto** — los scripts, los tests y
+ * el comprobador de contenido.
+ */
+export function codigoDe(
+  content: string | LocalizedText,
+  locale: Locale = DEFAULT_LOCALE,
+): string {
+  return typeof content === 'string' ? content : t(content, locale);
+}
+
+/**
  * Localiza en profundidad cualquier estructura de contenido: recorre el árbol
  * y colapsa todo `{es, en}` a un string.
  *

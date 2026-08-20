@@ -58,16 +58,25 @@
       {
         "path": "main.js",
         "active": true,
-        "content": "// Un servidor que atiende cuatro peticiones y no cuenta ninguna.\n// Paso 1: una línea de log por petición, con lo que respondió.\n\nconst http = require('http');\nconst { buscarPedidos } = require('./pedidos');\nconst { log } = require('./log');\n\nfunction atender(peticion, respuesta) {\n  if (peticion.url === '/api/pedidos') {\n    const pedidos = buscarPedidos();\n    respuesta.end(JSON.stringify(pedidos));\n    return;\n  }\n\n  if (peticion.url === '/') {\n    respuesta.end('Hola');\n    return;\n  }\n\n  respuesta.statusCode = 404;\n  respuesta.end('No encontrado');\n}\n\nconst servidor = http.createServer(function (peticion, respuesta) {\n  atender(peticion, respuesta);\n});\n\nservidor.listen(3000);\n"
+        "content": {
+          "es": "// Un servidor que atiende cuatro peticiones y no cuenta ninguna.\n// Paso 1: una línea de log por petición, con lo que respondió.\n\nconst http = require('http');\nconst { buscarPedidos } = require('./pedidos');\nconst { log } = require('./log');\n\nfunction atender(peticion, respuesta) {\n  if (peticion.url === '/api/pedidos') {\n    const pedidos = buscarPedidos();\n    respuesta.end(JSON.stringify(pedidos));\n    return;\n  }\n\n  if (peticion.url === '/') {\n    respuesta.end('Hola');\n    return;\n  }\n\n  respuesta.statusCode = 404;\n  respuesta.end('No encontrado');\n}\n\nconst servidor = http.createServer(function (peticion, respuesta) {\n  atender(peticion, respuesta);\n});\n\nservidor.listen(3000);\n",
+          "en": "// A server that serves four requests and accounts for none of them.\n// Step 1: one log line per request, with what it answered.\n\nconst http = require('http');\nconst { buscarPedidos } = require('./pedidos');\nconst { log } = require('./log');\n\nfunction atender(peticion, respuesta) {\n  if (peticion.url === '/api/pedidos') {\n    const pedidos = buscarPedidos();\n    respuesta.end(JSON.stringify(pedidos));\n    return;\n  }\n\n  if (peticion.url === '/') {\n    respuesta.end('Hola');\n    return;\n  }\n\n  respuesta.statusCode = 404;\n  respuesta.end('No encontrado');\n}\n\nconst servidor = http.createServer(function (peticion, respuesta) {\n  atender(peticion, respuesta);\n});\n\nservidor.listen(3000);\n"
+        }
       },
       {
         "path": "pedidos.js",
-        "content": "// La capa de datos. Deja su línea de log, pero no sabe nada de la\n// petición que la llamó: cuando hay tráfico, esa línea no se puede\n// atribuir a nadie.\n\nconst { log } = require('./log');\n\nfunction buscarPedidos() {\n  const pedidos = [{ id: 'A-1042' }, { id: 'A-1043' }];\n\n  log('info', 'consulta_pedidos', { encontrados: pedidos.length });\n\n  return pedidos;\n}\n\nmodule.exports = { buscarPedidos };\n"
+        "content": {
+          "es": "// La capa de datos. Deja su línea de log, pero no sabe nada de la\n// petición que la llamó: cuando hay tráfico, esa línea no se puede\n// atribuir a nadie.\n\nconst { log } = require('./log');\n\nfunction buscarPedidos() {\n  const pedidos = [{ id: 'A-1042' }, { id: 'A-1043' }];\n\n  log('info', 'consulta_pedidos', { encontrados: pedidos.length });\n\n  return pedidos;\n}\n\nmodule.exports = { buscarPedidos };\n",
+          "en": "// The data layer. It leaves its log line, but knows nothing about the\n// request that called it: once there's traffic, that line can't be\n// attributed to anyone.\n\nconst { log } = require('./log');\n\nfunction buscarPedidos() {\n  const pedidos = [{ id: 'A-1042' }, { id: 'A-1043' }];\n\n  log('info', 'consulta_pedidos', { encontrados: pedidos.length });\n\n  return pedidos;\n}\n\nmodule.exports = { buscarPedidos };\n"
+        }
       },
       {
         "path": "log.js",
         "readOnly": true,
-        "content": "// El logger de la lección anterior, tal cual. Aquí ya no se toca.\n\nfunction log(level, event, datos) {\n  console.log(\n    JSON.stringify({\n      ts: new Date().toISOString(),\n      service: 'pedidos-api',\n      level: level,\n      event: event,\n      ...datos,\n    }),\n  );\n}\n\nmodule.exports = { log };\n"
+        "content": {
+          "es": "// El logger de la lección anterior, tal cual. Aquí ya no se toca.\n\nfunction log(level, event, datos) {\n  console.log(\n    JSON.stringify({\n      ts: new Date().toISOString(),\n      service: 'pedidos-api',\n      level: level,\n      event: event,\n      ...datos,\n    }),\n  );\n}\n\nmodule.exports = { log };\n",
+          "en": "// The previous lesson's logger, unchanged. Not touched again here.\n\nfunction log(level, event, datos) {\n  console.log(\n    JSON.stringify({\n      ts: new Date().toISOString(),\n      service: 'pedidos-api',\n      level: level,\n      event: event,\n      ...datos,\n    }),\n  );\n}\n\nmodule.exports = { log };\n"
+        }
       }
     ]
   },

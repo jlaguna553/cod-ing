@@ -38,11 +38,17 @@
       {
         "path": "main.js",
         "active": true,
-        "content": "// Paso 1: importa `sumar` desde ./calculadora y usa el resultado.\n// El archivo ya existe: ábrelo en la lista de la izquierda.\n\nconsole.log('todavía no importo nada');\n"
+        "content": {
+          "es": "// Paso 1: importa `sumar` desde ./calculadora y usa el resultado.\n// El archivo ya existe: ábrelo en la lista de la izquierda.\n\nconsole.log('todavía no importo nada');\n",
+          "en": "// Step 1: import `sumar` from ./calculadora and use the result.\n// The file already exists: open it in the list on the left.\n\nconsole.log('todavía no importo nada');\n"
+        }
       },
       {
         "path": "calculadora.js",
-        "content": "// Este archivo declara dos funciones. Solo una sale de aquí.\n\nfunction sumar(a, b) {\n  return a + b;\n}\n\nfunction secreta() {\n  return 'no deberías poder llamarme';\n}\n\nmodule.exports = { sumar };\n"
+        "content": {
+          "es": "// Este archivo declara dos funciones. Solo una sale de aquí.\n\nfunction sumar(a, b) {\n  return a + b;\n}\n\nfunction secreta() {\n  return 'no deberías poder llamarme';\n}\n\nmodule.exports = { sumar };\n",
+          "en": "// This file declares two functions. Only one of them leaves it.\n\nfunction sumar(a, b) {\n  return a + b;\n}\n\nfunction secreta() {\n  return 'no deberías poder llamarme';\n}\n\nmodule.exports = { sumar };\n"
+        }
       },
       {
         "path": "contador.js",
@@ -50,7 +56,10 @@
       },
       {
         "path": "roto.js",
-        "content": "// Paso 3: este archivo no exporta nada. Arréglalo.\n\nfunction doble(n) {\n  return n * 2;\n}\n\nexports = { doble };\n"
+        "content": {
+          "es": "// Paso 3: este archivo no exporta nada. Arréglalo.\n\nfunction doble(n) {\n  return n * 2;\n}\n\nexports = { doble };\n",
+          "en": "// Step 3: this file exports nothing. Fix it.\n\nfunction doble(n) {\n  return n * 2;\n}\n\nexports = { doble };\n"
+        }
       }
     ]
   },

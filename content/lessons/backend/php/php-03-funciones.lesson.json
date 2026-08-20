@@ -38,7 +38,10 @@
       {
         "path": "funciones.php",
         "active": true,
-        "content": "<?php\n\n// Paso 1: escribe dosPorUno($nombre) para que DEVUELVA la frase.\n// La llamada de abajo ya está: no la toques.\n\necho dosPorUno('Ada');\n"
+        "content": {
+          "es": "<?php\n\n// Paso 1: escribe dosPorUno($nombre) para que DEVUELVA la frase.\n// La llamada de abajo ya está: no la toques.\n\necho dosPorUno('Ada');\n",
+          "en": "<?php\n\n// Step 1: write dosPorUno($nombre) so that it RETURNS the phrase.\n// The call below is already there: don't touch it.\n\necho dosPorUno('Ada');\n"
+        }
       }
     ]
   },

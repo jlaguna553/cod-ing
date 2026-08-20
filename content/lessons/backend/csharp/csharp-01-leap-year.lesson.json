@@ -1,16 +1,13 @@
 {
   "$schema": "../../../schema/lesson.schema.json",
   "schemaVersion": 1,
-
   "id": "csharp-01-leap-year",
   "track": "backend",
   "module": "csharp",
   "order": 1,
-
   "kind": "challenge",
   "difficulty": "apprentice",
   "estimatedMinutes": 24,
-
   "title": {
     "es": "Años bisiestos en C#: tres reglas y una que casi nadie escribe",
     "en": "Leap years in C#: three rules, and one almost nobody writes"
@@ -19,9 +16,14 @@
     "es": "El ejercicio donde la solución obvia funciona 96 de cada 100 veces. Y qué pasa el año que no.",
     "en": "The exercise where the obvious solution works 96 times out of 100. And what happens the year it doesn't."
   },
-  "concepts": ["csharp", "dotnet", "operadores", "xunit", "precedencia"],
+  "concepts": [
+    "csharp",
+    "dotnet",
+    "operadores",
+    "xunit",
+    "precedencia"
+  ],
   "prerequisites": [],
-
   "runtime": {
     "kind": "cli-sim",
     "cliScenario": "dotnet/xunit",
@@ -30,34 +32,49 @@
     "timeoutMs": 15000,
     "terminal": {
       "enabled": true,
-      "allowedCommands": ["dotnet", "ls", "cat", "cd", "pwd", "clear"]
+      "allowedCommands": [
+        "dotnet",
+        "ls",
+        "cat",
+        "cd",
+        "pwd",
+        "clear"
+      ]
     }
   },
-
   "workspace": {
     "entry": "Leap.cs",
     "allowCreate": false,
     "allowDelete": false,
-    "protectedPaths": ["LeapTests.cs"],
+    "protectedPaths": [
+      "LeapTests.cs"
+    ],
     "files": [
       {
         "path": "Leap.cs",
         "active": true,
-        "content": "namespace Calendario;\n\npublic static class Leap\n{\n    // TODO: devuelve si el año es bisiesto.\n    // Ahora mismo dice que ninguno lo es.\n    public static bool EsBisiesto(int year) => false;\n}\n"
+        "content": {
+          "es": "namespace Calendario;\n\npublic static class Leap\n{\n    // TODO: devuelve si el año es bisiesto.\n    // Ahora mismo dice que ninguno lo es.\n    public static bool EsBisiesto(int year) => false;\n}\n",
+          "en": "namespace Calendario;\n\npublic static class Leap\n{\n    // TODO: return whether the year is a leap year.\n    // Right now it says none of them are.\n    public static bool EsBisiesto(int year) => false;\n}\n"
+        }
       },
       {
         "path": "LeapTests.cs",
         "readOnly": true,
-        "content": "using Xunit;\n\nnamespace Calendario.Tests;\n\npublic class LeapTests\n{\n    [InlineData(1996, true)]   // divisible entre 4\n    [InlineData(1997, false)]  // no divisible entre 4\n    [InlineData(1900, false)]  // divisible entre 100, pero no entre 400\n    [InlineData(2000, true)]   // divisible entre 400\n    [InlineData(2024, true)]\n    [InlineData(2100, false)]\n    [Theory]\n    public void EsBisiesto(int year, bool expected) =>\n        Assert.Equal(expected, Leap.EsBisiesto(year));\n}\n"
+        "content": {
+          "es": "using Xunit;\n\nnamespace Calendario.Tests;\n\npublic class LeapTests\n{\n    [InlineData(1996, true)]   // divisible entre 4\n    [InlineData(1997, false)]  // no divisible entre 4\n    [InlineData(1900, false)]  // divisible entre 100, pero no entre 400\n    [InlineData(2000, true)]   // divisible entre 400\n    [InlineData(2024, true)]\n    [InlineData(2100, false)]\n    [Theory]\n    public void EsBisiesto(int year, bool expected) =>\n        Assert.Equal(expected, Leap.EsBisiesto(year));\n}\n",
+          "en": "using Xunit;\n\nnamespace Calendario.Tests;\n\npublic class LeapTests\n{\n    [InlineData(1996, true)]   // divisible by 4\n    [InlineData(1997, false)]  // not divisible by 4\n    [InlineData(1900, false)]  // divisible by 100, but not by 400\n    [InlineData(2000, true)]   // divisible by 400\n    [InlineData(2024, true)]\n    [InlineData(2100, false)]\n    [Theory]\n    public void EsBisiesto(int year, bool expected) =>\n        Assert.Equal(expected, Leap.EsBisiesto(year));\n}\n"
+        }
       }
     ]
   },
-
   "rules": [
     {
       "id": "ran-tests",
       "kind": "cli-transcript",
-      "expectedCommands": ["dotnet test"],
+      "expectedCommands": [
+        "dotnet test"
+      ],
       "allowExtra": true,
       "phase": "run",
       "severity": "error",
@@ -116,7 +133,6 @@
       "points": 25
     }
   ],
-
   "steps": [
     {
       "id": "step-1-run",
@@ -133,7 +149,9 @@
         "en": "Run `dotnet test` in the terminal and read which cases fail."
       },
       "focusFile": "LeapTests.cs",
-      "ruleIds": ["ran-tests"],
+      "ruleIds": [
+        "ran-tests"
+      ],
       "xp": 25
     },
     {
@@ -151,8 +169,16 @@
         "en": "Write `EsBisiesto` with all three rules and run `dotnet test` until all six cases pass."
       },
       "focusFile": "Leap.cs",
-      "focusLines": [7, 7],
-      "ruleIds": ["all-green", "uses-modulo", "no-hardcoded-years", "ran-tests"],
+      "focusLines": [
+        7,
+        7
+      ],
+      "ruleIds": [
+        "all-green",
+        "uses-modulo",
+        "no-hardcoded-years",
+        "ran-tests"
+      ],
       "xp": 60,
       "hints": [
         {
@@ -201,7 +227,10 @@
         "en": "Check that your expression gets 2400 and 2300 right without adding code, and run `dotnet test` again."
       },
       "focusFile": "Leap.cs",
-      "ruleIds": ["all-green", "no-hardcoded-years"],
+      "ruleIds": [
+        "all-green",
+        "no-hardcoded-years"
+      ],
       "xp": 35,
       "solution": [
         {
@@ -215,17 +244,16 @@
       }
     }
   ],
-
   "drills": [],
-
   "reward": {
     "baseXp": 120,
     "flawlessBonus": 45,
     "noHintBonus": 25,
     "comboMultiplierCap": 3,
-    "achievements": ["first-steps"]
+    "achievements": [
+      "first-steps"
+    ]
   },
-
   "solution": {
     "files": [
       {

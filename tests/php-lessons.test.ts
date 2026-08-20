@@ -4,7 +4,7 @@ import { createRequire } from 'node:module';
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { LessonSchema } from '@/lib/content/lesson.schema';
-import { localize } from '@/lib/content/localize';
+import { codigoDe, localize } from '@/lib/content/localize';
 import type { Lesson } from '@/lib/content/types';
 import { emptyContext, evaluateRule } from '@/lib/engine';
 import { PHP_PRELUDE } from '@/lib/runners/php-prelude';
@@ -105,9 +105,10 @@ for (const lesson of phpLessons()) {
    * cuela una salida esperada mal copiada.
    */
   for (const [index, step] of localized.steps.entries()) {
-    const reference = (step.solution ?? lesson.solution?.files ?? []).find(
+    const referenciaCruda = (step.solution ?? lesson.solution?.files ?? []).find(
       (file) => file.path === lesson.workspace.entry,
     )?.content;
+    const reference = referenciaCruda === undefined ? undefined : codigoDe(referenciaCruda);
 
     test(`⭐ ${lesson.id} · paso ${index + 1} (${step.id}): la solución corre y cumple lo que promete`, async () => {
       assert.ok(reference, `el paso ${step.id} no publica solución para ${lesson.workspace.entry}`);
@@ -139,9 +140,10 @@ for (const lesson of phpLessons()) {
   }
 
   test(`⭐ ${lesson.id}: el archivo de partida NO pasa las comprobaciones`, async () => {
-    const starter = lesson.workspace.files.find(
+    const partida = lesson.workspace.files.find(
       (file) => file.path === lesson.workspace.entry,
     )?.content;
+    const starter = partida === undefined ? undefined : codigoDe(partida);
     assert.ok(starter);
 
     const { stdout } = await runPhp(starter);

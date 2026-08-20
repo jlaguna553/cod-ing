@@ -42,7 +42,10 @@
     "files": [
       {
         "path": "app.js",
-        "content": "const table = document.querySelector('#grid tbody');\n\nexport function renderRows(rows) {\n  table.innerHTML = '';\n\n  for (const row of rows) {\n    const tr = document.createElement('tr');\n    tr.innerHTML = `\n      <td>${row.id}</td>\n      <td>${row.name}</td>\n      <td><button class=\"select\">Seleccionar</button></td>\n    `;\n\n    // Un listener por fila: con 5.000 filas son 5.000 listeners.\n    tr.querySelector('.select').addEventListener('click', () => {\n      document.querySelector('#selected').textContent = row.name;\n    });\n\n    table.appendChild(tr);\n  }\n}\n\nrenderRows(window.__ROWS__);\n",
+        "content": {
+          "es": "const table = document.querySelector('#grid tbody');\n\nexport function renderRows(rows) {\n  table.innerHTML = '';\n\n  for (const row of rows) {\n    const tr = document.createElement('tr');\n    tr.innerHTML = `\n      <td>${row.id}</td>\n      <td>${row.name}</td>\n      <td><button class=\"select\">Seleccionar</button></td>\n    `;\n\n    // Un listener por fila: con 5.000 filas son 5.000 listeners.\n    tr.querySelector('.select').addEventListener('click', () => {\n      document.querySelector('#selected').textContent = row.name;\n    });\n\n    table.appendChild(tr);\n  }\n}\n\nrenderRows(window.__ROWS__);\n",
+          "en": "const table = document.querySelector('#grid tbody');\n\nexport function renderRows(rows) {\n  table.innerHTML = '';\n\n  for (const row of rows) {\n    const tr = document.createElement('tr');\n    tr.innerHTML = `\n      <td>${row.id}</td>\n      <td>${row.name}</td>\n      <td><button class=\"select\">Seleccionar</button></td>\n    `;\n\n    // One listener per row: with 5,000 rows that's 5,000 listeners.\n    tr.querySelector('.select').addEventListener('click', () => {\n      document.querySelector('#selected').textContent = row.name;\n    });\n\n    table.appendChild(tr);\n  }\n}\n\nrenderRows(window.__ROWS__);\n"
+        },
         "active": true
       },
       {
@@ -52,7 +55,10 @@
       },
       {
         "path": "bench.js",
-        "content": "// Genera 5.000 filas y mide el tiempo de renderizado.\nwindow.__ROWS__ = Array.from({ length: 5000 }, (_, i) => ({\n  id: i + 1,\n  name: `Fila ${i + 1}`,\n}));\n\nwindow.__measure__ = (label, fn) => {\n  const start = performance.now();\n  fn();\n  console.log(`${label}: ${(performance.now() - start).toFixed(1)}ms`);\n};\n",
+        "content": {
+          "es": "// Genera 5.000 filas y mide el tiempo de renderizado.\nwindow.__ROWS__ = Array.from({ length: 5000 }, (_, i) => ({\n  id: i + 1,\n  name: `Fila ${i + 1}`,\n}));\n\nwindow.__measure__ = (label, fn) => {\n  const start = performance.now();\n  fn();\n  console.log(`${label}: ${(performance.now() - start).toFixed(1)}ms`);\n};\n",
+          "en": "// Generates 5,000 rows and measures how long rendering takes.\nwindow.__ROWS__ = Array.from({ length: 5000 }, (_, i) => ({\n  id: i + 1,\n  name: `Fila ${i + 1}`,\n}));\n\nwindow.__measure__ = (label, fn) => {\n  const start = performance.now();\n  fn();\n  console.log(`${label}: ${(performance.now() - start).toFixed(1)}ms`);\n};\n"
+        },
         "readOnly": true,
         "hidden": false
       }
@@ -216,7 +222,10 @@
       "solution": [
         {
           "path": "app.js",
-          "content": "const table = document.querySelector('#grid tbody');\n\nlet listeners = 0;\n\nexport function renderRows(rows) {\n  table.innerHTML = '';\n\n  for (const row of rows) {\n    const tr = document.createElement('tr');\n    tr.innerHTML = `\n      <td>${row.id}</td>\n      <td>${row.name}</td>\n      <td><button class=\"select\">Seleccionar</button></td>\n    `;\n\n    // Un listener por fila: con 5.000 filas son 5.000 listeners.\n    listeners += 1;\n    tr.querySelector('.select').addEventListener('click', () => {\n      document.querySelector('#selected').textContent = row.name;\n    });\n\n    table.appendChild(tr);\n  }\n}\n\nwindow.__measure__('render', () => renderRows(window.__ROWS__));\nconsole.log(`${listeners} listeners registrados`);\n"
+          "content": {
+            "es": "const table = document.querySelector('#grid tbody');\n\nlet listeners = 0;\n\nexport function renderRows(rows) {\n  table.innerHTML = '';\n\n  for (const row of rows) {\n    const tr = document.createElement('tr');\n    tr.innerHTML = `\n      <td>${row.id}</td>\n      <td>${row.name}</td>\n      <td><button class=\"select\">Seleccionar</button></td>\n    `;\n\n    // Un listener por fila: con 5.000 filas son 5.000 listeners.\n    listeners += 1;\n    tr.querySelector('.select').addEventListener('click', () => {\n      document.querySelector('#selected').textContent = row.name;\n    });\n\n    table.appendChild(tr);\n  }\n}\n\nwindow.__measure__('render', () => renderRows(window.__ROWS__));\nconsole.log(`${listeners} listeners registrados`);\n",
+            "en": "const table = document.querySelector('#grid tbody');\n\nlet listeners = 0;\n\nexport function renderRows(rows) {\n  table.innerHTML = '';\n\n  for (const row of rows) {\n    const tr = document.createElement('tr');\n    tr.innerHTML = `\n      <td>${row.id}</td>\n      <td>${row.name}</td>\n      <td><button class=\"select\">Seleccionar</button></td>\n    `;\n\n    // One listener per row: with 5,000 rows that's 5,000 listeners.\n    listeners += 1;\n    tr.querySelector('.select').addEventListener('click', () => {\n      document.querySelector('#selected').textContent = row.name;\n    });\n\n    table.appendChild(tr);\n  }\n}\n\nwindow.__measure__('render', () => renderRows(window.__ROWS__));\nconsole.log(`${listeners} listeners registrados`);\n"
+          }
         }
       ]
     },

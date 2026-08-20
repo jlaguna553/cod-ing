@@ -3,7 +3,7 @@ import test from 'node:test';
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { LessonSchema } from '@/lib/content/lesson.schema';
-import { localize } from '@/lib/content/localize';
+import { codigoDe, localize } from '@/lib/content/localize';
 import type { Lesson, ValidationRule } from '@/lib/content/types';
 import { emptyContext, evaluateRule, isImplemented } from '@/lib/engine';
 import { Shell, VirtualFs } from '@/lib/runners/cli-sim';
@@ -257,7 +257,7 @@ const STATIC_KINDS = new Set(['regex-must', 'regex-forbid', 'ast-query', 'docker
  * transcripción esperada de la lección **es realmente ejecutable**.
  */
 function solvedWorkspace(lesson: Lesson): Record<string, string> {
-  const files = Object.fromEntries(lesson.workspace.files.map((f) => [f.path, f.content]));
+  const files = Object.fromEntries(lesson.workspace.files.map((f) => [f.path, codigoDe(f.content)]));
 
   const transcriptRule = lesson.rules.find((rule) => rule.kind === 'cli-transcript');
   if (lesson.runtime.terminal?.enabled && transcriptRule && transcriptRule.kind === 'cli-transcript') {
@@ -292,7 +292,7 @@ function solvedWorkspace(lesson: Lesson): Record<string, string> {
     Object.assign(files, fs.toRecord());
   }
 
-  for (const file of lesson.solution?.files ?? []) files[file.path] = file.content;
+  for (const file of lesson.solution?.files ?? []) files[file.path] = codigoDe(file.content);
   return files;
 }
 
@@ -370,7 +370,7 @@ for (const lesson of allLessons()) {
   });
 
   test(`⭐ ${lesson.id}: el código de partida NO supera las reglas bloqueantes`, () => {
-    const files = Object.fromEntries(lesson.workspace.files.map((f) => [f.path, f.content]));
+    const files = Object.fromEntries(lesson.workspace.files.map((f) => [f.path, codigoDe(f.content)]));
     const context = emptyContext({ files });
 
     const blocking = staticRules.filter((rule) => rule.severity === 'error');

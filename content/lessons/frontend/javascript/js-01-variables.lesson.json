@@ -36,7 +36,10 @@
     "files": [
       {
         "path": "index.js",
-        "content": "// El nombre del jugador no cambia en toda la partida.\nvar playerName = 'Ada';\n\n// La puntuación sube con cada acierto.\nvar score = 0;\nscore = score + 10;\n\n// El equipo se decide al empezar y ya no cambia.\nvar team = 'cyan';\n\nconsole.log(playerName, score, team);\n",
+        "content": {
+          "es": "// El nombre del jugador no cambia en toda la partida.\nvar playerName = 'Ada';\n\n// La puntuación sube con cada acierto.\nvar score = 0;\nscore = score + 10;\n\n// El equipo se decide al empezar y ya no cambia.\nvar team = 'cyan';\n\nconsole.log(playerName, score, team);\n",
+          "en": "// The player's name doesn't change for the whole game.\nvar playerName = 'Ada';\n\n// The score goes up with every correct answer.\nvar score = 0;\nscore = score + 10;\n\n// The team is decided at the start and never changes again.\nvar team = 'cyan';\n\nconsole.log(playerName, score, team);\n"
+        },
         "active": true
       }
     ]
@@ -173,7 +176,10 @@
       "solution": [
         {
           "path": "index.js",
-          "content": "// El nombre del jugador no cambia en toda la partida.\nconst playerName = 'Ada';\n\n// La puntuación sube con cada acierto.\nlet score = 0;\nscore = score + 10;\n\n// El equipo se decide al empezar y ya no cambia.\nconst team = 'cyan';\n\nconsole.log(playerName, score, team);\n"
+          "content": {
+            "es": "// El nombre del jugador no cambia en toda la partida.\nconst playerName = 'Ada';\n\n// La puntuación sube con cada acierto.\nlet score = 0;\nscore = score + 10;\n\n// El equipo se decide al empezar y ya no cambia.\nconst team = 'cyan';\n\nconsole.log(playerName, score, team);\n",
+            "en": "// The player's name doesn't change for the whole game.\nconst playerName = 'Ada';\n\n// The score goes up with every correct answer.\nlet score = 0;\nscore = score + 10;\n\n// The team is decided at the start and never changes again.\nconst team = 'cyan';\n\nconsole.log(playerName, score, team);\n"
+          }
         }
       ]
     },

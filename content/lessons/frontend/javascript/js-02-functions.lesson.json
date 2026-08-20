@@ -39,7 +39,10 @@
     "files": [
       {
         "path": "index.js",
-        "content": "// TODO: escribe una función que reciba un nombre y devuelva un saludo\n// Ejemplo: greet('Ada') → 'Hola, Ada'\n\n\nconsole.log(greet('Ada'));\n",
+        "content": {
+          "es": "// TODO: escribe una función que reciba un nombre y devuelva un saludo\n// Ejemplo: greet('Ada') → 'Hola, Ada'\n\n\nconsole.log(greet('Ada'));\n",
+          "en": "// TODO: write a function taking a name and returning a greeting\n// Example: greet('Ada') → 'Hola, Ada'\n\n\nconsole.log(greet('Ada'));\n"
+        },
         "active": true
       }
     ]

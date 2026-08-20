@@ -1,16 +1,13 @@
 {
   "$schema": "../../../schema/lesson.schema.json",
   "schemaVersion": 1,
-
   "id": "vue-04-todo-list",
   "track": "frontend",
   "module": "vue",
   "order": 4,
-
   "kind": "challenge",
   "difficulty": "apprentice",
   "estimatedMinutes": 26,
-
   "title": {
     "es": "La lista de tareas: el ejercicio que todo framework usa para presentarse",
     "en": "The todo list: the exercise every framework uses to introduce itself"
@@ -19,25 +16,38 @@
     "es": "TodoMVC, pero mirando lo que de verdad se aprende: por qué el índice es una `key` mentirosa y por qué el contador no debe ser una variable.",
     "en": "TodoMVC, but looking at what it actually teaches: why the index is a lying `key`, and why the counter shouldn't be a variable."
   },
-  "concepts": ["vue", "v-for", "key", "computed", "listas"],
-  "prerequisites": ["vue-01-template-syntax", "vue-02-components", "vue-03-reactivity"],
-
+  "concepts": [
+    "vue",
+    "v-for",
+    "key",
+    "computed",
+    "listas"
+  ],
+  "prerequisites": [
+    "vue-01-template-syntax",
+    "vue-02-components",
+    "vue-03-reactivity"
+  ],
   "runtime": {
     "kind": "vue",
     "dependencies": {},
     "timeoutMs": 15000
   },
-
   "workspace": {
     "entry": "src/App.vue",
     "allowCreate": false,
     "allowDelete": false,
-    "protectedPaths": ["src/main.js"],
+    "protectedPaths": [
+      "src/main.js"
+    ],
     "files": [
       {
         "path": "src/App.vue",
         "active": true,
-        "content": "<script setup>\nimport { ref } from 'vue';\n\nconst tareas = ref([\n  { id: 1, texto: 'Aprender v-for', hecha: true },\n  { id: 2, texto: 'Dominar computed', hecha: false },\n  { id: 3, texto: 'Vencer al boss', hecha: false },\n]);\n\n// El paso 3 lo usará. De momento no lo mira nadie.\nconst filtro = ref('pendientes');\n</script>\n\n<template>\n  <section class=\"lista\">\n    <h1>Mis tareas</h1>\n\n    <!-- TODO 1: pinta un <li class=\"tarea\"> por cada tarea.\n         Las hechas llevan además la clase \"hecha\". -->\n    <ul></ul>\n  </section>\n</template>\n\n<style>\n.hecha { text-decoration: line-through; opacity: 0.6; }\n</style>\n"
+        "content": {
+          "es": "<script setup>\nimport { ref } from 'vue';\n\nconst tareas = ref([\n  { id: 1, texto: 'Aprender v-for', hecha: true },\n  { id: 2, texto: 'Dominar computed', hecha: false },\n  { id: 3, texto: 'Vencer al boss', hecha: false },\n]);\n\n// El paso 3 lo usará. De momento no lo mira nadie.\nconst filtro = ref('pendientes');\n</script>\n\n<template>\n  <section class=\"lista\">\n    <h1>Mis tareas</h1>\n\n    <!-- TODO 1: pinta un <li class=\"tarea\"> por cada tarea.\n         Las hechas llevan además la clase \"hecha\". -->\n    <ul></ul>\n  </section>\n</template>\n\n<style>\n.hecha { text-decoration: line-through; opacity: 0.6; }\n</style>\n",
+          "en": "<script setup>\nimport { ref } from 'vue';\n\nconst tareas = ref([\n  { id: 1, texto: 'Aprender v-for', hecha: true },\n  { id: 2, texto: 'Dominar computed', hecha: false },\n  { id: 3, texto: 'Vencer al boss', hecha: false },\n]);\n\n// Step 3 will use it. For now nobody looks at it.\nconst filtro = ref('pendientes');\n</script>\n\n<template>\n  <section class=\"lista\">\n    <h1>Mis tareas</h1>\n\n    <!-- TODO 1: render one <li class=\"tarea\"> per task.\n         Done ones also carry the class \"hecha\". -->\n    <ul></ul>\n  </section>\n</template>\n\n<style>\n.hecha { text-decoration: line-through; opacity: 0.6; }\n</style>\n"
+        }
       },
       {
         "path": "src/main.js",
@@ -46,7 +56,6 @@
       }
     ]
   },
-
   "rules": [
     {
       "id": "renders-three",
@@ -187,7 +196,6 @@
       "points": 20
     }
   ],
-
   "steps": [
     {
       "id": "step-1-render",
@@ -204,8 +212,16 @@
         "en": "Render one `<li class=\"tarea\">` per task with its text, keyed by `id`, and add the `hecha` class to the completed ones."
       },
       "focusFile": "src/App.vue",
-      "focusLines": [17, 19],
-      "ruleIds": ["renders-three", "marks-done", "stable-key", "no-index-key"],
+      "focusLines": [
+        17,
+        19
+      ],
+      "ruleIds": [
+        "renders-three",
+        "marks-done",
+        "stable-key",
+        "no-index-key"
+      ],
       "xp": 45,
       "hints": [
         {
@@ -245,7 +261,11 @@
         "en": "Add a `computed` with the tasks still to do and show it in a `<p class=\"pendientes\">`."
       },
       "focusFile": "src/App.vue",
-      "ruleIds": ["shows-pending", "uses-computed", "no-manual-count"],
+      "ruleIds": [
+        "shows-pending",
+        "uses-computed",
+        "no-manual-count"
+      ],
       "xp": 40,
       "hints": [
         {
@@ -281,7 +301,10 @@
         "en": "Add a `visibles` computed that respects `filtro` (`todas`, `pendientes`, `hechas`) and loop over that in the template, without touching `tareas`."
       },
       "focusFile": "src/App.vue",
-      "ruleIds": ["filters-list", "keeps-source"],
+      "ruleIds": [
+        "filters-list",
+        "keeps-source"
+      ],
       "xp": 50,
       "hints": [
         {
@@ -307,9 +330,7 @@
       }
     }
   ],
-
   "drills": [],
-
   "reward": {
     "baseXp": 135,
     "flawlessBonus": 50,
@@ -317,7 +338,6 @@
     "comboMultiplierCap": 3,
     "achievements": []
   },
-
   "solution": {
     "files": [
       {

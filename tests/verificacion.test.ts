@@ -3,7 +3,7 @@ import test from 'node:test';
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { LessonSchema } from '@/lib/content/lesson.schema';
-import { localize } from '@/lib/content/localize';
+import { codigoDe, localize } from '@/lib/content/localize';
 import type { Lesson } from '@/lib/content/types';
 import { STATIC_KINDS, verifyStatic } from '@/lib/engine/static';
 
@@ -29,12 +29,14 @@ function todasLasLecciones(): Lesson[] {
 
 /** Los archivos con los que la lección se da por terminada. */
 function codigoFinal(lesson: Lesson): Record<string, string> {
-  const files = Object.fromEntries(lesson.workspace.files.map((f) => [f.path, f.content]));
+  const files = Object.fromEntries(
+    lesson.workspace.files.map((f) => [f.path, codigoDe(f.content)]),
+  );
   const ultimo = lesson.steps.at(-1);
 
   // El del último paso manda; si no lo publica, el de la lección entera.
   for (const archivo of ultimo?.solution ?? lesson.solution?.files ?? []) {
-    files[archivo.path] = archivo.content;
+    files[archivo.path] = codigoDe(archivo.content);
   }
   return files;
 }
@@ -118,7 +120,9 @@ for (const lesson of lecciones) {
 
 /** ¿Rechazaría el filtro el código con el que arranca la lección? */
 function rechazaElPuntoDePartida(lesson: Lesson): boolean {
-  const inicial = Object.fromEntries(lesson.workspace.files.map((f) => [f.path, f.content]));
+  const inicial = Object.fromEntries(
+    lesson.workspace.files.map((f) => [f.path, codigoDe(f.content)]),
+  );
   return verifyStatic(reglasDelUltimoPaso(lesson) as never, inicial).fallidas.length > 0;
 }
 
